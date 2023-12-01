@@ -21,6 +21,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	storagev1 "k8s.io/api/storage/v1"
+	kubeletconfigv1 "k8s.io/kubelet/config/v1beta1"
 	kubevirtv1 "kubevirt.io/api/core/v1"
 	capi "sigs.k8s.io/cluster-api/api/v1alpha4"
 
@@ -33,6 +34,13 @@ func main() {
 		OutputPackage: "github.com/harvester/harvester/pkg/generated",
 		Boilerplate:   "scripts/boilerplate.go.txt",
 		Groups: map[string]args.Group{
+			kubeletconfigv1.SchemeGroupVersion.Group: {
+				Types: []interface{}{
+					kubeletconfigv1.KubeletConfiguration{},
+				},
+				GenerateTypes:   false,
+				GenerateClients: true,
+			},
 			"harvesterhci.io": {
 				Types: []interface{}{
 					harvesterv1.KeyPair{},
