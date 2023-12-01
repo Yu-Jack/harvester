@@ -16,6 +16,7 @@ import (
 	ctlharvestercorev1 "github.com/harvester/harvester/pkg/generated/controllers/core"
 	ctlharvesterv1 "github.com/harvester/harvester/pkg/generated/controllers/harvesterhci.io"
 	ctlcniv1 "github.com/harvester/harvester/pkg/generated/controllers/k8s.cni.cncf.io"
+	kubeletv1 "github.com/harvester/harvester/pkg/generated/controllers/kubelet.config.k8s.io"
 	ctlkubevirtv1 "github.com/harvester/harvester/pkg/generated/controllers/kubevirt.io"
 	ctllonghornv1 "github.com/harvester/harvester/pkg/generated/controllers/longhorn.io"
 	ctlsnapshotv1 "github.com/harvester/harvester/pkg/generated/controllers/snapshot.storage.k8s.io"
@@ -27,6 +28,7 @@ type Clients struct {
 	HarvesterFactory         *ctlharvesterv1.Factory
 	HarvesterCoreFactory     *ctlharvestercorev1.Factory
 	KubevirtFactory          *ctlkubevirtv1.Factory
+	KubeletFactory           *kubeletv1.Factory
 	CNIFactory               *ctlcniv1.Factory
 	SnapshotFactory          *ctlsnapshotv1.Factory
 	FleetFactory             *ctlfleetv1.Factory
@@ -71,6 +73,14 @@ func New(ctx context.Context, rest *rest.Config, threadiness int) (*Clients, err
 	}
 
 	if err = kubevirtFactory.Start(ctx, threadiness); err != nil {
+		return nil, err
+	}
+
+	kubeletFactory, err := kubeletv1.NewFactoryFromConfigWithOptions(rest, clients.FactoryOptions)
+	if err != nil {
+		return nil, err
+	}
+	if err = kubeletFactory.Start(ctx, threadiness); err != nil {
 		return nil, err
 	}
 
@@ -135,6 +145,7 @@ func New(ctx context.Context, rest *rest.Config, threadiness int) (*Clients, err
 		HarvesterFactory:         harvesterFactory,
 		HarvesterCoreFactory:     harvesterCoreFactory,
 		KubevirtFactory:          kubevirtFactory,
+		KubeletFactory:           kubeletFactory,
 		CNIFactory:               cniFactory,
 		SnapshotFactory:          snapshotFactory,
 		FleetFactory:             fleetFactory,

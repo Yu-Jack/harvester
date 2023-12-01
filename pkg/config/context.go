@@ -3,7 +3,6 @@ package config
 import (
 	"context"
 
-	ctlnodeharvester "github.com/harvester/node-manager/pkg/generated/controllers/node.harvesterhci.io"
 	helmv1 "github.com/k3s-io/helm-controller/pkg/generated/controllers/helm.cattle.io"
 	dashboardapi "github.com/kubernetes/dashboard/src/app/backend/auth/api"
 	"github.com/rancher/lasso/pkg/controller"
@@ -25,11 +24,14 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 
+	ctlnodeharvester "github.com/harvester/node-manager/pkg/generated/controllers/node.harvesterhci.io"
+
 	"github.com/harvester/harvester/pkg/generated/clientset/versioned/scheme"
 	"github.com/harvester/harvester/pkg/generated/controllers/cluster.x-k8s.io"
 	ctlharvcorev1 "github.com/harvester/harvester/pkg/generated/controllers/core"
 	ctlharvesterv1 "github.com/harvester/harvester/pkg/generated/controllers/harvesterhci.io"
 	cniv1 "github.com/harvester/harvester/pkg/generated/controllers/k8s.cni.cncf.io"
+	kubeletv1 "github.com/harvester/harvester/pkg/generated/controllers/kubelet.config.k8s.io"
 	"github.com/harvester/harvester/pkg/generated/controllers/kubevirt.io"
 	loggingv1 "github.com/harvester/harvester/pkg/generated/controllers/logging.banzaicloud.io"
 	longhornv1 "github.com/harvester/harvester/pkg/generated/controllers/longhorn.io"
@@ -72,6 +74,7 @@ type Scaled struct {
 	SnapshotFactory          *snapshotv1.Factory
 	StorageFactory           *storagev1.Factory
 	LonghornFactory          *longhornv1.Factory
+	KubeletFactory           *kubeletv1.Factory
 	RancherManagementFactory *rancherv3.Factory
 	starters                 []start.Starter
 
@@ -97,6 +100,7 @@ type Management struct {
 	StorageFactory           *storagev1.Factory
 	SnapshotFactory          *snapshotv1.Factory
 	LonghornFactory          *longhornv1.Factory
+	KubeletFactory           *kubeletv1.Factory
 	ProvisioningFactory      *provisioningv1.Factory
 	CatalogFactory           *catalogv1.Factory
 	RancherManagementFactory *rancherv3.Factory
@@ -210,6 +214,13 @@ func SetupScaled(ctx context.Context, restConfig *rest.Config, opts *generic.Fac
 	scaled.LonghornFactory = longhorn
 	scaled.starters = append(scaled.starters, longhorn)
 
+	kubelet, err := kubeletv1.NewFactoryFromConfigWithOptions(restConfig, opts)
+	if err != nil {
+		return nil, nil, err
+	}
+	scaled.KubeletFactory = kubelet
+	scaled.starters = append(scaled.starters, kubelet)
+
 	rancher, err := rancherv3.NewFactoryFromConfigWithOptions(restConfig, opts)
 	if err != nil {
 		return nil, nil, err
@@ -319,6 +330,13 @@ func setupManagement(ctx context.Context, restConfig *rest.Config, opts *generic
 	}
 	management.LonghornFactory = longhorn
 	management.starters = append(management.starters, longhorn)
+
+	kubelet, err := kubeletv1.NewFactoryFromConfigWithOptions(restConfig, opts)
+	if err != nil {
+		return nil, err
+	}
+	management.KubeletFactory = kubelet
+	management.starters = append(management.starters, kubelet)
 
 	snapshot, err := snapshotv1.NewFactoryFromConfigWithOptions(restConfig, opts)
 	if err != nil {

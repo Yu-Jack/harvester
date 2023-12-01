@@ -28,6 +28,8 @@ import (
 	fakeharvesterhciv1beta1 "github.com/harvester/harvester/pkg/generated/clientset/versioned/typed/harvesterhci.io/v1beta1/fake"
 	k8scnicncfiov1 "github.com/harvester/harvester/pkg/generated/clientset/versioned/typed/k8s.cni.cncf.io/v1"
 	fakek8scnicncfiov1 "github.com/harvester/harvester/pkg/generated/clientset/versioned/typed/k8s.cni.cncf.io/v1/fake"
+	kubeletv1beta1 "github.com/harvester/harvester/pkg/generated/clientset/versioned/typed/kubelet.config.k8s.io/v1beta1"
+	fakekubeletv1beta1 "github.com/harvester/harvester/pkg/generated/clientset/versioned/typed/kubelet.config.k8s.io/v1beta1/fake"
 	kubevirtv1 "github.com/harvester/harvester/pkg/generated/clientset/versioned/typed/kubevirt.io/v1"
 	fakekubevirtv1 "github.com/harvester/harvester/pkg/generated/clientset/versioned/typed/kubevirt.io/v1/fake"
 	loggingv1beta1 "github.com/harvester/harvester/pkg/generated/clientset/versioned/typed/logging.banzaicloud.io/v1beta1"
@@ -121,6 +123,11 @@ func (c *Clientset) HarvesterhciV1beta1() harvesterhciv1beta1.HarvesterhciV1beta
 // K8sCniCncfIoV1 retrieves the K8sCniCncfIoV1Client
 func (c *Clientset) K8sCniCncfIoV1() k8scnicncfiov1.K8sCniCncfIoV1Interface {
 	return &fakek8scnicncfiov1.FakeK8sCniCncfIoV1{Fake: &c.Fake}
+}
+
+// KubeletV1beta1 retrieves the KubeletV1beta1Client
+func (c *Clientset) KubeletV1beta1() kubeletv1beta1.KubeletV1beta1Interface {
+	return &fakekubeletv1beta1.FakeKubeletV1beta1{Fake: &c.Fake}
 }
 
 // KubevirtV1 retrieves the KubevirtV1Client
