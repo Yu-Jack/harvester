@@ -46,6 +46,14 @@ func (m *Manager) Create(sb *harvesterv1.SupportBundle, image string, pullPolicy
 	deployName := m.getManagerName(sb)
 	logrus.Debugf("creating deployment %s with image %s", deployName, image)
 
+	apiVersion := sb.GroupVersionKind().GroupVersion().String()
+	apiPath := fmt.Sprintf("/apis/%s/namespaces/%s/%s/%s", apiVersion, sb.Namespace, harvesterv1.SupportBundleResourceName, sb.Name)
+	apiPath = strings.ToLower(apiPath)
+
+	fmt.Println("=====")
+	fmt.Println(apiPath)
+	fmt.Println("=====")
+
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      deployName,
@@ -125,6 +133,10 @@ func (m *Manager) Create(sb *harvesterv1.SupportBundle, image string, pullPolicy
 								{
 									Name:  "SUPPORT_BUNDLE_TAINT_TOLERATION",
 									Value: AdditionalTaintToleration,
+								},
+								{
+									Name:  "SUPPORT_BUNDLE_OWNER_RESOURCE_API_PATH",
+									Value: apiPath,
 								},
 							},
 							Ports: []corev1.ContainerPort{
