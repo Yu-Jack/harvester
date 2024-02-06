@@ -67,7 +67,7 @@ func NewHandlerDaemonSet(namespace, repository, imagePrefix, version, launcherVe
 			podTemplateSpec.ObjectMeta.Annotations = make(map[string]string)
 		}
 		// Join the pod to the migration network and name the corresponding interface "migration0"
-		podTemplateSpec.ObjectMeta.Annotations["k8s.v1.cni.cncf.io/networks"] = *migrationNetwork + "@migration0"
+		podTemplateSpec.ObjectMeta.Annotations["k8s.v1.cni.cncf.io/networks"] = *migrationNetwork + "@" + virtv1.MigrationInterfaceName
 	}
 
 	daemonset := &appsv1.DaemonSet{
@@ -123,7 +123,7 @@ func NewHandlerDaemonSet(namespace, repository, imagePrefix, version, launcherVe
 				"node-labeller.sh",
 			},
 			SecurityContext: &corev1.SecurityContext{
-				Privileged: boolPtr(true),
+				Privileged: pointer.Bool(true),
 			},
 			VolumeMounts: []corev1.VolumeMount{
 				{
@@ -193,7 +193,7 @@ func NewHandlerDaemonSet(namespace, repository, imagePrefix, version, launcherVe
 		},
 	}
 	container.SecurityContext = &corev1.SecurityContext{
-		Privileged: boolPtr(true),
+		Privileged: pointer.Bool(true),
 		SELinuxOptions: &corev1.SELinuxOptions{
 			Level: "s0",
 		},
@@ -294,6 +294,10 @@ func NewHandlerDaemonSet(namespace, repository, imagePrefix, version, launcherVe
 	}
 
 	// Use the downward API to access the network status annotations
+	// TODO: This is not used anymore, but can't be removed because of https://github.com/kubevirt/kubevirt/issues/10632
+	//   Since CR-based updates use the wrong install strategy, removing this volume and downgrading via CR will try to
+	//   run the previous version of virt-handler without the volume, which will fail and CrashLoop.
+	//   Please remove the volume once the above issue is fixed.
 	container.VolumeMounts = append(container.VolumeMounts, corev1.VolumeMount{
 		Name:      "podinfo",
 		MountPath: "/etc/podinfo",
@@ -316,8 +320,10 @@ func NewHandlerDaemonSet(namespace, repository, imagePrefix, version, launcherVe
 
 	container.Resources = corev1.ResourceRequirements{
 		Requests: corev1.ResourceList{
-			corev1.ResourceCPU:    resource.MustParse("10m"),
-			corev1.ResourceMemory: resource.MustParse("325Mi"),
+			corev1.ResourceCPU: resource.MustParse("10m"),
+			// 325Mi - base memory request
+			// +32Mi - to account for the buffer used to verify containerdisk checksums
+			corev1.ResourceMemory: resource.MustParse("357Mi"),
 		},
 	}
 	if prHelperImage == "" {

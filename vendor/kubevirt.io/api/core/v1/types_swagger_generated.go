@@ -26,7 +26,7 @@ func (VirtualMachineInstanceSpec) SwaggerDoc() map[string]string {
 		"schedulerName":                 "If specified, the VMI will be dispatched by specified scheduler.\nIf not specified, the VMI will be dispatched by default scheduler.\n+optional",
 		"tolerations":                   "If toleration is specified, obey all the toleration rules.",
 		"topologySpreadConstraints":     "TopologySpreadConstraints describes how a group of VMIs will be spread across a given topology\ndomains. K8s scheduler will schedule VMI pods in a way which abides by the constraints.\n+optional\n+patchMergeKey=topologyKey\n+patchStrategy=merge\n+listType=map\n+listMapKey=topologyKey\n+listMapKey=whenUnsatisfiable",
-		"evictionStrategy":              "EvictionStrategy can be set to \"LiveMigrate\" if the VirtualMachineInstance should be\nmigrated instead of shut-off in case of a node drain.\n\n+optional",
+		"evictionStrategy":              "EvictionStrategy describes the strategy to follow when a node drain occurs.\nThe possible options are:\n- \"None\": No action will be taken, according to the specified 'RunStrategy' the VirtualMachine will be restarted or shutdown.\n- \"LiveMigrate\": the VirtualMachineInstance will be migrated instead of being shutdown.\n- \"LiveMigrateIfPossible\": the same as \"LiveMigrate\" but only if the VirtualMachine is Live-Migratable, otherwise it will behave as \"None\".\n- \"External\": the VirtualMachineInstance will be protected by a PDB and `vmi.Status.EvacuationNodeName` will be set on eviction. This is mainly useful for cluster-api-provider-kubevirt (capk) which needs a way for VMI's to be blocked from eviction, yet signal capk that eviction has been called on the VMI so the capk controller can handle tearing the VMI down. Details can be found in the commit description https://github.com/kubevirt/kubevirt/commit/c1d77face705c8b126696bac9a3ee3825f27f1fa.\n+optional",
 		"startStrategy":                 "StartStrategy can be set to \"Paused\" if Virtual Machine should be started in paused state.\n\n+optional",
 		"terminationGracePeriodSeconds": "Grace period observed after signalling a VirtualMachineInstance to stop after which the VirtualMachineInstance is force terminated.",
 		"volumes":                       "List of volumes that can be mounted by disks belonging to the vmi.",
@@ -72,6 +72,7 @@ func (VirtualMachineInstanceStatus) SwaggerDoc() map[string]string {
 		"evacuationNodeName":            "EvacuationNodeName is used to track the eviction process of a VMI. It stores the name of the node that we want\nto evacuate. It is meant to be used by KubeVirt core components only and can't be set or modified by users.\n+optional",
 		"activePods":                    "ActivePods is a mapping of pod UID to node name.\nIt is possible for multiple pods to be running for a single VMI during migration.",
 		"volumeStatus":                  "VolumeStatus contains the statuses of all the volumes\n+optional\n+listType=atomic",
+		"kernelBootStatus":              "KernelBootStatus contains info about the kernelBootContainer\n+optional",
 		"fsFreezeStatus":                "FSFreezeStatus is the state of the fs of the guest\nit can be either frozen or thawed\n+optional",
 		"topologyHints":                 "+optional",
 		"virtualMachineRevisionName":    "VirtualMachineRevisionName is used to get the vm revision of the vmi when doing\nan online vm snapshot\n+optional",
@@ -108,6 +109,29 @@ func (VolumeStatus) SwaggerDoc() map[string]string {
 		"hotplugVolume":             "If the volume is hotplug, this will contain the hotplug status.",
 		"size":                      "Represents the size of the volume",
 		"memoryDumpVolume":          "If the volume is memorydump volume, this will contain the memorydump info.",
+		"containerDiskVolume":       "ContainerDiskVolume shows info about the containerdisk, if the volume is a containerdisk",
+	}
+}
+
+func (KernelInfo) SwaggerDoc() map[string]string {
+	return map[string]string{
+		"":         "KernelInfo show info about the kernel image",
+		"checksum": "Checksum is the checksum of the kernel image",
+	}
+}
+
+func (InitrdInfo) SwaggerDoc() map[string]string {
+	return map[string]string{
+		"":         "InitrdInfo show info about the initrd file",
+		"checksum": "Checksum is the checksum of the initrd file",
+	}
+}
+
+func (KernelBootStatus) SwaggerDoc() map[string]string {
+	return map[string]string{
+		"":           "KernelBootStatus contains info about the kernelBootContainer",
+		"kernelInfo": "KernelInfo show info about the kernel image",
+		"initrdInfo": "InitrdInfo show info about the initrd file",
 	}
 }
 
@@ -126,6 +150,13 @@ func (HotplugVolumeStatus) SwaggerDoc() map[string]string {
 		"":              "HotplugVolumeStatus represents the hotplug status of the volume",
 		"attachPodName": "AttachPodName is the name of the pod used to attach the volume to the node.",
 		"attachPodUID":  "AttachPodUID is the UID of the pod used to attach the volume to the node.",
+	}
+}
+
+func (ContainerDiskInfo) SwaggerDoc() map[string]string {
+	return map[string]string{
+		"":         "ContainerDiskInfo shows info about the containerdisk",
+		"checksum": "Checksum is the checksum of the rootdisk or kernel artifacts inside the containerdisk",
 	}
 }
 
@@ -350,7 +381,7 @@ func (VirtualMachineStatus) SwaggerDoc() map[string]string {
 		"restoreInProgress":      "RestoreInProgress is the name of the VirtualMachineRestore currently executing",
 		"created":                "Created indicates if the virtual machine is created in the cluster",
 		"ready":                  "Ready indicates if the virtual machine is running and ready",
-		"printableStatus":        "PrintableStatus is a human readable, high-level representation of the status of the virtual machine",
+		"printableStatus":        "PrintableStatus is a human readable, high-level representation of the status of the virtual machine\n+kubebuilder:default=Stopped",
 		"conditions":             "Hold the state information of the VirtualMachine and its VirtualMachineInstance",
 		"stateChangeRequests":    "StateChangeRequests indicates a list of actions that should be taken on a VMI\ne.g. stop a specific VMI then start a new one.",
 		"volumeRequests":         "VolumeRequests indicates a list of volumes add or remove from the VMI template and\nhotplug on an active running VMI.\n+listType=atomic",
@@ -610,6 +641,12 @@ func (VirtualMachineInstanceFileSystemInfo) SwaggerDoc() map[string]string {
 func (VirtualMachineInstanceFileSystemList) SwaggerDoc() map[string]string {
 	return map[string]string{
 		"": "VirtualMachineInstanceFileSystemList comprises the list of all filesystems on guest machine\n\n+k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object",
+	}
+}
+
+func (VirtualMachineInstanceFileSystemDisk) SwaggerDoc() map[string]string {
+	return map[string]string{
+		"": "VirtualMachineInstanceFileSystemDisk represents the guest os FS disks",
 	}
 }
 
@@ -881,6 +918,7 @@ func (InterfaceBindingPlugin) SwaggerDoc() map[string]string {
 	return map[string]string{
 		"sidecarImage":                "SidecarImage references a container image that runs in the virt-launcher pod.\nThe sidecar handles (libvirt) domain configuration and optional services.\nversion: 1alphav1",
 		"networkAttachmentDefinition": "NetworkAttachmentDefinition references to a NetworkAttachmentDefinition CR object.\nFormat: <name>, <namespace>/<name>.\nIf namespace is not specified, VMI namespace is assumed.\nversion: 1alphav1",
+		"domainAttachmentType":        "DomainAttachmentType is a standard domain network attachment method kubevirt supports.\nSupported values: \"tap\".\nThe standard domain attachment can be used instead or in addition to the sidecarImage.\nversion: 1alphav1",
 	}
 }
 

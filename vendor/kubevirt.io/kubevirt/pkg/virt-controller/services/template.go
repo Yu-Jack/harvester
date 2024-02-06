@@ -20,6 +20,7 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -259,11 +260,8 @@ func (t *templateService) RenderLaunchManifestNoVm(vmi *v1.VirtualMachineInstanc
 }
 
 func (t *templateService) RenderMigrationManifest(vmi *v1.VirtualMachineInstance, pod *k8sv1.Pod) (*k8sv1.Pod, error) {
-	reproducibleImageIDs, err := containerdisk.ExtractImageIDsFromSourcePod(vmi, pod)
-	if err != nil {
-		return nil, fmt.Errorf("can not proceed with the migration when no reproducible image digest can be detected: %v", err)
-	}
-	podManifest, err := t.renderLaunchManifest(vmi, reproducibleImageIDs, false)
+	imageIDs := containerdisk.ExtractImageIDsFromSourcePod(vmi, pod)
+	podManifest, err := t.renderLaunchManifest(vmi, imageIDs, false)
 	if err != nil {
 		return nil, err
 	}
@@ -476,11 +474,48 @@ func (t *templateService) renderLaunchManifest(vmi *v1.VirtualMachineInstance, i
 		containers = append(containers, *sconsolelogContainer)
 	}
 
+	var sidecarVolumes []k8sv1.Volume
 	for i, requestedHookSidecar := range requestedHookSidecarList {
-		containers = append(
-			containers,
-			newSidecarContainerRenderer(
-				sidecarContainerName(i), vmi, sidecarResources(vmi, t.clusterConfig), requestedHookSidecar, userId).Render(requestedHookSidecar.Command))
+		sidecarContainer := newSidecarContainerRenderer(
+			sidecarContainerName(i), vmi, sidecarResources(vmi, t.clusterConfig), requestedHookSidecar, userId).Render(requestedHookSidecar.Command)
+
+		if requestedHookSidecar.ConfigMap != nil {
+			cm, err := t.virtClient.CoreV1().ConfigMaps(vmi.Namespace).Get(context.TODO(), requestedHookSidecar.ConfigMap.Name, metav1.GetOptions{})
+			if err != nil {
+				return nil, err
+			}
+			volumeSource := k8sv1.VolumeSource{
+				ConfigMap: &k8sv1.ConfigMapVolumeSource{
+					LocalObjectReference: k8sv1.LocalObjectReference{Name: cm.Name},
+					DefaultMode:          pointer.Int32(0755),
+				},
+			}
+			vol := k8sv1.Volume{
+				Name:         cm.Name,
+				VolumeSource: volumeSource,
+			}
+			sidecarVolumes = append(sidecarVolumes, vol)
+		}
+		if requestedHookSidecar.PVC != nil {
+			volumeSource := k8sv1.VolumeSource{
+				PersistentVolumeClaim: &k8sv1.PersistentVolumeClaimVolumeSource{
+					ClaimName: requestedHookSidecar.PVC.Name,
+				},
+			}
+			vol := k8sv1.Volume{
+				Name:         requestedHookSidecar.PVC.Name,
+				VolumeSource: volumeSource,
+			}
+			sidecarVolumes = append(sidecarVolumes, vol)
+			if requestedHookSidecar.PVC.SharedComputePath != "" {
+				containers[0].VolumeMounts = append(containers[0].VolumeMounts,
+					k8sv1.VolumeMount{
+						Name:      requestedHookSidecar.PVC.Name,
+						MountPath: requestedHookSidecar.PVC.SharedComputePath,
+					})
+			}
+		}
+		containers = append(containers, sidecarContainer)
 	}
 
 	podAnnotations, err := generatePodAnnotations(vmi, t.clusterConfig)
@@ -597,6 +632,8 @@ func (t *templateService) renderLaunchManifest(vmi *v1.VirtualMachineInstance, i
 		pod.Spec.AutomountServiceAccountToken = &automount
 	}
 
+	pod.Spec.Volumes = append(pod.Spec.Volumes, sidecarVolumes...)
+
 	return &pod, nil
 }
 
@@ -638,9 +675,18 @@ func initContainerVolumeMount() k8sv1.VolumeMount {
 func newSidecarContainerRenderer(sidecarName string, vmiSpec *v1.VirtualMachineInstance, resources k8sv1.ResourceRequirements, requestedHookSidecar hooks.HookSidecar, userId int64) *ContainerSpecRenderer {
 	sidecarOpts := []Option{
 		WithResourceRequirements(resources),
-		WithVolumeMounts(sidecarVolumeMount()),
 		WithArgs(requestedHookSidecar.Args),
 	}
+
+	var mounts []k8sv1.VolumeMount
+	mounts = append(mounts, sidecarVolumeMount())
+	if requestedHookSidecar.ConfigMap != nil {
+		mounts = append(mounts, configMapVolumeMount(*requestedHookSidecar.ConfigMap))
+	}
+	if requestedHookSidecar.PVC != nil {
+		mounts = append(mounts, pvcVolumeMount(*requestedHookSidecar.PVC))
+	}
+	sidecarOpts = append(sidecarOpts, WithVolumeMounts(mounts...))
 
 	if util.IsNonRootVMI(vmiSpec) {
 		sidecarOpts = append(sidecarOpts, WithNonRoot(userId))
@@ -762,6 +808,21 @@ func sidecarVolumeMount() k8sv1.VolumeMount {
 	}
 }
 
+func configMapVolumeMount(v hooks.ConfigMap) k8sv1.VolumeMount {
+	return k8sv1.VolumeMount{
+		Name:      v.Name,
+		MountPath: v.HookPath,
+		SubPath:   v.Key,
+	}
+}
+
+func pvcVolumeMount(v hooks.PVC) k8sv1.VolumeMount {
+	return k8sv1.VolumeMount{
+		Name:      v.Name,
+		MountPath: v.VolumePath,
+	}
+}
+
 func gracePeriodInSeconds(vmi *v1.VirtualMachineInstance) int64 {
 	if vmi.Spec.TerminationGracePeriodSeconds != nil {
 		return *vmi.Spec.TerminationGracePeriodSeconds
@@ -778,6 +839,9 @@ func (t *templateService) RenderHotplugAttachmentPodTemplate(volumes []*v1.Volum
 	runUser := int64(util.NonRootUID)
 	sharedMount := k8sv1.MountPropagationHostToContainer
 	command := []string{"/bin/sh", "-c", "/usr/bin/container-disk --copy-path /path/hp"}
+
+	tmpTolerations := make([]k8sv1.Toleration, len(ownerPod.Spec.Tolerations))
+	copy(tmpTolerations, ownerPod.Spec.Tolerations)
 
 	pod := &k8sv1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -843,6 +907,7 @@ func (t *templateService) RenderHotplugAttachmentPodTemplate(volumes []*v1.Volum
 					},
 				},
 			},
+			Tolerations:                   tmpTolerations,
 			Volumes:                       []k8sv1.Volume{emptyDirVolume(hotplugDisks)},
 			TerminationGracePeriodSeconds: &zero,
 		},
@@ -917,6 +982,9 @@ func (t *templateService) RenderHotplugAttachmentTriggerPodTemplate(volume *v1.V
 		annotationsList[v1.EphemeralProvisioningObject] = "true"
 	}
 
+	tmpTolerations := make([]k8sv1.Toleration, len(ownerPod.Spec.Tolerations))
+	copy(tmpTolerations, ownerPod.Spec.Tolerations)
+
 	pod := &k8sv1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "hp-volume-",
@@ -974,6 +1042,7 @@ func (t *templateService) RenderHotplugAttachmentTriggerPodTemplate(volume *v1.V
 					},
 				},
 			},
+			Tolerations: tmpTolerations,
 			Volumes: []k8sv1.Volume{
 				{
 					Name: volume.Name,
@@ -1209,7 +1278,7 @@ func wrapGuestAgentPingWithVirtProbe(vmi *v1.VirtualMachineInstance, probe *k8sv
 
 func alignPodMultiCategorySecurity(pod *k8sv1.Pod, vmi *v1.VirtualMachineInstance, selinuxType string, dockerSELinuxMCSWorkaround bool, customPolicyDisabled bool) {
 	if selinuxType == "" {
-		if !customPolicyDisabled && util.IsPasstVMI(vmi) {
+		if !customPolicyDisabled && util.IsPasstVMI(&vmi.Spec) {
 			// If no SELinux type was specified, use our custom type for VMIs that need it
 			selinuxType = customSELinuxType
 		}
@@ -1393,12 +1462,17 @@ func (t *templateService) doesVMIRequireAutoCPULimits(vmi *v1.VirtualMachineInst
 }
 
 func (t *templateService) VMIResourcePredicates(vmi *v1.VirtualMachineInstance, networkToResourceMap map[string]string) VMIResourcePredicates {
-	memoryOverhead := GetMemoryOverhead(vmi, t.clusterConfig.GetClusterCPUArch(), t.clusterConfig.GetConfig().AdditionalGuestMemoryOverheadRatio)
+	// Set default with vmi Architecture. compatible with multi-architecture hybrid environments
+	vmiCPUArch := vmi.Spec.Architecture
+	if vmiCPUArch == "" {
+		vmiCPUArch = t.clusterConfig.GetClusterCPUArch()
+	}
+	memoryOverhead := GetMemoryOverhead(vmi, vmiCPUArch, t.clusterConfig.GetConfig().AdditionalGuestMemoryOverheadRatio)
 	withCPULimits := t.doesVMIRequireAutoCPULimits(vmi)
 	return VMIResourcePredicates{
 		vmi: vmi,
 		resourceRules: []VMIResourceRule{
-			NewVMIResourceRule(doesVMIRequireDedicatedCPU, WithCPUPinning(vmi.Spec.Domain.CPU)),
+			NewVMIResourceRule(doesVMIRequireDedicatedCPU, WithCPUPinning(vmi.Spec.Domain.CPU, vmi.Annotations)),
 			NewVMIResourceRule(not(doesVMIRequireDedicatedCPU), WithoutDedicatedCPU(vmi.Spec.Domain.CPU, t.clusterConfig.GetCPUAllocationRatio(), withCPULimits)),
 			NewVMIResourceRule(util.HasHugePages, WithHugePages(vmi.Spec.Domain.Memory, memoryOverhead)),
 			NewVMIResourceRule(not(util.HasHugePages), WithMemoryOverhead(vmi.Spec.Domain.Resources, memoryOverhead)),

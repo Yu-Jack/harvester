@@ -1224,6 +1224,12 @@ var CRDsValidation map[string]string = map[string]string{
                 binding:
                   additionalProperties:
                     properties:
+                      domainAttachmentType:
+                        description: 'DomainAttachmentType is a standard domain network
+                          attachment method kubevirt supports. Supported values: "tap".
+                          The standard domain attachment can be used instead or in
+                          addition to the sidecarImage. version: 1alphav1'
+                        type: string
                       networkAttachmentDefinition:
                         description: 'NetworkAttachmentDefinition references to a
                           NetworkAttachmentDefinition CR object. Format: <name>, <namespace>/<name>.
@@ -5952,9 +5958,8 @@ var CRDsValidation map[string]string = map[string]string{
                                   de:ad:00:00:be:af or DE-AD-00-00-BE-AF.'
                                 type: string
                               macvtap:
-                                description: InterfaceMacvtap connects to a given
-                                  network by extending the Kubernetes node's L2 networks
-                                  via a macvtap interface.
+                                description: Deprecated, please refer to Kubevirt
+                                  user guide for alternatives.
                                 type: object
                               masquerade:
                                 description: InterfaceMasquerade connects to a given
@@ -5972,7 +5977,8 @@ var CRDsValidation map[string]string = map[string]string{
                                   match the Name of a Network.
                                 type: string
                               passt:
-                                description: InterfacePasst connects to a given network.
+                                description: Deprecated, please refer to Kubevirt
+                                  user guide for alternatives.
                                 type: object
                               pciAddress:
                                 description: 'If specified, the virtual network interface
@@ -6322,6 +6328,16 @@ var CRDsValidation map[string]string = map[string]string{
                     firmware:
                       description: Firmware.
                       properties:
+                        acpi:
+                          description: Information that can be set in the ACPI table
+                          properties:
+                            slicNameRef:
+                              description: 'SlicNameRef should match the volume name
+                                of a secret object. The data in the secret should
+                                be a binary blob that follows the ACPI SLIC standard,
+                                see: https://learn.microsoft.com/en-us/previous-versions/windows/hardware/design/dn653305(v=vs.85)'
+                              type: string
+                          type: object
                         bootloader:
                           description: Settings to control the bootloader that is
                             used.
@@ -6508,9 +6524,20 @@ var CRDsValidation map[string]string = map[string]string{
                   - devices
                   type: object
                 evictionStrategy:
-                  description: EvictionStrategy can be set to "LiveMigrate" if the
-                    VirtualMachineInstance should be migrated instead of shut-off
-                    in case of a node drain.
+                  description: 'EvictionStrategy describes the strategy to follow
+                    when a node drain occurs. The possible options are: - "None":
+                    No action will be taken, according to the specified ''RunStrategy''
+                    the VirtualMachine will be restarted or shutdown. - "LiveMigrate":
+                    the VirtualMachineInstance will be migrated instead of being shutdown.
+                    - "LiveMigrateIfPossible": the same as "LiveMigrate" but only
+                    if the VirtualMachine is Live-Migratable, otherwise it will behave
+                    as "None". - "External": the VirtualMachineInstance will be protected
+                    by a PDB and ''vmi.Status.EvacuationNodeName'' will be set on
+                    eviction. This is mainly useful for cluster-api-provider-kubevirt
+                    (capk) which needs a way for VMI''s to be blocked from eviction,
+                    yet signal capk that eviction has been called on the VMI so the
+                    capk controller can handle tearing the VMI down. Details can be
+                    found in the commit description https://github.com/kubevirt/kubevirt/commit/c1d77face705c8b126696bac9a3ee3825f27f1fa.'
                   type: string
                 hostname:
                   description: Specifies the hostname of the vmi If not specified,
@@ -7556,6 +7583,7 @@ var CRDsValidation map[string]string = map[string]string{
           format: int64
           type: integer
         printableStatus:
+          default: Stopped
           description: PrintableStatus is a human readable, high-level representation
             of the status of the virtual machine
           type: string
@@ -7933,6 +7961,24 @@ var CRDsValidation map[string]string = map[string]string{
           required:
           - kind
           - name
+          type: object
+        template:
+          description: For a detailed description, please refer to https://kubevirt.io/user-guide/operations/clone_api/#label-annotation-filters.
+          properties:
+            annotationFilters:
+              description: 'Example use: "!some/key*". For a detailed description,
+                please refer to https://kubevirt.io/user-guide/operations/clone_api/#label-annotation-filters.'
+              items:
+                type: string
+              type: array
+              x-kubernetes-list-type: atomic
+            labelFilters:
+              description: 'Example use: "!some/key*". For a detailed description,
+                please refer to https://kubevirt.io/user-guide/operations/clone_api/#label-annotation-filters.'
+              items:
+                type: string
+              type: array
+              x-kubernetes-list-type: atomic
           type: object
       required:
       - source
@@ -10495,9 +10541,8 @@ var CRDsValidation map[string]string = map[string]string{
                           or DE-AD-00-00-BE-AF.'
                         type: string
                       macvtap:
-                        description: InterfaceMacvtap connects to a given network
-                          by extending the Kubernetes node's L2 networks via a macvtap
-                          interface.
+                        description: Deprecated, please refer to Kubevirt user guide
+                          for alternatives.
                         type: object
                       masquerade:
                         description: InterfaceMasquerade connects to a given network
@@ -10513,7 +10558,8 @@ var CRDsValidation map[string]string = map[string]string{
                           to the associated networks. Must match the Name of a Network.
                         type: string
                       passt:
-                        description: InterfacePasst connects to a given network.
+                        description: Deprecated, please refer to Kubevirt user guide
+                          for alternatives.
                         type: object
                       pciAddress:
                         description: 'If specified, the virtual network interface
@@ -10834,6 +10880,15 @@ var CRDsValidation map[string]string = map[string]string{
             firmware:
               description: Firmware.
               properties:
+                acpi:
+                  description: Information that can be set in the ACPI table
+                  properties:
+                    slicNameRef:
+                      description: 'SlicNameRef should match the volume name of a
+                        secret object. The data in the secret should be a binary blob
+                        that follows the ACPI SLIC standard, see: https://learn.microsoft.com/en-us/previous-versions/windows/hardware/design/dn653305(v=vs.85)'
+                      type: string
+                  type: object
                 bootloader:
                   description: Settings to control the bootloader that is used.
                   properties:
@@ -11008,8 +11063,19 @@ var CRDsValidation map[string]string = map[string]string{
           - devices
           type: object
         evictionStrategy:
-          description: EvictionStrategy can be set to "LiveMigrate" if the VirtualMachineInstance
-            should be migrated instead of shut-off in case of a node drain.
+          description: 'EvictionStrategy describes the strategy to follow when a node
+            drain occurs. The possible options are: - "None": No action will be taken,
+            according to the specified ''RunStrategy'' the VirtualMachine will be
+            restarted or shutdown. - "LiveMigrate": the VirtualMachineInstance will
+            be migrated instead of being shutdown. - "LiveMigrateIfPossible": the
+            same as "LiveMigrate" but only if the VirtualMachine is Live-Migratable,
+            otherwise it will behave as "None". - "External": the VirtualMachineInstance
+            will be protected by a PDB and ''vmi.Status.EvacuationNodeName'' will
+            be set on eviction. This is mainly useful for cluster-api-provider-kubevirt
+            (capk) which needs a way for VMI''s to be blocked from eviction, yet signal
+            capk that eviction has been called on the VMI so the capk controller can
+            handle tearing the VMI down. Details can be found in the commit description
+            https://github.com/kubevirt/kubevirt/commit/c1d77face705c8b126696bac9a3ee3825f27f1fa.'
           type: string
         hostname:
           description: Specifies the hostname of the vmi If not specified, the hostname
@@ -12051,6 +12117,26 @@ var CRDsValidation map[string]string = map[string]string{
                 type: integer
             type: object
           type: array
+        kernelBootStatus:
+          description: KernelBootStatus contains info about the kernelBootContainer
+          properties:
+            initrdInfo:
+              description: InitrdInfo show info about the initrd file
+              properties:
+                checksum:
+                  description: Checksum is the checksum of the initrd file
+                  format: int32
+                  type: integer
+              type: object
+            kernelInfo:
+              description: KernelInfo show info about the kernel image
+              properties:
+                checksum:
+                  description: Checksum is the checksum of the kernel image
+                  format: int32
+                  type: integer
+              type: object
+          type: object
         launcherContainerImageVersion:
           description: LauncherContainerImageVersion indicates what container image
             is currently active for the vmi.
@@ -12322,6 +12408,16 @@ var CRDsValidation map[string]string = map[string]string{
             description: VolumeStatus represents information about the status of volumes
               attached to the VirtualMachineInstance.
             properties:
+              containerDiskVolume:
+                description: ContainerDiskVolume shows info about the containerdisk,
+                  if the volume is a containerdisk
+                properties:
+                  checksum:
+                    description: Checksum is the checksum of the rootdisk or kernel
+                      artifacts inside the containerdisk
+                    format: int32
+                    type: integer
+                type: object
               hotplugVolume:
                 description: If the volume is hotplug, this will contain the hotplug
                   status.
@@ -13224,9 +13320,8 @@ var CRDsValidation map[string]string = map[string]string{
                           or DE-AD-00-00-BE-AF.'
                         type: string
                       macvtap:
-                        description: InterfaceMacvtap connects to a given network
-                          by extending the Kubernetes node's L2 networks via a macvtap
-                          interface.
+                        description: Deprecated, please refer to Kubevirt user guide
+                          for alternatives.
                         type: object
                       masquerade:
                         description: InterfaceMasquerade connects to a given network
@@ -13242,7 +13337,8 @@ var CRDsValidation map[string]string = map[string]string{
                           to the associated networks. Must match the Name of a Network.
                         type: string
                       passt:
-                        description: InterfacePasst connects to a given network.
+                        description: Deprecated, please refer to Kubevirt user guide
+                          for alternatives.
                         type: object
                       pciAddress:
                         description: 'If specified, the virtual network interface
@@ -13563,6 +13659,15 @@ var CRDsValidation map[string]string = map[string]string{
             firmware:
               description: Firmware.
               properties:
+                acpi:
+                  description: Information that can be set in the ACPI table
+                  properties:
+                    slicNameRef:
+                      description: 'SlicNameRef should match the volume name of a
+                        secret object. The data in the secret should be a binary blob
+                        that follows the ACPI SLIC standard, see: https://learn.microsoft.com/en-us/previous-versions/windows/hardware/design/dn653305(v=vs.85)'
+                      type: string
+                  type: object
                 bootloader:
                   description: Settings to control the bootloader that is used.
                   properties:
@@ -15407,9 +15512,8 @@ var CRDsValidation map[string]string = map[string]string{
                                   de:ad:00:00:be:af or DE-AD-00-00-BE-AF.'
                                 type: string
                               macvtap:
-                                description: InterfaceMacvtap connects to a given
-                                  network by extending the Kubernetes node's L2 networks
-                                  via a macvtap interface.
+                                description: Deprecated, please refer to Kubevirt
+                                  user guide for alternatives.
                                 type: object
                               masquerade:
                                 description: InterfaceMasquerade connects to a given
@@ -15427,7 +15531,8 @@ var CRDsValidation map[string]string = map[string]string{
                                   match the Name of a Network.
                                 type: string
                               passt:
-                                description: InterfacePasst connects to a given network.
+                                description: Deprecated, please refer to Kubevirt
+                                  user guide for alternatives.
                                 type: object
                               pciAddress:
                                 description: 'If specified, the virtual network interface
@@ -15777,6 +15882,16 @@ var CRDsValidation map[string]string = map[string]string{
                     firmware:
                       description: Firmware.
                       properties:
+                        acpi:
+                          description: Information that can be set in the ACPI table
+                          properties:
+                            slicNameRef:
+                              description: 'SlicNameRef should match the volume name
+                                of a secret object. The data in the secret should
+                                be a binary blob that follows the ACPI SLIC standard,
+                                see: https://learn.microsoft.com/en-us/previous-versions/windows/hardware/design/dn653305(v=vs.85)'
+                              type: string
+                          type: object
                         bootloader:
                           description: Settings to control the bootloader that is
                             used.
@@ -15963,9 +16078,20 @@ var CRDsValidation map[string]string = map[string]string{
                   - devices
                   type: object
                 evictionStrategy:
-                  description: EvictionStrategy can be set to "LiveMigrate" if the
-                    VirtualMachineInstance should be migrated instead of shut-off
-                    in case of a node drain.
+                  description: 'EvictionStrategy describes the strategy to follow
+                    when a node drain occurs. The possible options are: - "None":
+                    No action will be taken, according to the specified ''RunStrategy''
+                    the VirtualMachine will be restarted or shutdown. - "LiveMigrate":
+                    the VirtualMachineInstance will be migrated instead of being shutdown.
+                    - "LiveMigrateIfPossible": the same as "LiveMigrate" but only
+                    if the VirtualMachine is Live-Migratable, otherwise it will behave
+                    as "None". - "External": the VirtualMachineInstance will be protected
+                    by a PDB and ''vmi.Status.EvacuationNodeName'' will be set on
+                    eviction. This is mainly useful for cluster-api-provider-kubevirt
+                    (capk) which needs a way for VMI''s to be blocked from eviction,
+                    yet signal capk that eviction has been called on the VMI so the
+                    capk controller can handle tearing the VMI down. Details can be
+                    found in the commit description https://github.com/kubevirt/kubevirt/commit/c1d77face705c8b126696bac9a3ee3825f27f1fa.'
                   type: string
                 hostname:
                   description: Specifies the hostname of the vmi If not specified,
@@ -19791,9 +19917,8 @@ var CRDsValidation map[string]string = map[string]string{
                                           de:ad:00:00:be:af or DE-AD-00-00-BE-AF.'
                                         type: string
                                       macvtap:
-                                        description: InterfaceMacvtap connects to
-                                          a given network by extending the Kubernetes
-                                          node's L2 networks via a macvtap interface.
+                                        description: Deprecated, please refer to Kubevirt
+                                          user guide for alternatives.
                                         type: object
                                       masquerade:
                                         description: InterfaceMasquerade connects
@@ -19813,8 +19938,8 @@ var CRDsValidation map[string]string = map[string]string{
                                           networks. Must match the Name of a Network.
                                         type: string
                                       passt:
-                                        description: InterfacePasst connects to a
-                                          given network.
+                                        description: Deprecated, please refer to Kubevirt
+                                          user guide for alternatives.
                                         type: object
                                       pciAddress:
                                         description: 'If specified, the virtual network
@@ -20183,6 +20308,17 @@ var CRDsValidation map[string]string = map[string]string{
                             firmware:
                               description: Firmware.
                               properties:
+                                acpi:
+                                  description: Information that can be set in the
+                                    ACPI table
+                                  properties:
+                                    slicNameRef:
+                                      description: 'SlicNameRef should match the volume
+                                        name of a secret object. The data in the secret
+                                        should be a binary blob that follows the ACPI
+                                        SLIC standard, see: https://learn.microsoft.com/en-us/previous-versions/windows/hardware/design/dn653305(v=vs.85)'
+                                      type: string
+                                  type: object
                                 bootloader:
                                   description: Settings to control the bootloader
                                     that is used.
@@ -20381,9 +20517,22 @@ var CRDsValidation map[string]string = map[string]string{
                           - devices
                           type: object
                         evictionStrategy:
-                          description: EvictionStrategy can be set to "LiveMigrate"
-                            if the VirtualMachineInstance should be migrated instead
-                            of shut-off in case of a node drain.
+                          description: 'EvictionStrategy describes the strategy to
+                            follow when a node drain occurs. The possible options
+                            are: - "None": No action will be taken, according to the
+                            specified ''RunStrategy'' the VirtualMachine will be restarted
+                            or shutdown. - "LiveMigrate": the VirtualMachineInstance
+                            will be migrated instead of being shutdown. - "LiveMigrateIfPossible":
+                            the same as "LiveMigrate" but only if the VirtualMachine
+                            is Live-Migratable, otherwise it will behave as "None".
+                            - "External": the VirtualMachineInstance will be protected
+                            by a PDB and ''vmi.Status.EvacuationNodeName'' will be
+                            set on eviction. This is mainly useful for cluster-api-provider-kubevirt
+                            (capk) which needs a way for VMI''s to be blocked from
+                            eviction, yet signal capk that eviction has been called
+                            on the VMI so the capk controller can handle tearing the
+                            VMI down. Details can be found in the commit description
+                            https://github.com/kubevirt/kubevirt/commit/c1d77face705c8b126696bac9a3ee3825f27f1fa.'
                           type: string
                         hostname:
                           description: Specifies the hostname of the vmi If not specified,
@@ -24963,10 +25112,8 @@ var CRDsValidation map[string]string = map[string]string{
                                               example: de:ad:00:00:be:af or DE-AD-00-00-BE-AF.'
                                             type: string
                                           macvtap:
-                                            description: InterfaceMacvtap connects
-                                              to a given network by extending the
-                                              Kubernetes node's L2 networks via a
-                                              macvtap interface.
+                                            description: Deprecated, please refer
+                                              to Kubevirt user guide for alternatives.
                                             type: object
                                           masquerade:
                                             description: InterfaceMasquerade connects
@@ -24986,8 +25133,8 @@ var CRDsValidation map[string]string = map[string]string{
                                               networks. Must match the Name of a Network.
                                             type: string
                                           passt:
-                                            description: InterfacePasst connects to
-                                              a given network.
+                                            description: Deprecated, please refer
+                                              to Kubevirt user guide for alternatives.
                                             type: object
                                           pciAddress:
                                             description: 'If specified, the virtual
@@ -25369,6 +25516,18 @@ var CRDsValidation map[string]string = map[string]string{
                                 firmware:
                                   description: Firmware.
                                   properties:
+                                    acpi:
+                                      description: Information that can be set in
+                                        the ACPI table
+                                      properties:
+                                        slicNameRef:
+                                          description: 'SlicNameRef should match the
+                                            volume name of a secret object. The data
+                                            in the secret should be a binary blob
+                                            that follows the ACPI SLIC standard, see:
+                                            https://learn.microsoft.com/en-us/previous-versions/windows/hardware/design/dn653305(v=vs.85)'
+                                          type: string
+                                      type: object
                                     bootloader:
                                       description: Settings to control the bootloader
                                         that is used.
@@ -25573,9 +25732,23 @@ var CRDsValidation map[string]string = map[string]string{
                               - devices
                               type: object
                             evictionStrategy:
-                              description: EvictionStrategy can be set to "LiveMigrate"
-                                if the VirtualMachineInstance should be migrated instead
-                                of shut-off in case of a node drain.
+                              description: 'EvictionStrategy describes the strategy
+                                to follow when a node drain occurs. The possible options
+                                are: - "None": No action will be taken, according
+                                to the specified ''RunStrategy'' the VirtualMachine
+                                will be restarted or shutdown. - "LiveMigrate": the
+                                VirtualMachineInstance will be migrated instead of
+                                being shutdown. - "LiveMigrateIfPossible": the same
+                                as "LiveMigrate" but only if the VirtualMachine is
+                                Live-Migratable, otherwise it will behave as "None".
+                                - "External": the VirtualMachineInstance will be protected
+                                by a PDB and ''vmi.Status.EvacuationNodeName'' will
+                                be set on eviction. This is mainly useful for cluster-api-provider-kubevirt
+                                (capk) which needs a way for VMI''s to be blocked
+                                from eviction, yet signal capk that eviction has been
+                                called on the VMI so the capk controller can handle
+                                tearing the VMI down. Details can be found in the
+                                commit description https://github.com/kubevirt/kubevirt/commit/c1d77face705c8b126696bac9a3ee3825f27f1fa.'
                               type: string
                             hostname:
                               description: Specifies the hostname of the vmi If not
@@ -26733,6 +26906,7 @@ var CRDsValidation map[string]string = map[string]string{
                       format: int64
                       type: integer
                     printableStatus:
+                      default: Stopped
                       description: PrintableStatus is a human readable, high-level
                         representation of the status of the virtual machine
                       type: string

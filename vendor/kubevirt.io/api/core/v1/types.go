@@ -109,9 +109,12 @@ type VirtualMachineInstanceSpec struct {
 	// +listMapKey=topologyKey
 	// +listMapKey=whenUnsatisfiable
 	TopologySpreadConstraints []k8sv1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty" patchStrategy:"merge" patchMergeKey:"topologyKey"`
-	// EvictionStrategy can be set to "LiveMigrate" if the VirtualMachineInstance should be
-	// migrated instead of shut-off in case of a node drain.
-	//
+	// EvictionStrategy describes the strategy to follow when a node drain occurs.
+	// The possible options are:
+	// - "None": No action will be taken, according to the specified 'RunStrategy' the VirtualMachine will be restarted or shutdown.
+	// - "LiveMigrate": the VirtualMachineInstance will be migrated instead of being shutdown.
+	// - "LiveMigrateIfPossible": the same as "LiveMigrate" but only if the VirtualMachine is Live-Migratable, otherwise it will behave as "None".
+	// - "External": the VirtualMachineInstance will be protected by a PDB and `vmi.Status.EvacuationNodeName` will be set on eviction. This is mainly useful for cluster-api-provider-kubevirt (capk) which needs a way for VMI's to be blocked from eviction, yet signal capk that eviction has been called on the VMI so the capk controller can handle tearing the VMI down. Details can be found in the commit description https://github.com/kubevirt/kubevirt/commit/c1d77face705c8b126696bac9a3ee3825f27f1fa.
 	// +optional
 	EvictionStrategy *EvictionStrategy `json:"evictionStrategy,omitempty"`
 	// StartStrategy can be set to "Paused" if Virtual Machine should be started in paused state.
@@ -247,6 +250,10 @@ type VirtualMachineInstanceStatus struct {
 	// +listType=atomic
 	VolumeStatus []VolumeStatus `json:"volumeStatus,omitempty"`
 
+	// KernelBootStatus contains info about the kernelBootContainer
+	// +optional
+	KernelBootStatus *KernelBootStatus `json:"kernelBootStatus,omitempty"`
+
 	// FSFreezeStatus is the state of the fs of the guest
 	// it can be either frozen or thawed
 	// +optional
@@ -336,6 +343,28 @@ type VolumeStatus struct {
 	Size int64 `json:"size,omitempty"`
 	// If the volume is memorydump volume, this will contain the memorydump info.
 	MemoryDumpVolume *DomainMemoryDumpInfo `json:"memoryDumpVolume,omitempty"`
+	// ContainerDiskVolume shows info about the containerdisk, if the volume is a containerdisk
+	ContainerDiskVolume *ContainerDiskInfo `json:"containerDiskVolume,omitempty"`
+}
+
+// KernelInfo show info about the kernel image
+type KernelInfo struct {
+	// Checksum is the checksum of the kernel image
+	Checksum uint32 `json:"checksum,omitempty"`
+}
+
+// InitrdInfo show info about the initrd file
+type InitrdInfo struct {
+	// Checksum is the checksum of the initrd file
+	Checksum uint32 `json:"checksum,omitempty"`
+}
+
+// KernelBootStatus contains info about the kernelBootContainer
+type KernelBootStatus struct {
+	// KernelInfo show info about the kernel image
+	KernelInfo *KernelInfo `json:"kernelInfo,omitempty"`
+	// InitrdInfo show info about the initrd file
+	InitrdInfo *InitrdInfo `json:"initrdInfo,omitempty"`
 }
 
 // DomainMemoryDumpInfo represents the memory dump information
@@ -356,6 +385,12 @@ type HotplugVolumeStatus struct {
 	AttachPodName string `json:"attachPodName,omitempty"`
 	// AttachPodUID is the UID of the pod used to attach the volume to the node.
 	AttachPodUID types.UID `json:"attachPodUID,omitempty"`
+}
+
+// ContainerDiskInfo shows info about the containerdisk
+type ContainerDiskInfo struct {
+	// Checksum is the checksum of the rootdisk or kernel artifacts inside the containerdisk
+	Checksum uint32 `json:"checksum,omitempty"`
 }
 
 // VolumePhase indicates the current phase of the hotplug process.
@@ -523,6 +558,14 @@ const (
 	VirtualMachineInstanceVCPUChange = "HotVCPUChange"
 	// Indicates that the VMI is hot(un)plugging memory
 	VirtualMachineInstanceMemoryChange = "HotMemoryChange"
+
+	// Summarizes that all the DataVolumes attached to the VMI are Ready or not
+	VirtualMachineInstanceDataVolumesReady = "DataVolumesReady"
+
+	// Reason means that not all of the VMI's DVs are ready
+	VirtualMachineInstanceReasonNotAllDVsReady = "NotAllDVsReady"
+	// Reason means that all of the VMI's DVs are bound and not running
+	VirtualMachineInstanceReasonAllDVsReady = "AllDVsReady"
 )
 
 const (
@@ -994,6 +1037,12 @@ const (
 	// AutoMemoryLimitsRatioLabel allows to use a custom ratio for auto memory limits calculation.
 	// Must be a float >= 1.
 	AutoMemoryLimitsRatioLabel string = "alpha.kubevirt.io/auto-memory-limits-ratio"
+
+	// MigrationInterfaceName is an arbitrary name used in virt-handler to connect it to a dedicated migration network
+	MigrationInterfaceName string = "migration0"
+
+	// EmulatorThreadCompleteToEvenParity alpha annotation will cause Kubevirt to complete the VMI's CPU count to an even parity when IsolateEmulatorThread options are requested
+	EmulatorThreadCompleteToEvenParity string = "alpha.kubevirt.io/EmulatorThreadCompleteToEvenParity"
 )
 
 func NewVMI(name string, uid types.UID) *VirtualMachineInstance {
@@ -1520,6 +1569,7 @@ type VirtualMachineStatus struct {
 	// Ready indicates if the virtual machine is running and ready
 	Ready bool `json:"ready,omitempty"`
 	// PrintableStatus is a human readable, high-level representation of the status of the virtual machine
+	// +kubebuilder:default=Stopped
 	PrintableStatus VirtualMachinePrintableStatus `json:"printableStatus,omitempty"`
 	// Hold the state information of the VirtualMachine and its VirtualMachineInstance
 	Conditions []VirtualMachineCondition `json:"conditions,omitempty" optional:"true"`
@@ -1613,6 +1663,9 @@ const (
 	// VirtualMachinePaused is added in a virtual machine when its vmi
 	// signals with its own condition that it is paused.
 	VirtualMachinePaused VirtualMachineConditionType = "Paused"
+
+	// VirtualMachineInitialized means the virtual machine object has been seen by the VM controller
+	VirtualMachineInitialized VirtualMachineConditionType = "Initialized"
 )
 
 type HostDiskType string
@@ -2174,13 +2227,20 @@ type VirtualMachineInstanceFileSystemList struct {
 	Items           []VirtualMachineInstanceFileSystem `json:"items"`
 }
 
+// VirtualMachineInstanceFileSystemDisk represents the guest os FS disks
+type VirtualMachineInstanceFileSystemDisk struct {
+	Serial  string `json:"serial"`
+	BusType string `json:"bus-type"`
+}
+
 // VirtualMachineInstanceFileSystem represents guest os disk
 type VirtualMachineInstanceFileSystem struct {
-	DiskName       string `json:"diskName"`
-	MountPoint     string `json:"mountPoint"`
-	FileSystemType string `json:"fileSystemType"`
-	UsedBytes      int    `json:"usedBytes"`
-	TotalBytes     int    `json:"totalBytes"`
+	DiskName       string                                 `json:"diskName"`
+	MountPoint     string                                 `json:"mountPoint"`
+	FileSystemType string                                 `json:"fileSystemType"`
+	UsedBytes      int                                    `json:"usedBytes"`
+	TotalBytes     int                                    `json:"totalBytes"`
+	Disk           []VirtualMachineInstanceFileSystemDisk `json:"disk,omitempty"`
 }
 
 // FreezeUnfreezeTimeout represent the time unfreeze will be triggered if guest was not unfrozen by unfreeze command
@@ -2683,7 +2743,20 @@ type InterfaceBindingPlugin struct {
 	// If namespace is not specified, VMI namespace is assumed.
 	// version: 1alphav1
 	NetworkAttachmentDefinition string `json:"networkAttachmentDefinition,omitempty"`
+	// DomainAttachmentType is a standard domain network attachment method kubevirt supports.
+	// Supported values: "tap".
+	// The standard domain attachment can be used instead or in addition to the sidecarImage.
+	// version: 1alphav1
+	DomainAttachmentType DomainAttachmentType `json:"domainAttachmentType,omitempty"`
 }
+
+type DomainAttachmentType string
+
+const (
+	// Tap domain attachment type is a generic way to bind ethernet connection into guests using tap device
+	// https://libvirt.org/formatdomain.html#generic-ethernet-connection.
+	Tap DomainAttachmentType = "tap"
+)
 
 // GuestAgentPing configures the guest-agent based ping probe
 type GuestAgentPing struct {
