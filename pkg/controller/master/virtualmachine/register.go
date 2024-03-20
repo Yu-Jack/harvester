@@ -3,6 +3,9 @@ package virtualmachine
 import (
 	"context"
 
+	"github.com/sirupsen/logrus"
+	kubevirtv1 "kubevirt.io/api/core/v1"
+
 	"github.com/harvester/harvester/pkg/config"
 	"github.com/harvester/harvester/pkg/util/resourcequota"
 )
@@ -66,6 +69,15 @@ func Register(ctx context.Context, management *config.Management, _ config.Optio
 	virtualMachineClient.OnChange(ctx, vmControllerStoreRunStrategyControllerName, vmCtrl.StoreRunStrategy)
 	virtualMachineClient.OnChange(ctx, vmControllerSyncLabelsToVmi, vmCtrl.SyncLabelsToVmi)
 	virtualMachineClient.OnChange(ctx, vmControllerSetHaltIfInsufficientResourceQuotaControllerName, vmCtrl.SetHaltIfInsufficientResourceQuota)
+	virtualMachineClient.OnChange(ctx, "test", func(_ string, machine *kubevirtv1.VirtualMachine) (*kubevirtv1.VirtualMachine, error) {
+		if machine == nil {
+			return machine, nil
+		}
+
+		logrus.Info("vm: ", machine.Name, " status: ", *machine.Spec.RunStrategy, machine.Status.PrintableStatus)
+
+		return machine, nil
+	})
 
 	// registers the vmi controller
 	var virtualMachineCache = virtualMachineClient.Cache()
@@ -82,6 +94,16 @@ func Register(ctx context.Context, management *config.Management, _ config.Optio
 	virtualMachineInstanceClient.OnRemove(ctx, vmiControllerUnsetOwnerOfPVCsControllerName, vmiCtrl.UnsetOwnerOfPVCs)
 	virtualMachineInstanceClient.OnChange(ctx, vmiControllerReconcileFromHostLabelsControllerName, vmiCtrl.ReconcileFromHostLabels)
 	virtualMachineInstanceClient.OnChange(ctx, vmiControllerSetHaltIfOccurExceededQuotaControllerName, vmiCtrl.StopVMIfExceededQuota)
+	virtualMachineInstanceClient.OnChange(ctx, "asdasd", func(s string, instance *kubevirtv1.VirtualMachineInstance) (*kubevirtv1.VirtualMachineInstance, error) {
+		if instance == nil {
+			logrus.Info("is gone~~~~~")
+			return instance, nil
+		}
+
+		logrus.Info("vmi: ", instance.Name)
+
+		return instance, nil
+	})
 
 	// register the vm network controller upon the VMI changes
 	var vmNetworkCtl = &VMNetworkController{
