@@ -173,7 +173,7 @@ func (h *USBDeviceClaimHandler) OnRemove(_ string, claim *harvesterv1.USBDeviceC
 	virtDp.Spec.Configuration.PermittedHostDevices.USB = usbs
 
 	if !reflect.DeepEqual(virt.Spec.Configuration.PermittedHostDevices.USB, virtDp.Spec.Configuration.PermittedHostDevices.USB) {
-		if err, _ := h.virtClient.KubeVirt("harvester-system").Update(virtDp); err != nil {
+		if _, err := h.virtClient.KubeVirt("harvester-system").Update(virtDp); err != nil {
 			return claim, nil
 		}
 	}
