@@ -44,8 +44,8 @@ replace (
 	k8s.io/pod-security-admission => k8s.io/pod-security-admission v0.26.13
 	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.26.13
 
-	kubevirt.io/api => kubevirt.io/api v1.1.0
-	kubevirt.io/client-go => kubevirt.io/client-go v1.1.0
+	kubevirt.io/api => kubevirt.io/api v1.1.1
+	kubevirt.io/client-go => kubevirt.io/client-go v1.1.1
 	sigs.k8s.io/structured-merge-diff => sigs.k8s.io/structured-merge-diff v0.0.0-20190302045857-e85c7b244fd2
 )
 
@@ -90,6 +90,7 @@ require (
 	github.com/shopspring/decimal v1.3.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
+	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4
 	github.com/tidwall/gjson v1.9.3
 	github.com/urfave/cli v1.22.13
@@ -113,10 +114,10 @@ require (
 	k8s.io/kubectl v0.25.0
 	k8s.io/kubelet v0.26.13
 	k8s.io/utils v0.0.0-20230505201702-9f6742963106
-	kubevirt.io/api v1.1.0
-	kubevirt.io/client-go v1.1.0
+	kubevirt.io/api v1.1.1
+	kubevirt.io/client-go v1.1.1
 	kubevirt.io/containerized-data-importer-api v1.57.0-alpha1
-	kubevirt.io/kubevirt v1.1.0
+	kubevirt.io/kubevirt v1.1.1
 	sigs.k8s.io/cluster-api v1.4.8
 	sigs.k8s.io/controller-runtime v0.14.7
 	sigs.k8s.io/kind v0.14.0
@@ -269,7 +270,6 @@ require (
 	github.com/shirou/gopsutil/v3 v3.23.7 // indirect
 	github.com/slok/goresilience v0.2.0 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190809123943-df4f5c81cb3b // indirect

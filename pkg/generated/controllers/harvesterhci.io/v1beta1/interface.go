@@ -35,6 +35,8 @@ type Interface interface {
 	Preference() PreferenceController
 	Setting() SettingController
 	SupportBundle() SupportBundleController
+	USBDevice() USBDeviceController
+	USBDeviceClaim() USBDeviceClaimController
 	Upgrade() UpgradeController
 	UpgradeLog() UpgradeLogController
 	Version() VersionController
@@ -69,6 +71,12 @@ func (c *version) Setting() SettingController {
 }
 func (c *version) SupportBundle() SupportBundleController {
 	return NewSupportBundleController(schema.GroupVersionKind{Group: "harvesterhci.io", Version: "v1beta1", Kind: "SupportBundle"}, "supportbundles", true, c.controllerFactory)
+}
+func (c *version) USBDevice() USBDeviceController {
+	return NewUSBDeviceController(schema.GroupVersionKind{Group: "harvesterhci.io", Version: "v1beta1", Kind: "USBDevice"}, "usbdevices", false, c.controllerFactory)
+}
+func (c *version) USBDeviceClaim() USBDeviceClaimController {
+	return NewUSBDeviceClaimController(schema.GroupVersionKind{Group: "harvesterhci.io", Version: "v1beta1", Kind: "USBDeviceClaim"}, "usbdeviceclaims", false, c.controllerFactory)
 }
 func (c *version) Upgrade() UpgradeController {
 	return NewUpgradeController(schema.GroupVersionKind{Group: "harvesterhci.io", Version: "v1beta1", Kind: "Upgrade"}, "upgrades", true, c.controllerFactory)

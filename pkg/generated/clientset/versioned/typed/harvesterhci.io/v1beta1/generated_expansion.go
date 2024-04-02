@@ -28,6 +28,10 @@ type SettingExpansion interface{}
 
 type SupportBundleExpansion interface{}
 
+type USBDeviceExpansion interface{}
+
+type USBDeviceClaimExpansion interface{}
+
 type UpgradeExpansion interface{}
 
 type UpgradeLogExpansion interface{}

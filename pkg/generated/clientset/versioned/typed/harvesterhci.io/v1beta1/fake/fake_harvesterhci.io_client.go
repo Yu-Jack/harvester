@@ -48,6 +48,14 @@ func (c *FakeHarvesterhciV1beta1) SupportBundles(namespace string) v1beta1.Suppo
 	return &FakeSupportBundles{c, namespace}
 }
 
+func (c *FakeHarvesterhciV1beta1) USBDevices() v1beta1.USBDeviceInterface {
+	return &FakeUSBDevices{c}
+}
+
+func (c *FakeHarvesterhciV1beta1) USBDeviceClaims() v1beta1.USBDeviceClaimInterface {
+	return &FakeUSBDeviceClaims{c}
+}
+
 func (c *FakeHarvesterhciV1beta1) Upgrades(namespace string) v1beta1.UpgradeInterface {
 	return &FakeUpgrades{c, namespace}
 }

@@ -33,6 +33,8 @@ var (
 	PreferenceResourceName                    = "preferences"
 	SettingResourceName                       = "settings"
 	SupportBundleResourceName                 = "supportbundles"
+	USBDeviceResourceName                     = "usbdevices"
+	USBDeviceClaimResourceName                = "usbdeviceclaims"
 	UpgradeResourceName                       = "upgrades"
 	UpgradeLogResourceName                    = "upgradelogs"
 	VersionResourceName                       = "versions"
@@ -74,6 +76,10 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&SettingList{},
 		&SupportBundle{},
 		&SupportBundleList{},
+		&USBDevice{},
+		&USBDeviceList{},
+		&USBDeviceClaim{},
+		&USBDeviceClaimList{},
 		&Upgrade{},
 		&UpgradeList{},
 		&UpgradeLog{},

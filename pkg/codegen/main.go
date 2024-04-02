@@ -49,6 +49,8 @@ func main() {
 					harvesterv1.VirtualMachineTemplateVersion{},
 					harvesterv1.SupportBundle{},
 					harvesterv1.Addon{},
+					harvesterv1.USBDevice{},
+					harvesterv1.USBDeviceClaim{},
 				},
 				GenerateTypes:   true,
 				GenerateClients: true,

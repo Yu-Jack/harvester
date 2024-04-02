@@ -33,6 +33,8 @@ type HarvesterhciV1beta1Interface interface {
 	PreferencesGetter
 	SettingsGetter
 	SupportBundlesGetter
+	USBDevicesGetter
+	USBDeviceClaimsGetter
 	UpgradesGetter
 	UpgradeLogsGetter
 	VersionsGetter
@@ -66,6 +68,14 @@ func (c *HarvesterhciV1beta1Client) Settings() SettingInterface {
 
 func (c *HarvesterhciV1beta1Client) SupportBundles(namespace string) SupportBundleInterface {
 	return newSupportBundles(c, namespace)
+}
+
+func (c *HarvesterhciV1beta1Client) USBDevices() USBDeviceInterface {
+	return newUSBDevices(c)
+}
+
+func (c *HarvesterhciV1beta1Client) USBDeviceClaims() USBDeviceClaimInterface {
+	return newUSBDeviceClaims(c)
 }
 
 func (c *HarvesterhciV1beta1Client) Upgrades(namespace string) UpgradeInterface {

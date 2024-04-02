@@ -23,13 +23,12 @@ func IsVMStopped(
 		return false, fmt.Errorf("error getting run strategy for vm %s in namespace %s: %v", vm.Name, vm.Namespace, err)
 	}
 
-	// VM is stopped from GUI
-	if strategy == kubevirtv1.RunStrategyHalted {
-		return true, nil
-	}
-
 	if vm.Status.PrintableStatus != kubevirtv1.VirtualMachineStatusStopped {
 		return false, nil
+	}
+
+	if strategy == kubevirtv1.RunStrategyHalted {
+		return true, nil
 	}
 
 	// When vm is stopped inside VM, the vmi will not be deleted.

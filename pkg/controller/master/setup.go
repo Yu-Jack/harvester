@@ -23,6 +23,7 @@ import (
 	"github.com/harvester/harvester/pkg/controller/master/template"
 	"github.com/harvester/harvester/pkg/controller/master/upgrade"
 	"github.com/harvester/harvester/pkg/controller/master/upgradelog"
+	"github.com/harvester/harvester/pkg/controller/master/usb"
 	"github.com/harvester/harvester/pkg/controller/master/virtualmachine"
 )
 
@@ -53,6 +54,7 @@ var registerFuncs = []registerFunc{
 	storagenetwork.Register,
 	nodedrain.Register,
 	mcmsettings.Register,
+	usb.Register,
 }
 
 func register(ctx context.Context, management *config.Management, options config.Options) error {
