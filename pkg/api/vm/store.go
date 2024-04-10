@@ -25,6 +25,9 @@ type vmStore struct {
 }
 
 func (s *vmStore) Delete(request *types.APIRequest, _ *types.APISchema, id string) (types.APIObject, error) {
+	fmt.Println("==============Delete==================")
+	fmt.Println("request: ", request.Namespace, request.Name)
+
 	removedDisks := request.Query["removedDisks"]
 	vm, err := s.vmCache.Get(request.Namespace, request.Name)
 	if err != nil {
