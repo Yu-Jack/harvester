@@ -78,53 +78,54 @@ func (h *USBDeviceClaimHandler) OnUSBDeviceClaimChanged(_ string, usbDeviceClaim
 
 	fmt.Println(virtDp.Spec.Configuration.PermittedHostDevices.USB)
 
+	var newVirt *kubevirtv1.KubeVirt
+
 	if virt.Spec.Configuration.PermittedHostDevices == nil || !reflect.DeepEqual(virt.Spec.Configuration.PermittedHostDevices.USB, virtDp.Spec.Configuration.PermittedHostDevices.USB) {
 		fmt.Println("part1")
-		newVirt, err := h.virtClient.KubeVirt("harvester-system").Update(virtDp)
+		newVirt, err = h.virtClient.KubeVirt("harvester-system").Update(virtDp)
 		if err != nil {
 			return usbDeviceClaim, err
 		}
 		fmt.Println("part2")
+	}
 
-		// start device plugin
+	// start device plugin if kubevirt is updated.
+	if _, ok := h.devicePlugin[usbDeviceClaim.Name]; !ok && newVirt != nil {
+		pluginDevices := discoverAllowedUSBDevices(newVirt.Spec.Configuration.PermittedHostDevices.USB)
+		// same usb could have two more device with same resource name
 
-		if _, ok := h.devicePlugin[usbDeviceClaim.Name]; !ok {
-			pluginDevices := discoverAllowedUSBDevices(newVirt.Spec.Configuration.PermittedHostDevices.USB)
-			// same usb could have two more device with same resource name
+		fmt.Println("part3")
+		fmt.Println(len(pluginDevices))
+		var pluginDevice *PluginDevices
 
-			fmt.Println("part3")
-			fmt.Println(len(pluginDevices))
-			var pluginDevice *PluginDevices
-
-			for resourceName, devices := range pluginDevices {
-				fmt.Println(resourceName)
-				fmt.Println(len(devices))
-				for _, device := range devices {
-					fmt.Println("usbDevice.Status.DevicePath: ", usbDevice.Status.DevicePath)
-					fmt.Println("device.Devices[0].DevicePath: ", device.Devices[0].DevicePath)
-					if usbDevice.Status.DevicePath == device.Devices[0].DevicePath {
-						pluginDevice = device
-						break
-					}
+		for resourceName, devices := range pluginDevices {
+			fmt.Println(resourceName)
+			fmt.Println(len(devices))
+			for _, device := range devices {
+				fmt.Println("usbDevice.Status.DevicePath: ", usbDevice.Status.DevicePath)
+				fmt.Println("device.Devices[0].DevicePath: ", device.Devices[0].DevicePath)
+				if usbDevice.Status.DevicePath == device.Devices[0].DevicePath {
+					pluginDevice = device
+					break
 				}
 			}
-
-			fmt.Println("part4")
-			if pluginDevice != nil {
-				fmt.Println("Start device plugin: ", usbDevice.Name)
-				usbDevicePlugin := NewUSBDevicePlugin(usbDevice.Status.ResourceName, []*PluginDevices{pluginDevice})
-				h.devicePlugin[usbDeviceClaim.Name] = usbDevicePlugin
-				go func() {
-					fmt.Println("part6")
-					sp := make(chan struct{})
-					if err := usbDevicePlugin.Start(sp); err != nil {
-						fmt.Println(err)
-					}
-					<-sp
-				}()
-			}
-			fmt.Println("part5")
 		}
+
+		fmt.Println("part4")
+		if pluginDevice != nil {
+			fmt.Println("Start device plugin: ", usbDevice.Name)
+			usbDevicePlugin := NewUSBDevicePlugin(usbDevice.Status.ResourceName, []*PluginDevices{pluginDevice})
+			h.devicePlugin[usbDeviceClaim.Name] = usbDevicePlugin
+			go func() {
+				fmt.Println("part6")
+				sp := make(chan struct{})
+				if err := usbDevicePlugin.Start(sp); err != nil {
+					fmt.Println(err)
+				}
+				<-sp
+			}()
+		}
+		fmt.Println("part5")
 	}
 
 	return usbDeviceClaim, nil
