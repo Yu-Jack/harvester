@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 
@@ -31,6 +32,26 @@ func NewRouter(scaled *config.Scaled, restConfig *rest.Config, options config.Op
 		restConfig: restConfig,
 		options:    options,
 	}, nil
+}
+
+type Test struct{}
+
+func (t *Test) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+
+	fmt.Println("namespace: ", vars["namespace"])
+	fmt.Println("resource: ", vars["resource"])
+	fmt.Println("name: ", vars["name"])
+	fmt.Println("subresource: ", vars["subresource"])
+	fmt.Println("req.Method: ", req.Method)
+
+	rw.Write([]byte("Hello World"))
+}
+
+type Test2 struct{}
+
+func (t *Test2) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	rw.Write([]byte("Hello World"))
 }
 
 // Routes adds some customize routes to the default router
@@ -81,6 +102,12 @@ func (r *Router) Routes(h router.Handlers) http.Handler {
 	m.Path("/v1/harvester/{type}/{namespace}/{name}").Queries("link", "{link}").Handler(h.K8sResource)
 	m.Path("/v1/harvester/{type}/{namespace}/{name}").Handler(h.K8sResource)
 	m.Path("/v1/harvester/{type}/{namespace}/{name}/{link}").Handler(h.K8sResource)
+
+	t2 := &Test2{}
+	m.Path("/apis/subresources.harvester.io/v1").Handler(t2)
+
+	t := &Test{}
+	m.Path("/apis/subresources.harvester.io/v1/namespaces/{namespace}/{resource}/{name}/{subresource}").Handler(t)
 
 	vueUI := ui.Vue
 	m.Handle("/dashboard/", vueUI.IndexFile())

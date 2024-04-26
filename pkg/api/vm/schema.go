@@ -58,6 +58,13 @@ func RegisterSchema(scaled *config.Scaled, server *server.Server, options config
 	copyConfig.APIPath = "/apis"
 	copyConfig.NegotiatedSerializer = scheme.Codecs.WithoutConversion()
 	virtSubresourceClient, err := rest.RESTClientFor(copyConfig)
+
+	harvesterCopyConfig := rest.CopyConfig(server.RESTConfig)
+	harvesterCopyConfig.GroupVersion = &k8sschema.GroupVersion{Group: "subresources.harvester.io", Version: "v1"}
+	harvesterCopyConfig.APIPath = "/apis"
+	harvesterCopyConfig.NegotiatedSerializer = scheme.Codecs.WithoutConversion()
+	harvesterSubresourceClient, err := rest.RESTClientFor(harvesterCopyConfig)
+
 	if err != nil {
 		return err
 	}
@@ -66,30 +73,31 @@ func RegisterSchema(scaled *config.Scaled, server *server.Server, options config
 		return err
 	}
 	actionHandler := vmActionHandler{
-		namespace:                 options.Namespace,
-		vms:                       vms,
-		vmCache:                   vms.Cache(),
-		vmis:                      vmis,
-		vmiCache:                  vmis.Cache(),
-		vmims:                     vmims,
-		vmimCache:                 vmims.Cache(),
-		vmTemplateClient:          vmt,
-		vmTemplateVersionClient:   vmtv,
-		backups:                   backups,
-		backupCache:               backups.Cache(),
-		restores:                  restores,
-		settingCache:              settings.Cache(),
-		nadCache:                  nads.Cache(),
-		nodeCache:                 nodes.Cache(),
-		pvcCache:                  pvcs.Cache(),
-		pvCache:                   pvs.Cache(),
-		secretClient:              secrets,
-		secretCache:               secrets.Cache(),
-		virtSubresourceRestClient: virtSubresourceClient,
-		virtRestClient:            virtv1Client.RESTClient(),
-		vmImages:                  vmImages,
-		vmImageCache:              vmImages.Cache(),
-		storageClassCache:         storageClasses.Cache(),
+		namespace:                  options.Namespace,
+		vms:                        vms,
+		vmCache:                    vms.Cache(),
+		vmis:                       vmis,
+		vmiCache:                   vmis.Cache(),
+		vmims:                      vmims,
+		vmimCache:                  vmims.Cache(),
+		vmTemplateClient:           vmt,
+		vmTemplateVersionClient:    vmtv,
+		backups:                    backups,
+		backupCache:                backups.Cache(),
+		restores:                   restores,
+		settingCache:               settings.Cache(),
+		nadCache:                   nads.Cache(),
+		nodeCache:                  nodes.Cache(),
+		pvcCache:                   pvcs.Cache(),
+		pvCache:                    pvs.Cache(),
+		secretClient:               secrets,
+		secretCache:                secrets.Cache(),
+		virtSubresourceRestClient:  virtSubresourceClient,
+		harvesterSubresourceClient: harvesterSubresourceClient,
+		virtRestClient:             virtv1Client.RESTClient(),
+		vmImages:                   vmImages,
+		vmImageCache:               vmImages.Cache(),
+		storageClassCache:          storageClasses.Cache(),
 	}
 
 	vmformatter := vmformatter{
