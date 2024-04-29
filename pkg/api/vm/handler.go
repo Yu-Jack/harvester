@@ -38,6 +38,7 @@ import (
 	ctlharvesterv1 "github.com/harvester/harvester/pkg/generated/controllers/harvesterhci.io/v1beta1"
 	ctlcniv1 "github.com/harvester/harvester/pkg/generated/controllers/k8s.cni.cncf.io/v1"
 	ctlkubevirtv1 "github.com/harvester/harvester/pkg/generated/controllers/kubevirt.io/v1"
+	"github.com/harvester/harvester/pkg/server/subresource"
 	"github.com/harvester/harvester/pkg/settings"
 	"github.com/harvester/harvester/pkg/util"
 	"github.com/harvester/harvester/pkg/util/drainhelper"
@@ -96,11 +97,14 @@ func (h vmActionHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	rw.WriteHeader(http.StatusNoContent)
 }
 
-func (h *vmActionHandler) doAction(rw http.ResponseWriter, r *http.Request) error {
-	vars := util.EncodeVars(mux.Vars(r))
-	action := vars["action"]
-	namespace := vars["namespace"]
-	name := vars["name"]
+func (h *vmActionHandler) Matched(resource string) bool {
+	return resource == vmResource
+}
+
+func (h *vmActionHandler) SubResourceHandler(rw http.ResponseWriter, r *http.Request, resource subresource.Resource) error {
+	action := resource.SubResource
+	namespace := resource.Namespace
+	name := resource.ObjectName
 
 	switch action {
 	case ejectCdRom:
@@ -234,6 +238,19 @@ func (h *vmActionHandler) doAction(rw http.ResponseWriter, r *http.Request) erro
 	return nil
 }
 
+func (h *vmActionHandler) doAction(rw http.ResponseWriter, r *http.Request) error {
+	vars := util.EncodeVars(mux.Vars(r))
+
+	resource := subresource.Resource{
+		Name:        "virtualmachines",
+		ObjectName:  vars["name"],
+		Namespace:   vars["namespace"],
+		SubResource: vars["action"],
+	}
+
+	return h.SubResourceHandler(rw, r, resource)
+}
+
 func (h *vmActionHandler) ejectCdRom(ctx context.Context, name, namespace string, diskNames []string) error {
 	vm, err := h.vmCache.Get(namespace, name)
 	if err != nil {
@@ -285,8 +302,6 @@ func (h *vmActionHandler) subresourceOperate(ctx context.Context, resource, name
 			return err
 		}
 	}
-
-	h.harvesterSubresourceClient.Post().Namespace(namespace).Resource(resource).SubResource(subresourece).Name(name).Do(ctx)
 
 	return h.virtSubresourceRestClient.Put().Namespace(namespace).Resource(resource).SubResource(subresourece).Name(name).Do(ctx).Error()
 }
