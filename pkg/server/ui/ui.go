@@ -3,17 +3,20 @@ package ui
 import (
 	"crypto/tls"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 
 	responsewriter "github.com/rancher/apiserver/pkg/middleware"
 	"github.com/sirupsen/logrus"
 
 	"github.com/harvester/harvester/pkg/settings"
+)
+
+const (
+	uiSourceAuto    = "auto"
+	uiSourceBundled = "bundled"
 )
 
 var (
@@ -26,10 +29,11 @@ var (
 		},
 	}
 
-	Vue = newHandler(settings.UIIndex.Get,
+	Vue = newHandler(
+		settings.UIIndex.Get,
 		settings.UIPath.Get,
-		settings.UISource.Get)
-	VueIndex = Vue.IndexFile()
+		settings.UISource.Get,
+	)
 )
 
 func newHandler(
@@ -60,25 +64,27 @@ type handler struct {
 	offlineSetting  func() string
 	middleware      func(http.Handler) http.Handler
 	indexMiddleware func(http.Handler) http.Handler
-
-	downloadOnce    sync.Once
-	downloadSuccess bool
+	previousPath    string
 }
 
 func (u *handler) canDownload(url string) bool {
-	u.downloadOnce.Do(func() {
-		if err := serveIndex(ioutil.Discard, url); err == nil {
-			u.downloadSuccess = true
-		} else {
-			logrus.Errorf("Failed to download %s, falling back to packaged UI", url)
-		}
-	})
-	return u.downloadSuccess
+	if u.previousPath == url {
+		return true
+	}
+
+	u.previousPath = url
+
+	if err := serveIndex(io.Discard, url); err != nil {
+		logrus.Errorf("Failed to download %s, falling back to packaged UI", url)
+		return false
+	}
+
+	return true
 }
 
 func (u *handler) path() (path string, isURL bool) {
 	switch u.offlineSetting() {
-	case "auto":
+	case uiSourceAuto:
 		if settings.IsRelease() {
 			return u.pathSetting(), false
 		}
@@ -86,7 +92,7 @@ func (u *handler) path() (path string, isURL bool) {
 			return u.indexSetting(), true
 		}
 		return u.pathSetting(), false
-	case "bundled":
+	case uiSourceBundled:
 		return u.pathSetting(), false
 	default:
 		return u.indexSetting(), true
