@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	harvesterServer "github.com/harvester/harvester/pkg/server/http"
 	"github.com/rancher/apiserver/pkg/apierror"
 	"github.com/rancher/wrangler/pkg/condition"
 	ctlbatchv1 "github.com/rancher/wrangler/pkg/generated/controllers/batch/v1"
@@ -82,31 +83,19 @@ type Handler struct {
 	upgradeLogClient ctlharvesterv1.UpgradeLogClient
 }
 
-func (h Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	if err := h.doAction(rw, req); err != nil {
-		status := http.StatusInternalServerError
-		if e, ok := err.(*apierror.APIError); ok {
-			status = e.Code.Status
-		}
-		rw.WriteHeader(status)
-		_, _ = rw.Write([]byte(err.Error()))
-		return
-	}
-}
-
-func (h Handler) doAction(rw http.ResponseWriter, req *http.Request) error {
+func (h *Handler) Do(rw http.ResponseWriter, req *http.Request) (interface{}, error) {
 	vars := util.EncodeVars(mux.Vars(req))
 
 	if req.Method == http.MethodGet {
-		return h.doGet(vars["link"], rw, req)
+		return harvesterServer.EmptyResponseBody, h.doGet(vars["link"], rw, req)
 	} else if req.Method == http.MethodPost {
 		return h.doPost(vars["action"], rw, req)
 	}
 
-	return apierror.NewAPIError(validation.InvalidAction, fmt.Sprintf("Unsupported method %s", req.Method))
+	return nil, apierror.NewAPIError(validation.InvalidAction, fmt.Sprintf("Unsupported method %s", req.Method))
 }
 
-func (h Handler) doGet(link string, rw http.ResponseWriter, req *http.Request) error {
+func (h *Handler) doGet(link string, rw http.ResponseWriter, req *http.Request) error {
 	switch link {
 	case downloadArchiveLink:
 		return h.downloadArchive(rw, req)
@@ -115,16 +104,16 @@ func (h Handler) doGet(link string, rw http.ResponseWriter, req *http.Request) e
 	}
 }
 
-func (h Handler) doPost(action string, rw http.ResponseWriter, req *http.Request) error {
+func (h *Handler) doPost(action string, rw http.ResponseWriter, req *http.Request) (string, error) {
 	switch action {
 	case generateArchiveAction:
 		return h.generateArchive(rw, req)
 	default:
-		return apierror.NewAPIError(validation.InvalidAction, fmt.Sprintf("Unsupported POST action %s", action))
+		return "", apierror.NewAPIError(validation.InvalidAction, fmt.Sprintf("Unsupported POST action %s", action))
 	}
 }
 
-func (h Handler) downloadArchive(rw http.ResponseWriter, req *http.Request) error {
+func (h *Handler) downloadArchive(rw http.ResponseWriter, req *http.Request) error {
 	vars := util.EncodeVars(mux.Vars(req))
 	upgradeLogName := vars["name"]
 	upgradeLogNamespace := vars["namespace"]
@@ -175,7 +164,7 @@ func (h Handler) downloadArchive(rw http.ResponseWriter, req *http.Request) erro
 	return nil
 }
 
-func (h Handler) generateArchive(rw http.ResponseWriter, req *http.Request) error {
+func (h *Handler) generateArchive(rw http.ResponseWriter, req *http.Request) (string, error) {
 	vars := util.EncodeVars(mux.Vars(req))
 	upgradeLogName := vars["name"]
 	upgradeLogNamespace := vars["namespace"]
@@ -184,19 +173,19 @@ func (h Handler) generateArchive(rw http.ResponseWriter, req *http.Request) erro
 
 	upgradeLog, err := h.upgradeLogCache.Get(upgradeLogNamespace, upgradeLogName)
 	if err != nil {
-		return fmt.Errorf("failed to get the upgradelog resource (%s/%s): %w", upgradeLogNamespace, upgradeLogName, err)
+		return "", fmt.Errorf("failed to get the upgradelog resource (%s/%s): %w", upgradeLogNamespace, upgradeLogName, err)
 	}
 
 	isUpgradeLogReady := checkConditionReady(upgradeLog.Status.Conditions, harvesterv1.UpgradeLogReady)
 	if !isUpgradeLogReady {
-		return fmt.Errorf("the logging infrastructure for the upgradelog resource (%s/%s) is not ready yet", upgradeLogNamespace, upgradeLogName)
+		return "", fmt.Errorf("the logging infrastructure for the upgradelog resource (%s/%s) is not ready yet", upgradeLogNamespace, upgradeLogName)
 	}
 
 	// Get image version for log packager
 	upgradeName := upgradeLog.Spec.UpgradeName
 	upgrade, err := h.upgradeCache.Get(util.HarvesterSystemNamespaceName, upgradeName)
 	if err != nil {
-		return fmt.Errorf("failed to get the upgrade resource (%s/%s): %w", util.HarvesterSystemNamespaceName, upgradeName, err)
+		return "", fmt.Errorf("failed to get the upgrade resource (%s/%s): %w", util.HarvesterSystemNamespaceName, upgradeName, err)
 	}
 	imageVersion := upgrade.Status.PreviousVersion
 
@@ -217,19 +206,18 @@ func (h Handler) generateArchive(rw http.ResponseWriter, req *http.Request) erro
 	}
 
 	if _, err := h.jobClient.Create(prepareLogPackager(upgradeLog, imageVersion, archiveName, component)); err != nil {
-		return fmt.Errorf("failed to create log packager job for the upgradelog resource (%s/%s): %w", upgradeLogNamespace, upgradeLogName, err)
+		return "", fmt.Errorf("failed to create log packager job for the upgradelog resource (%s/%s): %w", upgradeLogNamespace, upgradeLogName, err)
 	}
 	toUpdate := upgradeLog.DeepCopy()
 	ctlupgradelog.SetUpgradeLogArchive(toUpdate, archiveName, archiveSize, generatedTime)
 	if _, err := h.upgradeLogClient.Update(toUpdate); err != nil {
-		return fmt.Errorf("failed to update the upgradelog resource (%s/%s): %w", upgradeLogNamespace, upgradeLogName, err)
+		return "", fmt.Errorf("failed to update the upgradelog resource (%s/%s): %w", upgradeLogNamespace, upgradeLogName, err)
 	}
-	util.ResponseOKWithBody(rw, archiveName)
 
-	return nil
+	return archiveName, nil
 }
 
-func (h Handler) doRetry(req *http.Request) (*http.Response, error) {
+func (h *Handler) doRetry(req *http.Request) (*http.Response, error) {
 	const retry = 15
 	var (
 		err  error

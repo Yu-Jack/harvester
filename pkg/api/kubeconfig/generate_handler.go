@@ -9,10 +9,12 @@ import (
 	"strings"
 	"time"
 
+	harvesterServer "github.com/harvester/harvester/pkg/server/http"
 	"github.com/mitchellh/mapstructure"
-	"github.com/pkg/errors"
+	"github.com/rancher/apiserver/pkg/apierror"
 	ctlcorev1 "github.com/rancher/wrangler/pkg/generated/controllers/core/v1"
 	ctlrbacv1 "github.com/rancher/wrangler/pkg/generated/controllers/rbac/v1"
+	"github.com/rancher/wrangler/pkg/schemas/validation"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -22,7 +24,6 @@ import (
 
 	"github.com/harvester/harvester/pkg/config"
 	"github.com/harvester/harvester/pkg/controller/master/rancher"
-	"github.com/harvester/harvester/pkg/util"
 )
 
 const (
@@ -47,8 +48,8 @@ type GenerateHandler struct {
 	namespace                string
 }
 
-func NewGenerateHandler(scaled *config.Scaled, option config.Options) *GenerateHandler {
-	return &GenerateHandler{
+func NewGenerateHandler(scaled *config.Scaled, option config.Options) http.Handler {
+	handler := &GenerateHandler{
 		context:                  scaled.Ctx,
 		saClient:                 scaled.CoreFactory.Core().V1().ServiceAccount(),
 		saCache:                  scaled.CoreFactory.Core().V1().ServiceAccount().Cache(),
@@ -62,6 +63,8 @@ func NewGenerateHandler(scaled *config.Scaled, option config.Options) *GenerateH
 		configMapCache:           scaled.CoreFactory.Core().V1().ConfigMap().Cache(),
 		namespace:                option.Namespace,
 	}
+
+	return harvesterServer.NewHandler(handler)
 }
 
 type req struct {
@@ -87,49 +90,41 @@ func decodeRequest(r *http.Request) (*req, error) {
 
 	return &req, nil
 }
-
-func (h *GenerateHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (h *GenerateHandler) Do(_ http.ResponseWriter, r *http.Request) (interface{}, error) {
 	// TODO authentication
 	req, err := decodeRequest(r)
 	if err != nil {
-		util.ResponseError(rw, http.StatusBadRequest, errors.Wrap(err, "fail to decode request"))
-		return
+		return nil, apierror.NewAPIError(harvesterServer.BadRequest, "Failed to decode request")
 	}
 
 	if _, err := h.clusterRoleCache.Get(req.ClusterRoleName); err != nil {
-		util.ResponseError(rw, http.StatusBadRequest, errors.Wrapf(err, "clusterRole %s is not found", req.ClusterRoleName))
-		return
+		return nil, apierror.NewAPIError(harvesterServer.BadRequest, fmt.Sprintf("clusterRole %s is not found", req.ClusterRoleName))
 	}
 
 	sa, secret, err := h.ensureSaAndSecret(req.Namespace, req.SaName)
 	if err != nil {
-		util.ResponseError(rw, http.StatusBadRequest, errors.Wrap(err, "fail to create serviceAccount"))
-		return
+		return nil, apierror.NewAPIError(harvesterServer.BadRequest, "fail to create serviceAccount")
 	}
 
 	if _, err := h.createRoleBindingIfNotExists(sa); err != nil {
-		util.ResponseError(rw, http.StatusInternalServerError, errors.Wrap(err, "fail to create roleBinding"))
-		return
+		return nil, apierror.NewAPIError(validation.ServerError, "fail to create roleBinding")
 	}
 
 	if _, err := h.createClusterRoleBindingIfNotExists(sa); err != nil {
-		util.ResponseError(rw, http.StatusInternalServerError, errors.Wrap(err, "fail to create clusterRoleBinding"))
-		return
+		return nil, apierror.NewAPIError(validation.ServerError, "fail to create clusterRoleBinding")
 	}
 
 	serverURL, err := h.getServerURL()
 	if err != nil {
-		util.ResponseError(rw, http.StatusInternalServerError, errors.Wrap(err, "failed to get server url"))
-		return
+		return nil, apierror.NewAPIError(validation.ServerError, "failed to get server url")
 	}
 
 	kubeConfig, err := h.generateKubeConfig(secret, serverURL)
 	if err != nil {
-		util.ResponseError(rw, http.StatusInternalServerError, errors.Wrap(err, "fail to generate kubeconfig"))
-		return
+		return nil, apierror.NewAPIError(validation.ServerError, "fail to generate kubeconfig")
 	}
 
-	util.ResponseOKWithBody(rw, kubeConfig)
+	return kubeConfig, nil
 }
 
 func (h *GenerateHandler) getServerURL() (string, error) {

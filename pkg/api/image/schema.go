@@ -3,6 +3,7 @@ package image
 import (
 	"net/http"
 
+	harvesterServer "github.com/harvester/harvester/pkg/server/http"
 	"github.com/rancher/apiserver/pkg/types"
 	"github.com/rancher/steve/pkg/schema"
 	"github.com/rancher/steve/pkg/server"
@@ -21,6 +22,8 @@ func RegisterSchema(scaled *config.Scaled, server *server.Server, _ config.Optio
 		BackingImageCache:           scaled.LonghornFactory.Longhorn().V1beta2().BackingImage().Cache(),
 	}
 
+	handler := harvesterServer.NewHandler(&imgHandler)
+
 	t := schema.Template{
 		ID: "harvesterhci.io.virtualmachineimage",
 		Customize: func(s *types.APISchema) {
@@ -34,7 +37,7 @@ func RegisterSchema(scaled *config.Scaled, server *server.Server, _ config.Optio
 			 * pair in the current HTTP requests.
 			 */
 			s.ActionHandlers = map[string]http.Handler{
-				actionUpload: imgHandler,
+				actionUpload: handler,
 			}
 			/*
 			 * LinkHandlers would let people define their own `GET` method.
@@ -45,7 +48,7 @@ func RegisterSchema(scaled *config.Scaled, server *server.Server, _ config.Optio
 			 * with rancher/apiserver
 			 */
 			s.LinkHandlers = map[string]http.Handler{
-				actionDownload: imgHandler,
+				actionDownload: handler,
 			}
 		},
 	}

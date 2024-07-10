@@ -30,6 +30,7 @@ func RegisterSchema(scaled *config.Scaled, server *server.Server, _ config.Optio
 		volumes:     scaled.LonghornFactory.Longhorn().V1beta2().Volume(),
 		volumeCache: scaled.LonghornFactory.Longhorn().V1beta2().Volume().Cache(),
 	}
+	handler := harvesterServer.NewHandler(actionHandler)
 
 	t := schema.Template{
 		ID: pvcSchemaID,
@@ -47,10 +48,10 @@ func RegisterSchema(scaled *config.Scaled, server *server.Server, _ config.Optio
 				},
 			}
 			s.ActionHandlers = map[string]http.Handler{
-				actionExport:       harvesterServer.NewHandler(actionHandler),
-				actionCancelExpand: harvesterServer.NewHandler(actionHandler),
-				actionClone:        harvesterServer.NewHandler(actionHandler),
-				actionSnapshot:     harvesterServer.NewHandler(actionHandler),
+				actionExport:       handler,
+				actionCancelExpand: handler,
+				actionClone:        handler,
+				actionSnapshot:     handler,
 			}
 		},
 		Formatter: Formatter,

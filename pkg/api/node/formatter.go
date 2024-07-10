@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	harvesterServer "github.com/harvester/harvester/pkg/server/http"
 	"github.com/rancher/apiserver/pkg/apierror"
 	"github.com/rancher/apiserver/pkg/types"
 	"github.com/rancher/norman/httperror"
@@ -94,63 +95,50 @@ type ActionHandler struct {
 	ctx                         context.Context
 }
 
-func (h ActionHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	if err := h.do(rw, req); err != nil {
-		status := http.StatusInternalServerError
-		if e, ok := err.(*apierror.APIError); ok {
-			status = e.Code.Status
-		}
-		rw.WriteHeader(status)
-		_, _ = rw.Write([]byte(err.Error()))
-		return
-	}
-	rw.WriteHeader(http.StatusNoContent)
-}
-
-func (h ActionHandler) do(rw http.ResponseWriter, req *http.Request) error {
+func (h *ActionHandler) Do(rw http.ResponseWriter, req *http.Request) (interface{}, error) {
 	vars := util.EncodeVars(mux.Vars(req))
 	action := vars["action"]
 	name := vars["name"]
 	node, err := h.nodeCache.Get(name)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	toUpdate := node.DeepCopy()
 	switch action {
 	case enableMaintenanceModeAction:
 		var maintenanceInput MaintenanceModeInput
 		if err := json.NewDecoder(req.Body).Decode(&maintenanceInput); err != nil {
-			return apierror.NewAPIError(validation.InvalidBodyContent, fmt.Sprintf("Failed to decode request body: %v ", err))
+			return nil, apierror.NewAPIError(validation.InvalidBodyContent, fmt.Sprintf("Failed to decode request body: %v ", err))
 		}
 
 		if maintenanceInput.Force == "true" {
 			logrus.Infof("forced drain requested for node %s", node.Name)
 		}
-		return h.enableMaintenanceMode(toUpdate, maintenanceInput.Force)
+		return nil, h.enableMaintenanceMode(toUpdate, maintenanceInput.Force)
 	case disableMaintenanceModeAction:
-		return h.disableMaintenanceMode(name)
+		return nil, h.disableMaintenanceMode(name)
 	case cordonAction:
-		return h.cordonUncordonNode(toUpdate, cordonAction, true)
+		return nil, h.cordonUncordonNode(toUpdate, cordonAction, true)
 	case uncordonAction:
-		return h.cordonUncordonNode(toUpdate, uncordonAction, false)
+		return nil, h.cordonUncordonNode(toUpdate, uncordonAction, false)
 	case listUnhealthyVM:
 		return h.listUnhealthyVM(rw, toUpdate)
 	case maintenancePossible:
-		return h.maintenancePossible(toUpdate)
+		return nil, h.maintenancePossible(toUpdate)
 	case powerActionPossible:
-		return h.powerActionPossible(rw, name)
+		return nil, h.powerActionPossible(rw, name)
 	case powerAction:
 		var input PowerActionInput
 		if err := json.NewDecoder(req.Body).Decode(&input); err != nil {
-			return apierror.NewAPIError(validation.InvalidBodyContent, fmt.Sprintf("Failed to decode request body: %v ", err))
+			return nil, apierror.NewAPIError(validation.InvalidBodyContent, fmt.Sprintf("Failed to decode request body: %v ", err))
 		}
-		return h.powerAction(toUpdate, input.Operation)
+		return nil, h.powerAction(toUpdate, input.Operation)
 	default:
-		return apierror.NewAPIError(validation.InvalidAction, "Unsupported action")
+		return nil, apierror.NewAPIError(validation.InvalidAction, "Unsupported action")
 	}
 }
 
-func (h ActionHandler) cordonUncordonNode(node *corev1.Node, actionName string, cordon bool) error {
+func (h *ActionHandler) cordonUncordonNode(node *corev1.Node, actionName string, cordon bool) error {
 	if cordon == node.Spec.Unschedulable {
 		return httperror.NewAPIError(httperror.InvalidAction, fmt.Sprintf("Node %s already %sed", node.Name, actionName))
 	}
@@ -159,7 +147,7 @@ func (h ActionHandler) cordonUncordonNode(node *corev1.Node, actionName string, 
 	return err
 }
 
-func (h ActionHandler) enableMaintenanceMode(node *corev1.Node, force string) error {
+func (h *ActionHandler) enableMaintenanceMode(node *corev1.Node, force string) error {
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		nodeObj, err := h.nodeClient.Get(node.Name, metav1.GetOptions{})
 		if err != nil {
@@ -180,7 +168,7 @@ func (h ActionHandler) enableMaintenanceMode(node *corev1.Node, force string) er
 
 type maintenanceModeUpdateFunc func(node *corev1.Node)
 
-func (h ActionHandler) disableMaintenanceMode(nodeName string) error {
+func (h *ActionHandler) disableMaintenanceMode(nodeName string) error {
 	disableMaintaenanceModeFunc := func(node *corev1.Node) {
 		node.Spec.Unschedulable = false
 		for i, taint := range node.Spec.Taints {
@@ -241,7 +229,7 @@ func (h ActionHandler) disableMaintenanceMode(nodeName string) error {
 	return nil
 }
 
-func (h ActionHandler) retryMaintenanceModeUpdate(nodeName string, updateFunc maintenanceModeUpdateFunc, actionName string) error {
+func (h *ActionHandler) retryMaintenanceModeUpdate(nodeName string, updateFunc maintenanceModeUpdateFunc, actionName string) error {
 	maxTry := 3
 	for i := 0; i < maxTry; i++ {
 		node, err := h.nodeCache.Get(nodeName)
@@ -266,38 +254,36 @@ func (h ActionHandler) retryMaintenanceModeUpdate(nodeName string, updateFunc ma
 	return fmt.Errorf("failed to %s maintenance mode on node:%s", actionName, nodeName)
 }
 
-func (h ActionHandler) listUnhealthyVM(rw http.ResponseWriter, node *corev1.Node) error {
+func (h *ActionHandler) listUnhealthyVM(_ http.ResponseWriter, node *corev1.Node) (interface{}, error) {
 	ndc := nodedrain.ActionHelper(h.nodeCache, h.virtualMachineInstanceCache, h.longhornVolumeCache, h.longhornReplicaCache)
 
 	var respObj ListUnhealthyVM
 
 	nonMigrtableVMList, err := ndc.FindAndListNonMigratableVM(node)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if len(nonMigrtableVMList) > 0 {
 		respObj.Message = "Please detach CDROM or ContainerDisk from following VMs:"
 		respObj.VMs = nonMigrtableVMList
-		rw.WriteHeader(http.StatusOK)
-		return json.NewEncoder(rw).Encode(&respObj)
+		return respObj, nil
 	}
 
 	vmWithPCIDevicesList, err := ndc.FindAndListVMWithPCIDevices(node)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if len(vmWithPCIDevicesList) > 0 {
 		respObj.Message = "Following VMs have PCIDevices attached and are non-migratable. Please power these off:"
 		respObj.VMs = vmWithPCIDevicesList
-		rw.WriteHeader(http.StatusOK)
-		return json.NewEncoder(rw).Encode(&respObj)
+		return respObj, nil
 	}
 
 	vmList, err := ndc.FindAndListVM(node)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if len(vmList) > 0 {
@@ -305,67 +291,54 @@ func (h ActionHandler) listUnhealthyVM(rw http.ResponseWriter, node *corev1.Node
 		respObj.VMs = vmList
 	}
 
-	rw.WriteHeader(http.StatusOK)
-	return json.NewEncoder(rw).Encode(&respObj)
+	return respObj, nil
 }
 
-func (h ActionHandler) maintenancePossible(node *corev1.Node) error {
+func (h *ActionHandler) maintenancePossible(node *corev1.Node) error {
 	return drainhelper.DrainPossible(h.nodeCache, node)
 }
 
-func (h ActionHandler) powerActionPossible(rw http.ResponseWriter, node string) error {
+func (h *ActionHandler) powerActionPossible(_ http.ResponseWriter, node string) error {
 	addon, err := h.addonCache.Get(defaultAddonNamespace, seederAddonName)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			logrus.Errorf("addon %s not found", seederAddonName)
-			rw.WriteHeader(http.StatusFailedDependency)
-			return nil
+			return apierror.NewAPIError(harvesterServer.FailedDependency, fmt.Sprintf("addon %s not found", seederAddonName))
 		}
 		return err
 	}
 
 	if !addon.Spec.Enabled {
 		logrus.Errorf("addon %s is not enabled", seederAddonName)
-		rw.WriteHeader(http.StatusFailedDependency)
-		return nil
+		return apierror.NewAPIError(harvesterServer.FailedDependency, fmt.Sprintf("addon %s not found", seederAddonName))
 	}
 
 	inventoryObject, err := h.fetchInventoryObject(node)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			logrus.Errorf("inventory %s not found", node)
-			rw.WriteHeader(http.StatusFailedDependency)
-			return nil
+			return apierror.NewAPIError(harvesterServer.FailedDependency, fmt.Sprintf("addon %s not found", seederAddonName))
 		}
 		return err
 	}
 
 	val, ok, err := unstructured.NestedString(inventoryObject.Object, "status", "status")
 	if err != nil {
-		logrus.Errorf("error fetching status from inventory object %s :%v", node, err)
-		rw.WriteHeader(http.StatusConflict)
-		return err
+		return apierror.NewAPIError(validation.Conflict, fmt.Sprintf("error fetching status from inventory object %s :%v", node, err))
 	}
 
 	if !ok {
-		errMsg := fmt.Sprintf("no field .status.status present in inventory object: %s", node)
-		logrus.Errorf(errMsg)
-		rw.WriteHeader(http.StatusConflict)
-		return fmt.Errorf(errMsg)
+		return apierror.NewAPIError(validation.Conflict, fmt.Sprintf("no field .status.status present in inventory object: %s", node))
 	}
 
 	if val != nodeReady {
-		errMsg := fmt.Sprintf("expected to find inventory %s status %s, but current status is: %s", node, nodeReady, val)
-		logrus.Errorf(errMsg)
-		rw.WriteHeader(http.StatusConflict)
-		return fmt.Errorf(errMsg)
+		return apierror.NewAPIError(validation.Conflict, fmt.Sprintf("expected to find inventory %s status %s, but current status is: %s", node, nodeReady, val))
 	}
 
-	rw.WriteHeader(http.StatusNoContent)
 	return nil
 }
 
-func (h ActionHandler) powerAction(node *corev1.Node, operation string) error {
+func (h *ActionHandler) powerAction(node *corev1.Node, operation string) error {
 	if !slice.ContainsString(possiblePowerActions, operation) {
 		return fmt.Errorf("operation %s is not a valid power opreation. valid values need to be in %v", operation, possiblePowerActions)
 	}
@@ -417,6 +390,6 @@ func (h ActionHandler) powerAction(node *corev1.Node, operation string) error {
 	return err
 }
 
-func (h ActionHandler) fetchInventoryObject(node string) (*unstructured.Unstructured, error) {
+func (h *ActionHandler) fetchInventoryObject(node string) (*unstructured.Unstructured, error) {
 	return h.dynamicClient.Resource(seederGVR).Namespace(defaultAddonNamespace).Get(h.ctx, node, metav1.GetOptions{})
 }

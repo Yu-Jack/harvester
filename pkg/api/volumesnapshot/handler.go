@@ -30,20 +30,7 @@ type ActionHandler struct {
 	storageClassCache ctlstoragev1.StorageClassCache
 }
 
-func (h ActionHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	if err := h.do(rw, req); err != nil {
-		status := http.StatusInternalServerError
-		if e, ok := err.(*apierror.APIError); ok {
-			status = e.Code.Status
-		}
-		rw.WriteHeader(status)
-		_, _ = rw.Write([]byte(err.Error()))
-		return
-	}
-	rw.WriteHeader(http.StatusNoContent)
-}
-
-func (h *ActionHandler) do(_ http.ResponseWriter, r *http.Request) error {
+func (h *ActionHandler) Do(_ http.ResponseWriter, r *http.Request) (interface{}, error) {
 	vars := util.EncodeVars(mux.Vars(r))
 	action := vars["action"]
 	snapshotName := vars["name"]
@@ -53,14 +40,14 @@ func (h *ActionHandler) do(_ http.ResponseWriter, r *http.Request) error {
 	case actionRestore:
 		var input RestoreSnapshotInput
 		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-			return apierror.NewAPIError(validation.InvalidBodyContent, "Failed to decode request body: %v "+err.Error())
+			return nil, apierror.NewAPIError(validation.InvalidBodyContent, "Failed to decode request body: %v "+err.Error())
 		}
 		if input.Name == "" {
-			return apierror.NewAPIError(validation.InvalidBodyContent, "Parameter `name` is required")
+			return nil, apierror.NewAPIError(validation.InvalidBodyContent, "Parameter `name` is required")
 		}
-		return h.restore(r.Context(), snapshotNamespace, snapshotName, input.Name, input.StorageClassName)
+		return nil, h.restore(r.Context(), snapshotNamespace, snapshotName, input.Name, input.StorageClassName)
 	default:
-		return apierror.NewAPIError(validation.InvalidAction, "Unsupported action")
+		return nil, apierror.NewAPIError(validation.InvalidAction, "Unsupported action")
 	}
 }
 

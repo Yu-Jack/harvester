@@ -3,6 +3,7 @@ package keypair
 import (
 	"net/http"
 
+	harvesterServer "github.com/harvester/harvester/pkg/server/http"
 	"github.com/rancher/apiserver/pkg/types"
 	"github.com/rancher/steve/pkg/schema"
 	"github.com/rancher/steve/pkg/server"
@@ -18,6 +19,7 @@ const (
 
 func RegisterSchema(scaled *config.Scaled, server *server.Server, _ config.Options) error {
 	server.BaseSchemas.MustImportAndCustomize(harvesterv1.KeyGenInput{}, nil)
+
 	t := schema.Template{
 		ID: "harvesterhci.io.keypair",
 		Customize: func(s *types.APISchema) {
@@ -29,10 +31,10 @@ func RegisterSchema(scaled *config.Scaled, server *server.Server, _ config.Optio
 			}
 			s.Formatter = Formatter
 			s.ActionHandlers = map[string]http.Handler{
-				keygen: KeyGenActionHandler{
+				keygen: harvesterServer.NewHandler(&KeyGenActionHandler{
 					KeyPairs:     scaled.HarvesterFactory.Harvesterhci().V1beta1().KeyPair(),
 					KeyPairCache: scaled.HarvesterFactory.Harvesterhci().V1beta1().KeyPair().Cache(),
-				},
+				}),
 			}
 		},
 	}

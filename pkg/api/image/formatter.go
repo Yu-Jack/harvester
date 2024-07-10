@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	harvesterServer "github.com/harvester/harvester/pkg/server/http"
 	lhv1beta2 "github.com/longhorn/longhorn-manager/k8s/pkg/apis/longhorn/v1beta2"
 	"github.com/pkg/errors"
 	"github.com/rancher/apiserver/pkg/apierror"
@@ -53,31 +54,18 @@ type Handler struct {
 	BackingImageCache           ctllhv1.BackingImageCache
 }
 
-func (h Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	if err := h.do(rw, req); err != nil {
-		status := http.StatusInternalServerError
-		if e, ok := err.(*apierror.APIError); ok {
-			status = e.Code.Status
-		}
-		rw.WriteHeader(status)
-		_, _ = rw.Write([]byte(err.Error()))
-		return
-	}
-	rw.WriteHeader(http.StatusOK)
-}
-
-func (h Handler) do(rw http.ResponseWriter, req *http.Request) error {
+func (h *Handler) Do(rw http.ResponseWriter, req *http.Request) (interface{}, error) {
 	vars := util.EncodeVars(mux.Vars(req))
 	if req.Method == http.MethodGet {
-		return h.doGet(vars["link"], rw, req)
+		return harvesterServer.EmptyResponseBody, h.doGet(vars["link"], rw, req)
 	} else if req.Method == http.MethodPost {
-		return h.doPost(vars["action"], rw, req)
+		return harvesterServer.EmptyResponseBody, h.doPost(vars["action"], rw, req)
 	}
 
-	return apierror.NewAPIError(validation.InvalidAction, fmt.Sprintf("Unsupported method %s", req.Method))
+	return nil, apierror.NewAPIError(validation.InvalidAction, fmt.Sprintf("Unsupported method %s", req.Method))
 }
 
-func (h Handler) doGet(link string, rw http.ResponseWriter, req *http.Request) error {
+func (h *Handler) doGet(link string, rw http.ResponseWriter, req *http.Request) error {
 	switch link {
 	case actionDownload:
 		return h.downloadImage(rw, req)
@@ -86,7 +74,7 @@ func (h Handler) doGet(link string, rw http.ResponseWriter, req *http.Request) e
 	}
 }
 
-func (h Handler) doPost(action string, rw http.ResponseWriter, req *http.Request) error {
+func (h *Handler) doPost(action string, rw http.ResponseWriter, req *http.Request) error {
 	switch action {
 	case actionUpload:
 		return h.uploadImage(rw, req)
@@ -95,7 +83,7 @@ func (h Handler) doPost(action string, rw http.ResponseWriter, req *http.Request
 	}
 }
 
-func (h Handler) downloadImage(rw http.ResponseWriter, req *http.Request) error {
+func (h *Handler) downloadImage(rw http.ResponseWriter, req *http.Request) error {
 	vars := util.EncodeVars(mux.Vars(req))
 	namespace := vars["namespace"]
 	name := vars["name"]
@@ -139,7 +127,7 @@ func (h Handler) downloadImage(rw http.ResponseWriter, req *http.Request) error 
 	return nil
 }
 
-func (h Handler) uploadImage(_ http.ResponseWriter, req *http.Request) error {
+func (h *Handler) uploadImage(_ http.ResponseWriter, req *http.Request) error {
 	vars := util.EncodeVars(mux.Vars(req))
 	namespace := vars["namespace"]
 	name := vars["name"]
@@ -199,7 +187,7 @@ func (h Handler) uploadImage(_ http.ResponseWriter, req *http.Request) error {
 	return nil
 }
 
-func (h Handler) waitForBackingImageDataSourceReady(name string) error {
+func (h *Handler) waitForBackingImageDataSourceReady(name string) error {
 	retry := 30
 	for i := 0; i < retry; i++ {
 		ds, err := h.BackingImageDataSources.Get(util.LonghornSystemNamespaceName, name, metav1.GetOptions{})
@@ -219,7 +207,7 @@ func (h Handler) waitForBackingImageDataSourceReady(name string) error {
 	return errors.New("timeout waiting for backing image data source to be ready")
 }
 
-func (h Handler) updateImportedConditionOnConflict(image *apisv1beta1.VirtualMachineImage,
+func (h *Handler) updateImportedConditionOnConflict(image *apisv1beta1.VirtualMachineImage,
 	status, reason, message string) error {
 	retry := 3
 	for i := 0; i < retry; i++ {

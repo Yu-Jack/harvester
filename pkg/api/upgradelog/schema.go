@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	harvesterServer "github.com/harvester/harvester/pkg/server/http"
 	"github.com/rancher/apiserver/pkg/types"
 	"github.com/rancher/steve/pkg/schema"
 	"github.com/rancher/steve/pkg/server"
@@ -24,6 +25,8 @@ func RegisterSchema(scaled *config.Scaled, server *server.Server, _ config.Optio
 		upgradeLogClient: scaled.HarvesterFactory.Harvesterhci().V1beta1().UpgradeLog(),
 	}
 
+	handler := harvesterServer.NewHandler(&upgradeLogHandler)
+
 	t := schema.Template{
 		ID: "harvesterhci.io.upgradelog",
 		Customize: func(s *types.APISchema) {
@@ -31,10 +34,10 @@ func RegisterSchema(scaled *config.Scaled, server *server.Server, _ config.Optio
 				generateArchiveAction: {},
 			}
 			s.ActionHandlers = map[string]http.Handler{
-				generateArchiveAction: upgradeLogHandler,
+				generateArchiveAction: handler,
 			}
 			s.LinkHandlers = map[string]http.Handler{
-				downloadArchiveLink: upgradeLogHandler,
+				downloadArchiveLink: handler,
 			}
 		},
 		Formatter: Formatter,

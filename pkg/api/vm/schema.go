@@ -3,6 +3,7 @@ package vm
 import (
 	"net/http"
 
+	harvesterServer "github.com/harvester/harvester/pkg/server/http"
 	"github.com/rancher/apiserver/pkg/types"
 	"github.com/rancher/steve/pkg/schema"
 	"github.com/rancher/steve/pkg/server"
@@ -91,6 +92,7 @@ func RegisterSchema(scaled *config.Scaled, server *server.Server, options config
 		vmImageCache:              vmImages.Cache(),
 		storageClassCache:         storageClasses.Cache(),
 	}
+	handler := harvesterServer.NewHandler(&actionHandler)
 
 	vmformatter := vmformatter{
 		vmiCache:      vmis.Cache(),
@@ -109,24 +111,24 @@ func RegisterSchema(scaled *config.Scaled, server *server.Server, options config
 		ID: vmSchemaID,
 		Customize: func(apiSchema *types.APISchema) {
 			apiSchema.ActionHandlers = map[string]http.Handler{
-				startVM:                          &actionHandler,
-				stopVM:                           &actionHandler,
-				restartVM:                        &actionHandler,
-				softReboot:                       &actionHandler,
-				ejectCdRom:                       &actionHandler,
-				pauseVM:                          &actionHandler,
-				unpauseVM:                        &actionHandler,
-				migrate:                          &actionHandler,
-				abortMigration:                   &actionHandler,
-				findMigratableNodes:              &actionHandler,
-				backupVM:                         &actionHandler,
-				restoreVM:                        &actionHandler,
-				createTemplate:                   &actionHandler,
-				addVolume:                        &actionHandler,
-				removeVolume:                     &actionHandler,
-				cloneVM:                          &actionHandler,
-				forceStopVM:                      &actionHandler,
-				dismissInsufficientResourceQuota: &actionHandler,
+				startVM:                          handler,
+				stopVM:                           handler,
+				restartVM:                        handler,
+				softReboot:                       handler,
+				ejectCdRom:                       handler,
+				pauseVM:                          handler,
+				unpauseVM:                        handler,
+				migrate:                          handler,
+				abortMigration:                   handler,
+				findMigratableNodes:              handler,
+				backupVM:                         handler,
+				restoreVM:                        handler,
+				createTemplate:                   handler,
+				addVolume:                        handler,
+				removeVolume:                     handler,
+				cloneVM:                          handler,
+				forceStopVM:                      handler,
+				dismissInsufficientResourceQuota: handler,
 			}
 			apiSchema.ResourceActions = map[string]schemas.Action{
 				startVM:    {},

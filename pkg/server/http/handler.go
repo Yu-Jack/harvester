@@ -5,8 +5,17 @@ import (
 	"net/http"
 
 	"github.com/rancher/apiserver/pkg/apierror"
+	"github.com/rancher/wrangler/pkg/schemas/validation"
 
 	"github.com/harvester/harvester/pkg/util"
+)
+
+var (
+	EmptyResponseBody = struct{}{}
+
+	// Extended status code for rancher/wrangler/pkg/schemas/validation
+	BadRequest       = validation.ErrorCode{Code: "BadRequest", Status: 400}
+	FailedDependency = validation.ErrorCode{Code: "FailedDependency", Status: 424}
 )
 
 type HarvesterServerHandler interface {
@@ -41,7 +50,7 @@ func (handler *harvesterServerHandler) ServeHTTP(rw http.ResponseWriter, req *ht
 		return
 	}
 
-	if resp == util.EmptyResponseBody {
+	if resp == EmptyResponseBody {
 		util.ResponseOK(rw)
 		return
 	}

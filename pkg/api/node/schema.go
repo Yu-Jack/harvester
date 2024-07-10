@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	harvesterServer "github.com/harvester/harvester/pkg/server/http"
 	"github.com/rancher/apiserver/pkg/types"
 	"github.com/rancher/steve/pkg/schema"
 	"github.com/rancher/steve/pkg/server"
@@ -58,6 +59,7 @@ func RegisterSchema(scaled *config.Scaled, server *server.Server, _ config.Optio
 		virtSubresourceRestClient:   virtSubresourceClient,
 		ctx:                         scaled.Ctx,
 	}
+	handler := harvesterServer.NewHandler(&nodeHandler)
 
 	server.BaseSchemas.MustImportAndCustomize(MaintenanceModeInput{}, nil)
 
@@ -80,14 +82,14 @@ func RegisterSchema(scaled *config.Scaled, server *server.Server, _ config.Optio
 				powerActionPossible: {},
 			}
 			s.ActionHandlers = map[string]http.Handler{
-				enableMaintenanceModeAction:  nodeHandler,
-				disableMaintenanceModeAction: nodeHandler,
-				cordonAction:                 nodeHandler,
-				uncordonAction:               nodeHandler,
-				listUnhealthyVM:              nodeHandler,
-				maintenancePossible:          nodeHandler,
-				powerAction:                  nodeHandler,
-				powerActionPossible:          nodeHandler,
+				enableMaintenanceModeAction:  handler,
+				disableMaintenanceModeAction: handler,
+				cordonAction:                 handler,
+				uncordonAction:               handler,
+				listUnhealthyVM:              handler,
+				maintenancePossible:          handler,
+				powerAction:                  handler,
+				powerActionPossible:          handler,
 			}
 		},
 	}

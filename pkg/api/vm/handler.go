@@ -82,20 +82,7 @@ type vmActionHandler struct {
 	storageClassCache         ctlstoragev1.StorageClassCache
 }
 
-func (h vmActionHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	if err := h.doAction(rw, req); err != nil {
-		status := http.StatusInternalServerError
-		if e, ok := err.(*apierror.APIError); ok {
-			status = e.Code.Status
-		}
-		rw.WriteHeader(status)
-		_, _ = rw.Write([]byte(err.Error()))
-		return
-	}
-	rw.WriteHeader(http.StatusNoContent)
-}
-
-func (h *vmActionHandler) doAction(rw http.ResponseWriter, r *http.Request) error {
+func (h *vmActionHandler) Do(rw http.ResponseWriter, r *http.Request) (interface{}, error) {
 	vars := util.EncodeVars(mux.Vars(r))
 	action := vars["action"]
 	namespace := vars["namespace"]
@@ -105,132 +92,132 @@ func (h *vmActionHandler) doAction(rw http.ResponseWriter, r *http.Request) erro
 	case ejectCdRom:
 		var input EjectCdRomActionInput
 		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-			return apierror.NewAPIError(validation.InvalidBodyContent, "Failed to decode request body: %v "+err.Error())
+			return nil, apierror.NewAPIError(validation.InvalidBodyContent, "Failed to decode request body: %v "+err.Error())
 		}
 
 		if len(input.DiskNames) == 0 {
-			return apierror.NewAPIError(validation.InvalidBodyContent, "Parameter diskNames is empty")
+			return nil, apierror.NewAPIError(validation.InvalidBodyContent, "Parameter diskNames is empty")
 		}
 
-		return h.ejectCdRom(r.Context(), name, namespace, input.DiskNames)
+		return nil, h.ejectCdRom(r.Context(), name, namespace, input.DiskNames)
 	case migrate:
 		var input MigrateInput
 		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-			return apierror.NewAPIError(validation.InvalidBodyContent, "Failed to decode request body: %v "+err.Error())
+			return nil, apierror.NewAPIError(validation.InvalidBodyContent, "Failed to decode request body: %v "+err.Error())
 		}
-		return h.migrate(r.Context(), namespace, name, input.NodeName)
+		return nil, h.migrate(r.Context(), namespace, name, input.NodeName)
 	case abortMigration:
-		return h.abortMigration(namespace, name)
+		return nil, h.abortMigration(namespace, name)
 	case findMigratableNodes:
 		return h.findMigratableNodes(rw, namespace, name)
 	case startVM, stopVM, restartVM:
 		if err := h.subresourceOperate(r.Context(), vmResource, namespace, name, action); err != nil {
-			return fmt.Errorf("%s virtual machine %s/%s failed, %v", action, namespace, name, err)
+			return nil, fmt.Errorf("%s virtual machine %s/%s failed, %v", action, namespace, name, err)
 		}
 	case pauseVM, unpauseVM, softReboot:
 		if err := h.subresourceOperate(r.Context(), vmiResource, namespace, name, action); err != nil {
-			return fmt.Errorf("%s virtual machine %s/%s failed, %v", action, namespace, name, err)
+			return nil, fmt.Errorf("%s virtual machine %s/%s failed, %v", action, namespace, name, err)
 		}
 	case backupVM:
 		var input BackupInput
 		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-			return apierror.NewAPIError(validation.InvalidBodyContent, "Failed to decode request body: %v "+err.Error())
+			return nil, apierror.NewAPIError(validation.InvalidBodyContent, "Failed to decode request body: %v "+err.Error())
 		}
 
 		if input.Name == "" {
-			return apierror.NewAPIError(validation.InvalidBodyContent, "Parameter backup name is required")
+			return nil, apierror.NewAPIError(validation.InvalidBodyContent, "Parameter backup name is required")
 		}
 
 		if err := h.checkBackupTargetConfigured(); err != nil {
-			return err
+			return nil, err
 		}
 
 		if err := h.createVMBackup(name, namespace, input); err != nil {
-			return err
+			return nil, err
 		}
-		return nil
+		return nil, nil
 	case restoreVM:
 		var input RestoreInput
 		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-			return apierror.NewAPIError(validation.InvalidBodyContent, "Failed to decode request body: %v "+err.Error())
+			return nil, apierror.NewAPIError(validation.InvalidBodyContent, "Failed to decode request body: %v "+err.Error())
 		}
 
 		if input.Name == "" || input.BackupName == "" {
-			return apierror.NewAPIError(validation.InvalidBodyContent, "Parameter name and backupName are required")
+			return nil, apierror.NewAPIError(validation.InvalidBodyContent, "Parameter name and backupName are required")
 		}
 
 		if err := h.checkBackupTargetConfigured(); err != nil {
-			return err
+			return nil, err
 		}
 
 		if err := h.restoreBackup(name, namespace, input); err != nil {
-			return err
+			return nil, err
 		}
-		return nil
+		return nil, nil
 	case createTemplate:
 		var input CreateTemplateInput
 		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-			return apierror.NewAPIError(validation.InvalidBodyContent, "Failed to decode request body: %v "+err.Error())
+			return nil, apierror.NewAPIError(validation.InvalidBodyContent, "Failed to decode request body: %v "+err.Error())
 		}
 
 		if input.Name == "" {
-			return apierror.NewAPIError(validation.InvalidBodyContent, "Template name is required")
+			return nil, apierror.NewAPIError(validation.InvalidBodyContent, "Template name is required")
 		}
-		return h.createTemplate(namespace, name, input)
+		return nil, h.createTemplate(namespace, name, input)
 	case addVolume:
 		var input AddVolumeInput
 		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-			return apierror.NewAPIError(validation.InvalidBodyContent, "Failed to decode request body: %v "+err.Error())
+			return nil, apierror.NewAPIError(validation.InvalidBodyContent, "Failed to decode request body: %v "+err.Error())
 		}
 		if input.DiskName == "" || input.VolumeSourceName == "" {
-			return apierror.NewAPIError(validation.InvalidBodyContent, "Parameter `diskName` and `volumeName` are required")
+			return nil, apierror.NewAPIError(validation.InvalidBodyContent, "Parameter `diskName` and `volumeName` are required")
 		}
-		return h.addVolume(r.Context(), namespace, name, input)
+		return nil, h.addVolume(r.Context(), namespace, name, input)
 	case removeVolume:
 		var input RemoveVolumeInput
 		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-			return apierror.NewAPIError(validation.InvalidBodyContent, "Failed to decode request body: %v "+err.Error())
+			return nil, apierror.NewAPIError(validation.InvalidBodyContent, "Failed to decode request body: %v "+err.Error())
 		}
 		if input.DiskName == "" {
-			return apierror.NewAPIError(validation.InvalidBodyContent, "Parameter `volumeName` are required")
+			return nil, apierror.NewAPIError(validation.InvalidBodyContent, "Parameter `volumeName` are required")
 		}
-		return h.removeVolume(r.Context(), namespace, name, input)
+		return nil, h.removeVolume(r.Context(), namespace, name, input)
 	case cloneVM:
 		var input CloneInput
 		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-			return apierror.NewAPIError(validation.InvalidBodyContent, "Failed to decode request body: %v "+err.Error())
+			return nil, apierror.NewAPIError(validation.InvalidBodyContent, "Failed to decode request body: %v "+err.Error())
 		}
 
 		if input.TargetVM == "" {
-			return apierror.NewAPIError(validation.InvalidBodyContent, "Parameter targetVm are required")
+			return nil, apierror.NewAPIError(validation.InvalidBodyContent, "Parameter targetVm are required")
 		}
 
 		if err := h.cloneVM(name, namespace, input); err != nil {
-			return err
+			return nil, err
 		}
-		return nil
+		return nil, nil
 	case forceStopVM:
 		var gracePeriod int64
 		stopOptions := &kubevirtv1.StopOptions{GracePeriod: &gracePeriod}
 		body, err := json.Marshal(stopOptions)
 		if err != nil {
-			return fmt.Errorf("%s virtual machine %s/%s failed, %v", action, namespace, name, err)
+			return nil, fmt.Errorf("%s virtual machine %s/%s failed, %v", action, namespace, name, err)
 		}
 		// The request is equal to "virtctl stop my-vm --grace-period 0 --force"
 		if err := h.virtSubresourceRestClient.Put().Namespace(namespace).Resource(vmResource).SubResource(stopVM).Name(name).Body(body).Do(r.Context()).Error(); err != nil {
 			// Kubevirt returns "Halted does not support manual stop requests" error when VM runStrategy is Halted,
 			// but the request will still forcely stop the VM.
 			if strings.Contains(err.Error(), "Halted does not support manual stop requests") {
-				return nil
+				return nil, nil
 			}
-			return err
+			return nil, err
 		}
 	case dismissInsufficientResourceQuota:
-		return h.dismissInsufficientResourceQuota(name, namespace)
+		return nil, h.dismissInsufficientResourceQuota(name, namespace)
 	default:
-		return apierror.NewAPIError(validation.InvalidAction, "Unsupported action")
+		return nil, apierror.NewAPIError(validation.InvalidAction, "Unsupported action")
 	}
-	return nil
+	return nil, nil
 }
 
 func (h *vmActionHandler) ejectCdRom(ctx context.Context, name, namespace string, diskNames []string) error {
@@ -455,26 +442,25 @@ func (h *vmActionHandler) abortMigration(namespace, name string) error {
 	return nil
 }
 
-func (h *vmActionHandler) findMigratableNodes(rw http.ResponseWriter, namespace, name string) error {
+func (h *vmActionHandler) findMigratableNodes(_ http.ResponseWriter, namespace, name string) (*FindMigratableNodesOutput, error) {
 	vmi, err := h.vmiCache.Get(namespace, name)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if !canMigrate(vmi) {
-		return errors.New("The VM is not migratable")
+		return nil, errors.New("The VM is not migratable")
 	}
 
 	nodes, err := h.findMigratableNodesByVMI(vmi)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	resp := FindMigratableNodesOutput{
+	resp := &FindMigratableNodesOutput{
 		Nodes: nodes,
 	}
 
-	util.ResponseOKWithBody(rw, resp)
-	return nil
+	return resp, nil
 }
 
 func (h *vmActionHandler) findMigratableNodesByVMI(vmi *kubevirtv1.VirtualMachineInstance) ([]string, error) {
