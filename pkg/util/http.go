@@ -20,6 +20,11 @@ func ResponseBody(obj interface{}) []byte {
 	return respBody
 }
 
+func WriteResponseBody(rw http.ResponseWriter, obj interface{}) {
+	rw.Header().Set("Content-type", "application/json")
+	_, _ = rw.Write(ResponseBody(obj))
+}
+
 func ResponseOKWithBody(rw http.ResponseWriter, obj interface{}) {
 	rw.Header().Set("Content-type", "application/json")
 	rw.WriteHeader(http.StatusOK)
