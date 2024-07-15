@@ -592,7 +592,7 @@ func buildPromoteJob(namespace string, node *corev1.Node, promoteImage string) *
 			Image:     promoteImage,
 			Command:   []string{"sh"},
 			Args:      []string{"-e", promoteScript, promoteParameter},
-			Resources: corev1.ResourceRequirements{},
+			Resources: corev1.VolumeResourceRequirements{},
 			VolumeMounts: []corev1.VolumeMount{
 				{Name: "host-root", MountPath: promoteRootMountPath},
 				{Name: "helpers", MountPath: promoteScriptsMountPath},
