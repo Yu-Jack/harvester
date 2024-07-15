@@ -13,7 +13,7 @@ import (
 	"github.com/rancher/apiserver/pkg/types"
 	"github.com/rancher/steve/pkg/accesscontrol"
 	"github.com/rancher/steve/pkg/stores/partition/listprocessor"
-	corecontrollers "github.com/rancher/wrangler/v2/pkg/generated/controllers/core/v1"
+	corecontrollers "github.com/rancher/wrangler/v3/pkg/generated/controllers/core/v1"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -110,7 +110,7 @@ func (s *Store) Delete(apiOp *types.APIRequest, schema *types.APISchema, id stri
 	if err != nil {
 		return types.APIObject{}, err
 	}
-	return toAPI(schema, obj, warnings), nil
+	return ToAPI(schema, obj, warnings), nil
 }
 
 // ByID looks up a single object by its ID.
@@ -124,7 +124,7 @@ func (s *Store) ByID(apiOp *types.APIRequest, schema *types.APISchema, id string
 	if err != nil {
 		return types.APIObject{}, err
 	}
-	return toAPI(schema, obj, warnings), nil
+	return ToAPI(schema, obj, warnings), nil
 }
 
 func (s *Store) listPartition(ctx context.Context, apiOp *types.APIRequest, schema *types.APISchema, partition Partition,
@@ -175,18 +175,22 @@ func (s *Store) List(apiOp *types.APIRequest, schema *types.APISchema) (types.AP
 
 	opts := listprocessor.ParseQuery(apiOp)
 
-	key, err := s.getCacheKey(apiOp, opts)
-	if err != nil {
-		return result, err
-	}
-
 	var list []unstructured.Unstructured
-	if key.revision != "" && s.listCache != nil {
-		cachedList, ok := s.listCache.Get(key)
-		if ok {
-			logrus.Tracef("found cached list for query %s?%s", apiOp.Request.URL.Path, apiOp.Request.URL.RawQuery)
-			list = cachedList.(*unstructured.UnstructuredList).Items
-			result.Continue = cachedList.(*unstructured.UnstructuredList).GetContinue()
+	var key cacheKey
+	if s.listCache != nil {
+		key, err = s.getCacheKey(apiOp, opts)
+		if err != nil {
+			return result, err
+		}
+
+		if key.revision != "" {
+			cachedList, ok := s.listCache.Get(key)
+			if ok {
+				logrus.Tracef("found cached list for query %s?%s", apiOp.Request.URL.Path, apiOp.Request.URL.RawQuery)
+				list = cachedList.(*unstructured.UnstructuredList).Items
+				result.Continue = cachedList.(*unstructured.UnstructuredList).GetContinue()
+				result.Revision = key.revision
+			}
 		}
 	}
 	if list == nil { // did not look in cache or was not found in cache
@@ -202,7 +206,7 @@ func (s *Store) List(apiOp *types.APIRequest, schema *types.APISchema) (types.AP
 			return result, lister.Err()
 		}
 		list = listprocessor.SortList(list, opts.Sort)
-		key.revision = lister.Revision()
+		result.Revision = lister.Revision()
 		listToCache := &unstructured.UnstructuredList{
 			Items: list,
 		}
@@ -212,6 +216,7 @@ func (s *Store) List(apiOp *types.APIRequest, schema *types.APISchema) (types.AP
 			listToCache.SetContinue(c)
 		}
 		if s.listCache != nil {
+			key.revision = result.Revision
 			s.listCache.Add(key, listToCache, 30*time.Minute)
 		}
 		result.Continue = lister.Continue()
@@ -221,10 +226,9 @@ func (s *Store) List(apiOp *types.APIRequest, schema *types.APISchema) (types.AP
 
 	for _, item := range list {
 		item := item.DeepCopy()
-		result.Objects = append(result.Objects, toAPI(schema, item, nil))
+		result.Objects = append(result.Objects, ToAPI(schema, item, nil))
 	}
 
-	result.Revision = key.revision
 	result.Pages = pages
 	return result, lister.Err()
 }
@@ -262,7 +266,7 @@ func (s *Store) Create(apiOp *types.APIRequest, schema *types.APISchema, data ty
 	if err != nil {
 		return types.APIObject{}, err
 	}
-	return toAPI(schema, obj, warnings), nil
+	return ToAPI(schema, obj, warnings), nil
 }
 
 // Update updates a single object in the store.
@@ -276,7 +280,7 @@ func (s *Store) Update(apiOp *types.APIRequest, schema *types.APISchema, data ty
 	if err != nil {
 		return types.APIObject{}, err
 	}
-	return toAPI(schema, obj, warnings), nil
+	return ToAPI(schema, obj, warnings), nil
 }
 
 // Watch returns a channel of events for a list or resource.
@@ -306,7 +310,7 @@ func (s *Store) Watch(apiOp *types.APIRequest, schema *types.APISchema, wr types
 				return err
 			}
 			for i := range c {
-				response <- toAPIEvent(apiOp, schema, i)
+				response <- ToAPIEvent(apiOp, schema, i)
 			}
 			return nil
 		})
@@ -322,7 +326,7 @@ func (s *Store) Watch(apiOp *types.APIRequest, schema *types.APISchema, wr types
 	return response, nil
 }
 
-func toAPI(schema *types.APISchema, obj runtime.Object, warnings []types.Warning) types.APIObject {
+func ToAPI(schema *types.APISchema, obj runtime.Object, warnings []types.Warning) types.APIObject {
 	if obj == nil || reflect.ValueOf(obj).IsNil() {
 		return types.APIObject{}
 	}
@@ -368,7 +372,7 @@ func moveToUnderscore(obj *unstructured.Unstructured) *unstructured.Unstructured
 	return obj
 }
 
-func toAPIEvent(apiOp *types.APIRequest, schema *types.APISchema, event watch.Event) types.APIEvent {
+func ToAPIEvent(apiOp *types.APIRequest, schema *types.APISchema, event watch.Event) types.APIEvent {
 	name := types.ChangeAPIEvent
 	switch event.Type {
 	case watch.Deleted:
@@ -389,7 +393,7 @@ func toAPIEvent(apiOp *types.APIRequest, schema *types.APISchema, event watch.Ev
 		return apiEvent
 	}
 
-	apiEvent.Object = toAPI(schema, event.Object, nil)
+	apiEvent.Object = ToAPI(schema, event.Object, nil)
 
 	m, err := meta.Accessor(event.Object)
 	if err != nil {

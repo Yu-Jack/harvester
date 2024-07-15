@@ -2,13 +2,18 @@ package proxy
 
 import (
 	"github.com/rancher/apiserver/pkg/types"
-	"github.com/rancher/wrangler/v2/pkg/data"
-	"github.com/rancher/wrangler/v2/pkg/data/convert"
+	"github.com/rancher/wrangler/v3/pkg/data"
+	"github.com/rancher/wrangler/v3/pkg/data/convert"
 )
 
 // unformatterStore removes fields added by the formatter that kubernetes cannot recognize.
 type unformatterStore struct {
 	types.Store
+}
+
+// NewUnformatterStore returns a store which removes fields added by the formatter that kubernetes cannot recognize.
+func NewUnformatterStore(s types.Store) types.Store {
+	return &unformatterStore{Store: s}
 }
 
 // ByID looks up a single object by its ID.

@@ -18,10 +18,10 @@ import (
 	"github.com/rancher/steve/pkg/attributes"
 	metricsStore "github.com/rancher/steve/pkg/stores/metrics"
 	"github.com/rancher/steve/pkg/stores/partition"
-	"github.com/rancher/wrangler/v2/pkg/data"
-	corecontrollers "github.com/rancher/wrangler/v2/pkg/generated/controllers/core/v1"
-	"github.com/rancher/wrangler/v2/pkg/schemas/validation"
-	"github.com/rancher/wrangler/v2/pkg/summary"
+	"github.com/rancher/wrangler/v3/pkg/data"
+	corecontrollers "github.com/rancher/wrangler/v3/pkg/generated/controllers/core/v1"
+	"github.com/rancher/wrangler/v3/pkg/schemas/validation"
+	"github.com/rancher/wrangler/v3/pkg/summary"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -87,7 +87,7 @@ type Store struct {
 
 // NewProxyStore returns a wrapped types.Store.
 func NewProxyStore(clientGetter ClientGetter, notifier RelationshipNotifier, lookup accesscontrol.AccessSetLookup, namespaceCache corecontrollers.NamespaceCache) types.Store {
-	return &errorStore{
+	return &ErrorStore{
 		Store: &unformatterStore{
 			Store: &WatchRefresh{
 				Store: partition.NewStore(
