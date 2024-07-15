@@ -1,11 +1,12 @@
 package v1
 
 import (
-	"github.com/rancher/wrangler/pkg/genericcondition"
+	"github.com/rancher/wrangler/v2/pkg/genericcondition"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // +genclient
+// +kubebuilder:skipversion
 // +genclient:nonNamespaced
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
@@ -97,6 +98,7 @@ type RepoStatus struct {
 }
 
 // +genclient
+// +kubebuilder:skipversion
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type Operation struct {

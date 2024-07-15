@@ -4,9 +4,9 @@ import (
 	"github.com/rancher/apiserver/pkg/types"
 	"github.com/rancher/steve/pkg/attributes"
 	"github.com/rancher/steve/pkg/schema/table"
-	apiextv1 "github.com/rancher/wrangler/pkg/generated/controllers/apiextensions.k8s.io/v1"
-	"github.com/rancher/wrangler/pkg/schemas"
-	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	apiextv1 "github.com/rancher/wrangler/v2/pkg/generated/controllers/apiextensions.k8s.io/v1"
+	"github.com/rancher/wrangler/v2/pkg/schemas"
+	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
