@@ -149,10 +149,6 @@ github.com/containernetworking/cni/pkg/types
 # github.com/coreos/go-systemd/v22 v22.5.0
 ## explicit; go 1.12
 github.com/coreos/go-systemd/v22/dbus
-# github.com/coreos/prometheus-operator v0.38.3
-## explicit; go 1.13
-github.com/coreos/prometheus-operator/pkg/apis/monitoring
-github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1
 # github.com/cpuguy83/go-md2man/v2 v2.0.4
 ## explicit; go 1.11
 github.com/cpuguy83/go-md2man/v2/md2man
@@ -420,6 +416,14 @@ github.com/imdario/mergo
 # github.com/inconshreveable/mousetrap v1.1.0
 ## explicit; go 1.18
 github.com/inconshreveable/mousetrap
+# github.com/insomniacslk/dhcp v0.0.0-20230908212754-65c27093e38a
+## explicit; go 1.18
+github.com/insomniacslk/dhcp/dhcpv4
+github.com/insomniacslk/dhcp/dhcpv6
+github.com/insomniacslk/dhcp/dhcpv6/server6
+github.com/insomniacslk/dhcp/iana
+github.com/insomniacslk/dhcp/interfaces
+github.com/insomniacslk/dhcp/rfc1035label
 # github.com/jinzhu/copier v0.3.5
 ## explicit; go 1.13
 github.com/jinzhu/copier
@@ -433,6 +437,9 @@ github.com/jmoiron/sqlx/reflectx
 # github.com/josharian/intern v1.0.0
 ## explicit; go 1.5
 github.com/josharian/intern
+# github.com/josharian/native v1.1.0
+## explicit; go 1.13
+github.com/josharian/native
 # github.com/json-iterator/go v1.1.12
 ## explicit; go 1.12
 github.com/json-iterator/go
@@ -455,6 +462,10 @@ github.com/klauspost/compress/internal/cpuinfo
 github.com/klauspost/compress/internal/snapref
 github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
+# github.com/krolaw/dhcp4 v0.0.0-20180925202202-7cead472c414
+## explicit
+github.com/krolaw/dhcp4
+github.com/krolaw/dhcp4/conn
 # github.com/kube-logging/logging-operator/pkg/sdk v0.9.1
 ## explicit; go 1.20
 github.com/kube-logging/logging-operator/pkg/sdk/logging/api/v1beta1
@@ -577,9 +588,10 @@ github.com/longhorn/types/pkg/generated/enginerpc
 github.com/longhorn/types/pkg/generated/imrpc
 github.com/longhorn/types/pkg/generated/smrpc
 github.com/longhorn/types/pkg/generated/spdkrpc
-# github.com/machadovilaca/operator-observability v0.0.6
-## explicit; go 1.20
+# github.com/machadovilaca/operator-observability v0.0.20
+## explicit; go 1.21
 github.com/machadovilaca/operator-observability/pkg/operatormetrics
+github.com/machadovilaca/operator-observability/pkg/operatorrules
 # github.com/mailru/easyjson v0.7.7
 ## explicit; go 1.12
 github.com/mailru/easyjson/buffer
@@ -742,8 +754,6 @@ github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
 github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1
 # github.com/prometheus/client_golang v1.18.0
 ## explicit; go 1.19
-github.com/prometheus/client_golang/api
-github.com/prometheus/client_golang/api/prometheus/v1
 github.com/prometheus/client_golang/prometheus
 github.com/prometheus/client_golang/prometheus/collectors
 github.com/prometheus/client_golang/prometheus/internal
@@ -1055,9 +1065,20 @@ github.com/tidwall/match
 # github.com/tidwall/pretty v1.2.0
 ## explicit; go 1.16
 github.com/tidwall/pretty
+# github.com/u-root/uio v0.0.0-20230220225925-ffce2a382923
+## explicit; go 1.16
+github.com/u-root/uio/rand
+github.com/u-root/uio/uio
 # github.com/urfave/cli v1.22.15
 ## explicit; go 1.11
 github.com/urfave/cli
+# github.com/vishvananda/netlink v1.2.1-beta.2
+## explicit; go 1.12
+github.com/vishvananda/netlink
+github.com/vishvananda/netlink/nl
+# github.com/vishvananda/netns v0.0.4
+## explicit; go 1.17
+github.com/vishvananda/netns
 # github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb
 ## explicit
 github.com/xeipuuv/gojsonpointer
@@ -1160,6 +1181,7 @@ golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
 golang.org/x/exp/maps
 # golang.org/x/net v0.27.0
 ## explicit; go 1.18
+golang.org/x/net/bpf
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
 golang.org/x/net/html
@@ -1170,8 +1192,12 @@ golang.org/x/net/http/httpproxy
 golang.org/x/net/http2
 golang.org/x/net/http2/hpack
 golang.org/x/net/idna
+golang.org/x/net/internal/iana
+golang.org/x/net/internal/socket
 golang.org/x/net/internal/socks
 golang.org/x/net/internal/timeseries
+golang.org/x/net/ipv4
+golang.org/x/net/ipv6
 golang.org/x/net/proxy
 golang.org/x/net/trace
 golang.org/x/net/websocket
@@ -2050,8 +2076,8 @@ kubevirt.io/containerized-data-importer-api/pkg/apis/upload/v1beta1
 # kubevirt.io/controller-lifecycle-operator-sdk/api v0.0.0-20220329064328-f3cc58c6ed90
 ## explicit; go 1.17
 kubevirt.io/controller-lifecycle-operator-sdk/api
-# kubevirt.io/kubevirt v1.1.1
-## explicit; go 1.19
+# kubevirt.io/kubevirt v1.3.0-rc.2
+## explicit; go 1.22.0
 kubevirt.io/kubevirt/pkg/apimachinery/patch
 kubevirt.io/kubevirt/pkg/certificates/bootstrap
 kubevirt.io/kubevirt/pkg/certificates/triple
@@ -2063,27 +2089,43 @@ kubevirt.io/kubevirt/pkg/controller
 kubevirt.io/kubevirt/pkg/downwardmetrics
 kubevirt.io/kubevirt/pkg/downwardmetrics/vhostmd
 kubevirt.io/kubevirt/pkg/downwardmetrics/vhostmd/api
+kubevirt.io/kubevirt/pkg/emptydisk
 kubevirt.io/kubevirt/pkg/ephemeral-disk
 kubevirt.io/kubevirt/pkg/ephemeral-disk-utils
+kubevirt.io/kubevirt/pkg/handler-launcher-com/cmd/v1
 kubevirt.io/kubevirt/pkg/healthz
 kubevirt.io/kubevirt/pkg/hooks
 kubevirt.io/kubevirt/pkg/hooks/info
 kubevirt.io/kubevirt/pkg/hooks/v1alpha1
 kubevirt.io/kubevirt/pkg/hooks/v1alpha2
+kubevirt.io/kubevirt/pkg/hooks/v1alpha3
 kubevirt.io/kubevirt/pkg/host-disk
+kubevirt.io/kubevirt/pkg/ignition
 kubevirt.io/kubevirt/pkg/instancetype
-kubevirt.io/kubevirt/pkg/monitoring/migration
-kubevirt.io/kubevirt/pkg/monitoring/migrationstats
-kubevirt.io/kubevirt/pkg/monitoring/perfscale
+kubevirt.io/kubevirt/pkg/liveupdate/memory
+kubevirt.io/kubevirt/pkg/monitoring/metrics/common/client
+kubevirt.io/kubevirt/pkg/monitoring/metrics/common/workqueue
+kubevirt.io/kubevirt/pkg/monitoring/metrics/virt-controller
 kubevirt.io/kubevirt/pkg/monitoring/profiler
-kubevirt.io/kubevirt/pkg/monitoring/virt-controller/metrics
-kubevirt.io/kubevirt/pkg/monitoring/vmistats
-kubevirt.io/kubevirt/pkg/monitoring/vmstats
+kubevirt.io/kubevirt/pkg/monitoring/rules
+kubevirt.io/kubevirt/pkg/monitoring/rules/alerts
+kubevirt.io/kubevirt/pkg/monitoring/rules/recordingrules
+kubevirt.io/kubevirt/pkg/network/admitter
+kubevirt.io/kubevirt/pkg/network/cache
+kubevirt.io/kubevirt/pkg/network/deviceinfo
+kubevirt.io/kubevirt/pkg/network/dhcp/server
+kubevirt.io/kubevirt/pkg/network/dhcp/serverv6
+kubevirt.io/kubevirt/pkg/network/dns
+kubevirt.io/kubevirt/pkg/network/downwardapi
+kubevirt.io/kubevirt/pkg/network/driver
 kubevirt.io/kubevirt/pkg/network/istio
+kubevirt.io/kubevirt/pkg/network/link
 kubevirt.io/kubevirt/pkg/network/namescheme
 kubevirt.io/kubevirt/pkg/network/netbinding
-kubevirt.io/kubevirt/pkg/network/sriov
+kubevirt.io/kubevirt/pkg/network/netmachinery
 kubevirt.io/kubevirt/pkg/network/vmispec
+kubevirt.io/kubevirt/pkg/os/fs
+kubevirt.io/kubevirt/pkg/pointer
 kubevirt.io/kubevirt/pkg/rest
 kubevirt.io/kubevirt/pkg/safepath
 kubevirt.io/kubevirt/pkg/service
@@ -2107,19 +2149,25 @@ kubevirt.io/kubevirt/pkg/util/ratelimiter
 kubevirt.io/kubevirt/pkg/util/status
 kubevirt.io/kubevirt/pkg/util/tls
 kubevirt.io/kubevirt/pkg/util/trace
-kubevirt.io/kubevirt/pkg/virt-api/webhooks
 kubevirt.io/kubevirt/pkg/virt-config
+kubevirt.io/kubevirt/pkg/virt-config/deprecation
 kubevirt.io/kubevirt/pkg/virt-controller/leaderelectionconfig
+kubevirt.io/kubevirt/pkg/virt-controller/network
 kubevirt.io/kubevirt/pkg/virt-controller/services
 kubevirt.io/kubevirt/pkg/virt-controller/watch
 kubevirt.io/kubevirt/pkg/virt-controller/watch/clone
+kubevirt.io/kubevirt/pkg/virt-controller/watch/descheduler
 kubevirt.io/kubevirt/pkg/virt-controller/watch/drain/disruptionbudget
 kubevirt.io/kubevirt/pkg/virt-controller/watch/drain/evacuation
 kubevirt.io/kubevirt/pkg/virt-controller/watch/topology
 kubevirt.io/kubevirt/pkg/virt-controller/watch/util
+kubevirt.io/kubevirt/pkg/virt-controller/watch/volume-migration
 kubevirt.io/kubevirt/pkg/virt-controller/watch/workload-updater
-kubevirt.io/kubevirt/pkg/virt-handler/node-labeller/util
 kubevirt.io/kubevirt/pkg/virt-launcher/virtwrap/api
+kubevirt.io/kubevirt/pkg/virt-launcher/virtwrap/converter
+kubevirt.io/kubevirt/pkg/virt-launcher/virtwrap/converter/vcpu
+kubevirt.io/kubevirt/pkg/virt-launcher/virtwrap/device
+kubevirt.io/kubevirt/pkg/virt-launcher/virtwrap/launchsecurity
 kubevirt.io/kubevirt/pkg/virt-operator/resource/apply
 kubevirt.io/kubevirt/pkg/virt-operator/resource/generate/components
 kubevirt.io/kubevirt/pkg/virt-operator/resource/generate/install
