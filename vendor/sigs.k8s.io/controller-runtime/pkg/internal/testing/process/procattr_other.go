@@ -1,5 +1,8 @@
+//go:build !aix && !darwin && !dragonfly && !freebsd && !linux && !netbsd && !openbsd && !solaris && !zos
+// +build !aix,!darwin,!dragonfly,!freebsd,!linux,!netbsd,!openbsd,!solaris,!zos
+
 /*
-Copyright 2018 The Kubernetes Authors.
+Copyright 2016 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +17,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// +k8s:deepcopy-gen=package
-// +k8s:conversion-gen=k8s.io/component-base/config
+package process
 
-package v1alpha1 // import "k8s.io/component-base/config/v1alpha1"
+import "syscall"
+
+// GetSysProcAttr returns the SysProcAttr to use for the process,
+// for non-unix systems this returns nil.
+func GetSysProcAttr() *syscall.SysProcAttr {
+	return nil
+}
