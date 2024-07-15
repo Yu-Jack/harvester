@@ -31,6 +31,7 @@ replace (
 	k8s.io/cri-api => k8s.io/cri-api v0.30.1
 	k8s.io/csi-translation-lib => k8s.io/csi-translation-lib v0.30.1
 	k8s.io/dynamic-resource-allocation => k8s.io/dynamic-resource-allocation v0.30.1
+	k8s.io/endpointslice => k8s.io/endpointslice v0.30.2
 	k8s.io/kms => k8s.io/kms v0.30.1
 	k8s.io/kube-aggregator => k8s.io/kube-aggregator v0.30.1
 	k8s.io/kube-controller-manager => k8s.io/kube-controller-manager v0.30.1
@@ -300,6 +301,7 @@ require (
 	go.opentelemetry.io/proto/otlp v1.0.0 // indirect
 	go.starlark.net v0.0.0-20230525235612-a134d8f9ddca // indirect
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect
+	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/oauth2 v0.21.0 // indirect
 	golang.org/x/sys v0.22.0 // indirect
 	golang.org/x/term v0.22.0 // indirect
@@ -312,7 +314,9 @@ require (
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	k8s.io/cli-runtime v0.30.2 // indirect
+	k8s.io/code-generator v0.30.1 // indirect
 	k8s.io/component-base v0.30.2 // indirect
+	k8s.io/gengo/v2 v2.0.0-20240228010128-51d4e06bde70 // indirect
 	k8s.io/klog v1.0.0 // indirect
 	k8s.io/klog/v2 v2.120.1 // indirect
 	k8s.io/kube-aggregator v0.30.1 // indirect

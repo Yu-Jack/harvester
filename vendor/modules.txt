@@ -958,6 +958,9 @@ github.com/rancher/wrangler/v3/pkg/broadcast
 github.com/rancher/wrangler/v3/pkg/cleanup
 github.com/rancher/wrangler/v3/pkg/clients
 github.com/rancher/wrangler/v3/pkg/condition
+github.com/rancher/wrangler/v3/pkg/controller-gen
+github.com/rancher/wrangler/v3/pkg/controller-gen/args
+github.com/rancher/wrangler/v3/pkg/controller-gen/generators
 github.com/rancher/wrangler/v3/pkg/crd
 github.com/rancher/wrangler/v3/pkg/data
 github.com/rancher/wrangler/v3/pkg/data/convert
@@ -1179,6 +1182,11 @@ golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
 # golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 ## explicit; go 1.20
 golang.org/x/exp/maps
+# golang.org/x/mod v0.17.0
+## explicit; go 1.18
+golang.org/x/mod/internal/lazyregexp
+golang.org/x/mod/module
+golang.org/x/mod/semver
 # golang.org/x/net v0.27.0
 ## explicit; go 1.18
 golang.org/x/net/bpf
@@ -1251,7 +1259,28 @@ golang.org/x/time/rate
 # golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d
 ## explicit; go 1.19
 golang.org/x/tools/cover
+golang.org/x/tools/go/ast/astutil
 golang.org/x/tools/go/ast/inspector
+golang.org/x/tools/go/gcexportdata
+golang.org/x/tools/go/internal/packagesdriver
+golang.org/x/tools/go/packages
+golang.org/x/tools/go/types/objectpath
+golang.org/x/tools/imports
+golang.org/x/tools/internal/aliases
+golang.org/x/tools/internal/event
+golang.org/x/tools/internal/event/core
+golang.org/x/tools/internal/event/keys
+golang.org/x/tools/internal/event/label
+golang.org/x/tools/internal/gcimporter
+golang.org/x/tools/internal/gocommand
+golang.org/x/tools/internal/gopathwalk
+golang.org/x/tools/internal/imports
+golang.org/x/tools/internal/packagesinternal
+golang.org/x/tools/internal/pkgbits
+golang.org/x/tools/internal/stdlib
+golang.org/x/tools/internal/tokeninternal
+golang.org/x/tools/internal/typesinternal
+golang.org/x/tools/internal/versions
 # gomodules.xyz/jsonpatch/v2 v2.4.0
 ## explicit; go 1.20
 gomodules.xyz/jsonpatch/v2
@@ -1910,6 +1939,20 @@ k8s.io/client-go/util/jsonpath
 k8s.io/client-go/util/keyutil
 k8s.io/client-go/util/retry
 k8s.io/client-go/util/workqueue
+# k8s.io/code-generator v0.30.1 => k8s.io/code-generator v0.30.1
+## explicit; go 1.22.0
+k8s.io/code-generator/cmd/client-gen/args
+k8s.io/code-generator/cmd/client-gen/generators
+k8s.io/code-generator/cmd/client-gen/generators/fake
+k8s.io/code-generator/cmd/client-gen/generators/scheme
+k8s.io/code-generator/cmd/client-gen/generators/util
+k8s.io/code-generator/cmd/client-gen/types
+k8s.io/code-generator/cmd/informer-gen/args
+k8s.io/code-generator/cmd/informer-gen/generators
+k8s.io/code-generator/cmd/lister-gen/args
+k8s.io/code-generator/cmd/lister-gen/generators
+k8s.io/code-generator/pkg/namer
+k8s.io/code-generator/pkg/util
 # k8s.io/component-base v0.30.2 => k8s.io/component-base v0.30.1
 ## explicit; go 1.22.0
 k8s.io/component-base/cli/flag
@@ -1930,7 +1973,20 @@ k8s.io/component-helpers/scheduling/corev1
 k8s.io/component-helpers/scheduling/corev1/nodeaffinity
 # k8s.io/gengo v0.0.0-20240310015720-9cff6334dab4
 ## explicit; go 1.13
+k8s.io/gengo/args
+k8s.io/gengo/examples/deepcopy-gen/generators
 k8s.io/gengo/examples/set-gen/sets
+k8s.io/gengo/generator
+k8s.io/gengo/namer
+k8s.io/gengo/parser
+k8s.io/gengo/types
+# k8s.io/gengo/v2 v2.0.0-20240228010128-51d4e06bde70
+## explicit; go 1.20
+k8s.io/gengo/v2
+k8s.io/gengo/v2/generator
+k8s.io/gengo/v2/namer
+k8s.io/gengo/v2/parser
+k8s.io/gengo/v2/types
 # k8s.io/klog v1.0.0
 ## explicit; go 1.12
 k8s.io/klog
@@ -2461,6 +2517,7 @@ sigs.k8s.io/yaml/goyaml.v2
 # k8s.io/cri-api => k8s.io/cri-api v0.30.1
 # k8s.io/csi-translation-lib => k8s.io/csi-translation-lib v0.30.1
 # k8s.io/dynamic-resource-allocation => k8s.io/dynamic-resource-allocation v0.30.1
+# k8s.io/endpointslice => k8s.io/endpointslice v0.30.2
 # k8s.io/kms => k8s.io/kms v0.30.1
 # k8s.io/kube-aggregator => k8s.io/kube-aggregator v0.30.1
 # k8s.io/kube-controller-manager => k8s.io/kube-controller-manager v0.30.1

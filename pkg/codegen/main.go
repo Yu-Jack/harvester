@@ -15,7 +15,7 @@ import (
 	catalogv1 "github.com/rancher/rancher/pkg/apis/catalog.cattle.io/v1"
 	mgmtv3 "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
 	upgradev1 "github.com/rancher/system-upgrade-controller/pkg/apis/upgrade.cattle.io/v1"
-	controllergen "github.com/rancher/wrangler/v3/pkg/controller-gen
+	controllergen "github.com/rancher/wrangler/v3/pkg/controller-gen"
 	"github.com/rancher/wrangler/v3/pkg/controller-gen/args"
 	"github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
