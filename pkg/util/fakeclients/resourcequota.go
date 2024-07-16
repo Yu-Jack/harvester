@@ -76,6 +76,6 @@ func (c ResourceQuotaClient) Patch(_, _ string, _ types.PatchType, _ []byte, _ .
 	panic("implement me")
 }
 
-func (c ResourceQuotaClient) WithImpersonation(impersonate rest.ImpersonationConfig) (generic.ClientInterface[*v1.ResourceQuota, *v1.ResourceQuotaList], error) {
+func (c ResourceQuotaClient) WithImpersonation(_ rest.ImpersonationConfig) (generic.ClientInterface[*v1.ResourceQuota, *v1.ResourceQuotaList], error) {
 	panic("implement me")
 }

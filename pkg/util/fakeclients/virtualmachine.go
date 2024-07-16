@@ -91,7 +91,7 @@ func (c VirtualMachineClient) Cache() generic.CacheInterface[*kubevirtv1api.Virt
 	panic("implement me")
 }
 
-func (c VirtualMachineClient) WithImpersonation(impersonate rest.ImpersonationConfig) (generic.ClientInterface[*kubevirtv1api.VirtualMachine, *kubevirtv1api.VirtualMachineList], error) {
+func (c VirtualMachineClient) WithImpersonation(_ rest.ImpersonationConfig) (generic.ClientInterface[*kubevirtv1api.VirtualMachine, *kubevirtv1api.VirtualMachineList], error) {
 	panic("implement me")
 }
 

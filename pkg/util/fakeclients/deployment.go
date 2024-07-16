@@ -46,6 +46,6 @@ func (c DeploymentClient) Patch(_, _ string, _ types.PatchType, _ []byte, _ ...s
 	panic("implement me")
 }
 
-func (c DeploymentClient) WithImpersonation(impersonate rest.ImpersonationConfig) (generic.ClientInterface[*appsv1.Deployment, *appsv1.DeploymentList], error) {
+func (c DeploymentClient) WithImpersonation(_ rest.ImpersonationConfig) (generic.ClientInterface[*appsv1.Deployment, *appsv1.DeploymentList], error) {
 	panic("implement me")
 }

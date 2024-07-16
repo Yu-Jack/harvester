@@ -41,7 +41,7 @@ func (c UpgradeLogClient) Patch(_, _ string, _ types.PatchType, _ []byte, _ ...s
 	panic("implement me")
 }
 
-func (c UpgradeLogClient) WithImpersonation(impersonate rest.ImpersonationConfig) (generic.ClientInterface[*harvesterv1.UpgradeLog, *harvesterv1.UpgradeLogList], error) {
+func (c UpgradeLogClient) WithImpersonation(_ rest.ImpersonationConfig) (generic.ClientInterface[*harvesterv1.UpgradeLog, *harvesterv1.UpgradeLogList], error) {
 	panic("implement me")
 }
 

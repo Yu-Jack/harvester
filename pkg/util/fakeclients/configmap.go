@@ -25,7 +25,7 @@ func (c ConfigmapClient) Update(configMap *v1.ConfigMap) (*v1.ConfigMap, error) 
 	return c(configMap.Namespace).Update(context.TODO(), configMap, metav1.UpdateOptions{})
 }
 
-func (c ConfigmapClient) UpdateStatus(configMap *v1.ConfigMap) (*v1.ConfigMap, error) {
+func (c ConfigmapClient) UpdateStatus(_ *v1.ConfigMap) (*v1.ConfigMap, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -50,7 +50,7 @@ func (c ConfigmapClient) Patch(_, _ string, _ types.PatchType, _ []byte, _ ...st
 	panic("implement me")
 }
 
-func (c ConfigmapClient) WithImpersonation(impersonate rest.ImpersonationConfig) (generic.ClientInterface[*v1.ConfigMap, *v1.ConfigMapList], error) {
+func (c ConfigmapClient) WithImpersonation(_ rest.ImpersonationConfig) (generic.ClientInterface[*v1.ConfigMap, *v1.ConfigMapList], error) {
 	panic("implement me")
 }
 

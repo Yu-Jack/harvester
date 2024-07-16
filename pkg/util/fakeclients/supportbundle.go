@@ -91,7 +91,7 @@ func (c SupportBundleClient) EnqueueAfter(_, _ string, _ time.Duration) {
 	// do nothing
 }
 
-func (c SupportBundleClient) WithImpersonation(impersonate rest.ImpersonationConfig) (generic.ClientInterface[*harvesterv1.SupportBundle, *harvesterv1.SupportBundleList], error) {
+func (c SupportBundleClient) WithImpersonation(_ rest.ImpersonationConfig) (generic.ClientInterface[*harvesterv1.SupportBundle, *harvesterv1.SupportBundleList], error) {
 	panic("implement me")
 }
 

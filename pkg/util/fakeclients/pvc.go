@@ -47,7 +47,7 @@ func (c PersistentVolumeClaimClient) Patch(namespace, name string, pt types.Patc
 	return c(namespace).Patch(context.TODO(), name, pt, data, metav1.PatchOptions{}, subresources...)
 }
 
-func (c PersistentVolumeClaimClient) WithImpersonation(impersonate rest.ImpersonationConfig) (generic.ClientInterface[*corev1.PersistentVolumeClaim, *corev1.PersistentVolumeClaimList], error) {
+func (c PersistentVolumeClaimClient) WithImpersonation(_ rest.ImpersonationConfig) (generic.ClientInterface[*corev1.PersistentVolumeClaim, *corev1.PersistentVolumeClaimList], error) {
 	panic("implement me")
 }
 

@@ -40,7 +40,7 @@ func (c UpgradeClient) Watch(_ string, _ metav1.ListOptions) (watch.Interface, e
 func (c UpgradeClient) Patch(_, _ string, _ types.PatchType, _ []byte, _ ...string) (result *harvesterv1.Upgrade, err error) {
 	panic("implement me")
 }
-func (c UpgradeClient) WithImpersonation(impersonate rest.ImpersonationConfig) (generic.ClientInterface[*harvesterv1.Upgrade, *harvesterv1.UpgradeList], error) {
+func (c UpgradeClient) WithImpersonation(_ rest.ImpersonationConfig) (generic.ClientInterface[*harvesterv1.Upgrade, *harvesterv1.UpgradeList], error) {
 	panic("implement me")
 }
 

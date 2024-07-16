@@ -48,7 +48,7 @@ func (c HarvesterSettingClient) Patch(name string, pt types.PatchType, data []by
 	return c().Patch(context.TODO(), name, pt, data, metav1.PatchOptions{}, subresources...)
 }
 
-func (c HarvesterSettingClient) WithImpersonation(impersonate rest.ImpersonationConfig) (generic.NonNamespacedClientInterface[*v1beta1.Setting, *v1beta1.SettingList], error) {
+func (c HarvesterSettingClient) WithImpersonation(_ rest.ImpersonationConfig) (generic.NonNamespacedClientInterface[*v1beta1.Setting, *v1beta1.SettingList], error) {
 	panic("implement me")
 }
 

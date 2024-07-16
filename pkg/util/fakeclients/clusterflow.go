@@ -9,6 +9,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/client-go/rest"
 
 	loggingv1type "github.com/harvester/harvester/pkg/generated/clientset/versioned/typed/logging.banzaicloud.io/v1beta1"
 )
@@ -38,6 +39,9 @@ func (c ClusterFlowClient) Watch(_ string, _ metav1.ListOptions) (watch.Interfac
 	panic("implement me")
 }
 func (c ClusterFlowClient) Patch(_, _ string, _ types.PatchType, _ []byte, _ ...string) (result *loggingv1.ClusterFlow, err error) {
+	panic("implement me")
+}
+func (c ClusterFlowClient) WithImpersonation(_ rest.ImpersonationConfig) (generic.ClientInterface[*loggingv1.ClusterFlow, *loggingv1.ClusterFlowList], error) {
 	panic("implement me")
 }
 

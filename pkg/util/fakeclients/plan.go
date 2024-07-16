@@ -41,7 +41,7 @@ func (c PlanClient) Patch(_, _ string, _ types.PatchType, _ []byte, _ ...string)
 	panic("implement me")
 }
 
-func (c PlanClient) WithImpersonation(impersonate rest.ImpersonationConfig) (generic.ClientInterface[*upgradeapiv1.Plan, *upgradeapiv1.PlanList], error) {
+func (c PlanClient) WithImpersonation(_ rest.ImpersonationConfig) (generic.ClientInterface[*upgradeapiv1.Plan, *upgradeapiv1.PlanList], error) {
 	panic("implement me")
 }
 

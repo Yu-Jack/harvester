@@ -48,7 +48,7 @@ func (c VirtualMachineInstanceClient) Patch(_, _ string, _ types.PatchType, _ []
 	panic("implement me")
 }
 
-func (c VirtualMachineInstanceClient) WithImpersonation(impersonate rest.ImpersonationConfig) (generic.ClientInterface[*kubevirtv1api.VirtualMachineInstance, *kubevirtv1api.VirtualMachineInstanceList], error) {
+func (c VirtualMachineInstanceClient) WithImpersonation(_ rest.ImpersonationConfig) (generic.ClientInterface[*kubevirtv1api.VirtualMachineInstance, *kubevirtv1api.VirtualMachineInstanceList], error) {
 	panic("implement me")
 }
 

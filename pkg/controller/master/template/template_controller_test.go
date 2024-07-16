@@ -305,7 +305,7 @@ func (c fakeTemplateClient) Patch(namespace, name string, pt types.PatchType, da
 	return c(namespace).Patch(context.TODO(), name, pt, data, metav1.PatchOptions{}, subresources...)
 }
 
-func (c fakeTemplateClient) WithImpersonation(impersonate rest.ImpersonationConfig) (generic.ClientInterface[*harvesterv1.VirtualMachineTemplate, *harvesterv1.VirtualMachineTemplateList], error) {
+func (c fakeTemplateClient) WithImpersonation(_ rest.ImpersonationConfig) (generic.ClientInterface[*harvesterv1.VirtualMachineTemplate, *harvesterv1.VirtualMachineTemplateList], error) {
 	panic("implement me")
 }
 
@@ -361,6 +361,6 @@ func (c fakeTemplateVersionClient) Patch(namespace, name string, pt types.PatchT
 	return c(namespace).Patch(context.TODO(), name, pt, data, metav1.PatchOptions{}, subresources...)
 }
 
-func (c fakeTemplateVersionClient) WithImpersonation(impersonate rest.ImpersonationConfig) (generic.ClientInterface[*harvesterv1.VirtualMachineTemplateVersion, *harvesterv1.VirtualMachineTemplateVersionList], error) {
+func (c fakeTemplateVersionClient) WithImpersonation(_ rest.ImpersonationConfig) (generic.ClientInterface[*harvesterv1.VirtualMachineTemplateVersion, *harvesterv1.VirtualMachineTemplateVersionList], error) {
 	panic("implement me")
 }

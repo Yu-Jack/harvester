@@ -76,6 +76,6 @@ func (c VirtualMachineInstanceMigrationClient) Patch(namespace, name string, pt 
 	return c(namespace).Patch(context.TODO(), name, pt, data, metav1.PatchOptions{}, subresources...)
 }
 
-func (c VirtualMachineInstanceMigrationClient) WithImpersonation(impersonate rest.ImpersonationConfig) (generic.ClientInterface[*kubevirtv1.VirtualMachineInstanceMigration, *kubevirtv1.VirtualMachineInstanceMigrationList], error) {
+func (c VirtualMachineInstanceMigrationClient) WithImpersonation(_ rest.ImpersonationConfig) (generic.ClientInterface[*kubevirtv1.VirtualMachineInstanceMigration, *kubevirtv1.VirtualMachineInstanceMigrationList], error) {
 	panic("implement me")
 }

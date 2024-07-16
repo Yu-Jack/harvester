@@ -49,7 +49,7 @@ func (c VMBackupClient) Patch(namespace, name string, pt types.PatchType, data [
 	return c(namespace).Patch(context.TODO(), name, pt, data, metav1.PatchOptions{}, subresources...)
 }
 
-func (c VMBackupClient) WithImpersonation(impersonate rest.ImpersonationConfig) (generic.ClientInterface[*harvesterv1beta1.VirtualMachineBackup, *harvesterv1beta1.VirtualMachineBackupList], error) {
+func (c VMBackupClient) WithImpersonation(_ rest.ImpersonationConfig) (generic.ClientInterface[*harvesterv1beta1.VirtualMachineBackup, *harvesterv1beta1.VirtualMachineBackupList], error) {
 	panic("implement me")
 }
 

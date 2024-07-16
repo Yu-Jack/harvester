@@ -46,7 +46,7 @@ func (c LonghornSettingClient) Watch(namespace string, opts metav1.ListOptions) 
 func (c LonghornSettingClient) Patch(namespace, name string, pt types.PatchType, data []byte, subresources ...string) (result *lhv1beta2.Setting, err error) {
 	return c(namespace).Patch(context.TODO(), name, pt, data, metav1.PatchOptions{}, subresources...)
 }
-func (c LonghornSettingClient) WithImpersonation(impersonate rest.ImpersonationConfig) (generic.ClientInterface[*lhv1beta2.Setting, *lhv1beta2.SettingList], error) {
+func (c LonghornSettingClient) WithImpersonation(_ rest.ImpersonationConfig) (generic.ClientInterface[*lhv1beta2.Setting, *lhv1beta2.SettingList], error) {
 	panic("implement me")
 }
 

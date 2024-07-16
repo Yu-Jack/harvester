@@ -9,6 +9,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/client-go/rest"
 
 	loggingv1type "github.com/harvester/harvester/pkg/generated/clientset/versioned/typed/logging.banzaicloud.io/v1beta1"
 )
@@ -38,6 +39,9 @@ func (c LoggingClient) Watch(_ metav1.ListOptions) (watch.Interface, error) {
 	panic("implement me")
 }
 func (c LoggingClient) Patch(_ string, _ types.PatchType, _ []byte, _ ...string) (result *loggingv1.Logging, err error) {
+	panic("implement me")
+}
+func (c LoggingClient) WithImpersonation(_ rest.ImpersonationConfig) (generic.NonNamespacedClientInterface[*loggingv1.Logging, *loggingv1.LoggingList], error) {
 	panic("implement me")
 }
 

@@ -47,7 +47,7 @@ func (c ControllerRevisionClient) Patch(_, _ string, _ types.PatchType, _ []byte
 	panic("implement me")
 }
 
-func (c ControllerRevisionClient) WithImpersonation(impersonate rest.ImpersonationConfig) (generic.ClientInterface[*k8sappsv1.ControllerRevision, *k8sappsv1.ControllerRevisionList], error) {
+func (c ControllerRevisionClient) WithImpersonation(_ rest.ImpersonationConfig) (generic.ClientInterface[*k8sappsv1.ControllerRevision, *k8sappsv1.ControllerRevisionList], error) {
 	panic("implement me")
 }
 

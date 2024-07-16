@@ -294,7 +294,7 @@ func (c fakeVMClient) Patch(namespace, name string, pt types.PatchType, data []b
 	return c(namespace).Patch(context.TODO(), name, pt, data, metav1.PatchOptions{}, subresources...)
 }
 
-func (c fakeVMClient) WithImpersonation(impersonate rest.ImpersonationConfig) (generic.ClientInterface[*kubevirtv1.VirtualMachine, *kubevirtv1.VirtualMachineList], error) {
+func (c fakeVMClient) WithImpersonation(_ rest.ImpersonationConfig) (generic.ClientInterface[*kubevirtv1.VirtualMachine, *kubevirtv1.VirtualMachineList], error) {
 	panic("implement me")
 }
 
@@ -350,6 +350,6 @@ func (c fakeVMIClient) Patch(namespace, name string, pt types.PatchType, data []
 	return c(namespace).Patch(context.TODO(), name, pt, data, metav1.PatchOptions{}, subresources...)
 }
 
-func (c fakeVMIClient) WithImpersonation(impersonate rest.ImpersonationConfig) (generic.ClientInterface[*kubevirtv1.VirtualMachineInstance, *kubevirtv1.VirtualMachineInstanceList], error) {
+func (c fakeVMIClient) WithImpersonation(_ rest.ImpersonationConfig) (generic.ClientInterface[*kubevirtv1.VirtualMachineInstance, *kubevirtv1.VirtualMachineInstanceList], error) {
 	panic("implement me")
 }

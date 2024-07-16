@@ -45,7 +45,7 @@ func (c VirtualMachineImageClient) Watch(_ string, _ metav1.ListOptions) (watch.
 func (c VirtualMachineImageClient) Patch(_, _ string, _ types.PatchType, _ []byte, _ ...string) (result *harvesterv1.VirtualMachineImage, err error) {
 	panic("implement me")
 }
-func (c VirtualMachineImageClient) WithImpersonation(impersonate rest.ImpersonationConfig) (generic.ClientInterface[*harvesterv1.VirtualMachineImage, *harvesterv1.VirtualMachineImageList], error) {
+func (c VirtualMachineImageClient) WithImpersonation(_ rest.ImpersonationConfig) (generic.ClientInterface[*harvesterv1.VirtualMachineImage, *harvesterv1.VirtualMachineImageList], error) {
 	panic("implement me")
 }
 

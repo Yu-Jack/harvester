@@ -254,6 +254,6 @@ func (c fakeSettingClient) Patch(name string, pt types.PatchType, data []byte, s
 	return c().Patch(context.TODO(), name, pt, data, metav1.PatchOptions{}, subresources...)
 }
 
-func (c fakeSettingClient) WithImpersonation(impersonate rest.ImpersonationConfig) (generic.NonNamespacedClientInterface[*harvesterv1.Setting, *harvesterv1.SettingList], error) {
+func (c fakeSettingClient) WithImpersonation(_ rest.ImpersonationConfig) (generic.NonNamespacedClientInterface[*harvesterv1.Setting, *harvesterv1.SettingList], error) {
 	panic("implement me")
 }

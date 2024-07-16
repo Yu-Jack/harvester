@@ -10,6 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/watch"
 	v1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	"k8s.io/client-go/rest"
 )
 
 type ServiceClient func(string) v1.ServiceInterface
@@ -44,6 +45,9 @@ func (c ServiceClient) Watch(namespace string, opts metav1.ListOptions) (watch.I
 
 func (c ServiceClient) Patch(namespace, name string, pt types.PatchType, data []byte, subresources ...string) (result *corev1.Service, err error) {
 	return c(namespace).Patch(context.TODO(), name, pt, data, metav1.PatchOptions{}, subresources...)
+}
+func (c ServiceClient) WithImpersonation(_ rest.ImpersonationConfig) (generic.ClientInterface[*corev1.Service, *corev1.ServiceList], error) {
+	panic("implement me")
 }
 
 type ServiceCache func(string) v1.ServiceInterface
