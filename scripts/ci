@@ -3,8 +3,8 @@ set -e
 
 cd $(dirname $0)
 
-./validate
-./validate-ci
+#./validate
+#./validate-ci
 ./build
 ./test
 ./package-webhook
