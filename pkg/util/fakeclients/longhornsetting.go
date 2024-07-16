@@ -3,7 +3,6 @@ package fakeclients
 import (
 	"context"
 
-	lhtype "github.com/harvester/harvester/pkg/generated/clientset/versioned/typed/longhorn.io/v1beta2"
 	lhv1beta2 "github.com/longhorn/longhorn-manager/k8s/pkg/apis/longhorn/v1beta2"
 	"github.com/rancher/wrangler/v3/pkg/generic"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -11,6 +10,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/rest"
+
+	lhtype "github.com/harvester/harvester/pkg/generated/clientset/versioned/typed/longhorn.io/v1beta2"
 )
 
 type LonghornSettingClient func(string) lhtype.SettingInterface

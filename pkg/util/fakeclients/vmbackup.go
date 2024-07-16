@@ -3,16 +3,17 @@ package fakeclients
 import (
 	"context"
 
-	harvesterv1beta1 "github.com/harvester/harvester/pkg/apis/harvesterhci.io/v1beta1"
-	harvestertype "github.com/harvester/harvester/pkg/generated/clientset/versioned/typed/harvesterhci.io/v1beta1"
-	"github.com/harvester/harvester/pkg/indexeres"
-	"github.com/harvester/harvester/pkg/ref"
 	"github.com/rancher/wrangler/v3/pkg/generic"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/rest"
+
+	harvesterv1beta1 "github.com/harvester/harvester/pkg/apis/harvesterhci.io/v1beta1"
+	harvestertype "github.com/harvester/harvester/pkg/generated/clientset/versioned/typed/harvesterhci.io/v1beta1"
+	"github.com/harvester/harvester/pkg/indexeres"
+	"github.com/harvester/harvester/pkg/ref"
 )
 
 type VMBackupClient func(string) harvestertype.VirtualMachineBackupInterface
