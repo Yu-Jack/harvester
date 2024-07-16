@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	mgmtv3 "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
-	ctlmgmtv3 "github.com/rancher/rancher/pkg/generated/controllers/management.cattle.io/v3"
+	"github.com/rancher/wrangler/v3/pkg/generic"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
@@ -61,7 +61,7 @@ func (c ManagedChartCache) List(namespace string, selector labels.Selector) ([]*
 	}
 	return result, err
 }
-func (c ManagedChartCache) AddIndexer(_ string, _ ctlmgmtv3.ManagedChartIndexer) {
+func (c ManagedChartCache) AddIndexer(_ string, _ generic.Indexer[*mgmtv3.ManagedChart]) {
 	panic("implement me")
 }
 func (c ManagedChartCache) GetByIndex(_, _ string) ([]*mgmtv3.ManagedChart, error) {

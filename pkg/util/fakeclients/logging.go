@@ -4,13 +4,13 @@ import (
 	"context"
 
 	loggingv1 "github.com/kube-logging/logging-operator/pkg/sdk/logging/api/v1beta1"
+	"github.com/rancher/wrangler/v3/pkg/generic"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/watch"
 
 	loggingv1type "github.com/harvester/harvester/pkg/generated/clientset/versioned/typed/logging.banzaicloud.io/v1beta1"
-	ctlloggingv1 "github.com/harvester/harvester/pkg/generated/controllers/logging.banzaicloud.io/v1beta1"
 )
 
 type LoggingClient func() loggingv1type.LoggingInterface
@@ -49,7 +49,7 @@ func (c LoggingCache) Get(name string) (*loggingv1.Logging, error) {
 func (c LoggingCache) List(_ labels.Selector) ([]*loggingv1.Logging, error) {
 	panic("implement me")
 }
-func (c LoggingCache) AddIndexer(_ string, _ ctlloggingv1.LoggingIndexer) {
+func (c LoggingCache) AddIndexer(_ string, _ generic.Indexer[*loggingv1.Logging]) {
 	panic("implement me")
 }
 func (c LoggingCache) GetByIndex(_, _ string) ([]*loggingv1.Logging, error) {

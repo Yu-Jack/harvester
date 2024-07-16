@@ -3,7 +3,7 @@ package fakeclients
 import (
 	"context"
 
-	ctlv1 "github.com/rancher/wrangler/v3/pkg/generated/controllers/core/v1"
+	"github.com/rancher/wrangler/v3/pkg/generic"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -56,7 +56,7 @@ func (c ServiceCache) List(_ string, _ labels.Selector) ([]*corev1.Service, erro
 	panic("implement me")
 }
 
-func (c ServiceCache) AddIndexer(_ string, _ ctlv1.ServiceIndexer) {
+func (c ServiceCache) AddIndexer(_ string, _ generic.Indexer[*corev1.Service]) {
 	panic("implement me")
 }
 
