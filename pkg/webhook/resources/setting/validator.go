@@ -349,10 +349,7 @@ func validateOvercommitConfig(setting *v1beta1.Setting) error {
 		return err
 	}
 
-	if err := validateOvercommitConfigHelper("value", setting.Value); err != nil {
-		return err
-	}
-	return nil
+	return validateOvercommitConfigHelper("value", setting.Value)
 }
 
 func validateUpdateOvercommitConfig(_ *v1beta1.Setting, newSetting *v1beta1.Setting) error {
