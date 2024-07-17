@@ -235,8 +235,9 @@ func (m *podMutator) nodeSelectorPatches(pod *corev1.Pod) (types.PatchOps, error
 		fmt.Println(key, value)
 		fmt.Println("===============")
 		if strings.Contains(key, "cpu-model-migration.node.kubevirt.io") {
-			path := fmt.Sprintf("/spec/nodeSelector/%s", key)
-			patchOps = append(patchOps, fmt.Sprintf(`{"op": "remove", "path": "%s", "value": %s}`, path, value))
+			cpuModel := strings.TrimPrefix(key, "cpu-model-migration.node.kubevirt.io/")
+			path := fmt.Sprintf("/spec/nodeSelector/%s", fmt.Sprintf("%s~1%s", "cpu-model-migration.node.kubevirt.io", cpuModel))
+			patchOps = append(patchOps, fmt.Sprintf(`{"op": "remove", "path": "%s"}`, path))
 			break
 		}
 	}
