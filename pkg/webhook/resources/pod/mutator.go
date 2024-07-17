@@ -71,9 +71,12 @@ func (m *podMutator) Create(_ *types.Request, newObj runtime.Object) (types.Patc
 			break
 		}
 	}
+
+	fmt.Println("1111")
 	if !match {
 		return nil, nil
 	}
+	fmt.Println("2222")
 
 	var patchOps types.PatchOps
 	httpProxyPatches, err := m.httpProxyPatches(pod)
