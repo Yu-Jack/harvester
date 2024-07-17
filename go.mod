@@ -4,8 +4,8 @@ go 1.22.5
 
 replace (
 	github.com/containerd/containerd => github.com/containerd/containerd v1.6.18
-	github.com/docker/distribution => github.com/docker/distribution v2.8.0+incompatible // oras dep requires a replace is set
-	github.com/docker/docker => github.com/docker/docker v20.10.9+incompatible // oras dep requires a replace is set
+	github.com/docker/distribution => github.com/docker/distribution v2.8.2+incompatible // oras dep requires a replace is set
+	github.com/docker/docker => github.com/docker/docker v24.0.6+incompatible // oras dep requires a replace is set
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.7
 	github.com/openshift/api => github.com/openshift/api v0.0.0-20191219222812-2987a591a72c
 	github.com/openshift/client-go => github.com/openshift/client-go v0.0.0-20200521150516-05eb9880269c
@@ -15,7 +15,7 @@ replace (
 	github.com/rancher/rancher/pkg/client => github.com/rancher/rancher/pkg/client v0.0.0-20240710123941-93e332156bbe
 	github.com/rancher/rke => github.com/rancher/rke v1.6.0-rc10
 
-	helm.sh/helm/v3 => github.com/rancher/helm/v3 v3.9.0-rancher1
+	helm.sh/helm/v3 => github.com/rancher/helm/v3 v3.13.3-rancher1
 	k8s.io/api => k8s.io/api v0.30.1
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.30.1
 	k8s.io/apimachinery => k8s.io/apimachinery v0.30.1
@@ -202,6 +202,8 @@ require (
 	github.com/gosuri/uitable v0.0.4 // indirect
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.18.0 // indirect
+	github.com/hashicorp/errwrap v1.1.0 // indirect
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/huandu/xstrings v1.4.0 // indirect
 	github.com/iancoleman/orderedmap v0.2.0 // indirect

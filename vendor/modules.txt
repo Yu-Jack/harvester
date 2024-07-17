@@ -164,7 +164,7 @@ github.com/docker/cli/cli/config
 github.com/docker/cli/cli/config/configfile
 github.com/docker/cli/cli/config/credentials
 github.com/docker/cli/cli/config/types
-# github.com/docker/distribution v2.8.3+incompatible => github.com/docker/distribution v2.8.0+incompatible
+# github.com/docker/distribution v2.8.3+incompatible => github.com/docker/distribution v2.8.2+incompatible
 ## explicit
 github.com/docker/distribution
 github.com/docker/distribution/digestset
@@ -178,7 +178,7 @@ github.com/docker/distribution/registry/client/auth/challenge
 github.com/docker/distribution/registry/client/transport
 github.com/docker/distribution/registry/storage/cache
 github.com/docker/distribution/registry/storage/cache/memory
-# github.com/docker/docker v25.0.3+incompatible => github.com/docker/docker v20.10.9+incompatible
+# github.com/docker/docker v25.0.3+incompatible => github.com/docker/docker v24.0.6+incompatible
 ## explicit
 github.com/docker/docker/api/types
 github.com/docker/docker/api/types/blkiodev
@@ -191,14 +191,13 @@ github.com/docker/docker/api/types/strslice
 github.com/docker/docker/api/types/swarm
 github.com/docker/docker/api/types/swarm/runtime
 github.com/docker/docker/api/types/versions
+github.com/docker/docker/api/types/volume
 github.com/docker/docker/errdefs
 github.com/docker/docker/pkg/homedir
 github.com/docker/docker/pkg/ioutils
 github.com/docker/docker/pkg/jsonmessage
 github.com/docker/docker/pkg/longpath
-github.com/docker/docker/pkg/stringid
 github.com/docker/docker/registry
-github.com/docker/docker/rootless
 # github.com/docker/docker-credential-helpers v0.8.1
 ## explicit; go 1.19
 github.com/docker/docker-credential-helpers/client
@@ -405,6 +404,12 @@ github.com/harvester/node-manager/pkg/apis/node.harvesterhci.io
 github.com/harvester/node-manager/pkg/apis/node.harvesterhci.io/v1beta1
 github.com/harvester/node-manager/pkg/generated/controllers/node.harvesterhci.io
 github.com/harvester/node-manager/pkg/generated/controllers/node.harvesterhci.io/v1beta1
+# github.com/hashicorp/errwrap v1.1.0
+## explicit
+github.com/hashicorp/errwrap
+# github.com/hashicorp/go-multierror v1.1.1
+## explicit; go 1.13
+github.com/hashicorp/go-multierror
 # github.com/hashicorp/golang-lru/v2 v2.0.7
 ## explicit; go 1.18
 github.com/hashicorp/golang-lru/v2
@@ -1398,8 +1403,8 @@ gopkg.in/yaml.v2
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
-# helm.sh/helm/v3 v3.15.1 => github.com/rancher/helm/v3 v3.9.0-rancher1
-## explicit; go 1.17
+# helm.sh/helm/v3 v3.15.1 => github.com/rancher/helm/v3 v3.13.3-rancher1
+## explicit; go 1.19
 helm.sh/helm/v3/internal/fileutil
 helm.sh/helm/v3/internal/ignore
 helm.sh/helm/v3/internal/resolver
@@ -2491,8 +2496,8 @@ sigs.k8s.io/structured-merge-diff/v4/value
 sigs.k8s.io/yaml
 sigs.k8s.io/yaml/goyaml.v2
 # github.com/containerd/containerd => github.com/containerd/containerd v1.6.18
-# github.com/docker/distribution => github.com/docker/distribution v2.8.0+incompatible
-# github.com/docker/docker => github.com/docker/docker v20.10.9+incompatible
+# github.com/docker/distribution => github.com/docker/distribution v2.8.2+incompatible
+# github.com/docker/docker => github.com/docker/docker v24.0.6+incompatible
 # github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.7
 # github.com/openshift/api => github.com/openshift/api v0.0.0-20191219222812-2987a591a72c
 # github.com/openshift/client-go => github.com/openshift/client-go v0.0.0-20200521150516-05eb9880269c
@@ -2501,7 +2506,7 @@ sigs.k8s.io/yaml/goyaml.v2
 # github.com/rancher/rancher/pkg/apis => github.com/rancher/rancher/pkg/apis v0.0.0-20240710123941-93e332156bbe
 # github.com/rancher/rancher/pkg/client => github.com/rancher/rancher/pkg/client v0.0.0-20240710123941-93e332156bbe
 # github.com/rancher/rke => github.com/rancher/rke v1.6.0-rc10
-# helm.sh/helm/v3 => github.com/rancher/helm/v3 v3.9.0-rancher1
+# helm.sh/helm/v3 => github.com/rancher/helm/v3 v3.13.3-rancher1
 # k8s.io/api => k8s.io/api v0.30.1
 # k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.30.1
 # k8s.io/apimachinery => k8s.io/apimachinery v0.30.1
