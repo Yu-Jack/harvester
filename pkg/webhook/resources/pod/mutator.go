@@ -3,6 +3,7 @@ package pod
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	admissionregv1 "k8s.io/api/admissionregistration/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -85,6 +86,11 @@ func (m *podMutator) Create(_ *types.Request, newObj runtime.Object) (types.Patc
 		return nil, err
 	}
 	patchOps = append(patchOps, additionalCAPatches...)
+	nodeSelectorPatches, err := m.nodeSelectorPatches(pod)
+	if err != nil {
+		return nil, err
+	}
+	patchOps = append(patchOps, nodeSelectorPatches...)
 
 	return patchOps, nil
 }
@@ -196,6 +202,25 @@ func (m *podMutator) additionalCAPatches(pod *corev1.Pod) (types.PatchOps, error
 			return nil, err
 		}
 		patchOps = append(patchOps, volumeMountPatch)
+	}
+
+	return patchOps, nil
+}
+
+func (m *podMutator) nodeSelectorPatches(pod *corev1.Pod) (types.PatchOps, error) {
+	var (
+		patchOps types.PatchOps
+	)
+
+	for key, value := range pod.Spec.NodeSelector {
+		if strings.Contains(key, "cpu-model-migration.node.kubevirt.io") {
+			fmt.Println("===============")
+			fmt.Println(key, value)
+			fmt.Println("===============")
+			path := fmt.Sprintf("/spec/nodeSelector/%s", key)
+			patchOps = append(patchOps, fmt.Sprintf(`{"op": "remove", "path": "%s", "value": %s}`, path, value))
+			break
+		}
 	}
 
 	return patchOps, nil
