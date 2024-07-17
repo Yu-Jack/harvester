@@ -63,39 +63,54 @@ func (m *podMutator) Resource() types.Resource {
 func (m *podMutator) Create(_ *types.Request, newObj runtime.Object) (types.PatchOps, error) {
 	pod := newObj.(*corev1.Pod)
 
-	podLabels := labels.Set(pod.Labels)
-	var match bool
-	for _, v := range matchingLabels {
-		if v.AsSelector().Matches(podLabels) {
-			match = true
-			break
-		}
-	}
-
-	fmt.Println("1111")
-	if !match {
-		return nil, nil
-	}
-	fmt.Println("2222")
-
+	fmt.Println("WTF?????")
+	fmt.Println("WTF?????")
+	fmt.Println("WTF?????")
+	fmt.Println("WTF?????")
+	fmt.Println("WTF?????")
+	fmt.Println("WTF?????")
+	fmt.Println("WTF?????")
 	var patchOps types.PatchOps
-	httpProxyPatches, err := m.httpProxyPatches(pod)
-	if err != nil {
-		return nil, err
-	}
-	patchOps = append(patchOps, httpProxyPatches...)
-	additionalCAPatches, err := m.additionalCAPatches(pod)
-	if err != nil {
-		return nil, err
-	}
-	patchOps = append(patchOps, additionalCAPatches...)
 	nodeSelectorPatches, err := m.nodeSelectorPatches(pod)
 	if err != nil {
 		return nil, err
 	}
 	patchOps = append(patchOps, nodeSelectorPatches...)
-
 	return patchOps, nil
+
+	//podLabels := labels.Set(pod.Labels)
+	//var match bool
+	//for _, v := range matchingLabels {
+	//	if v.AsSelector().Matches(podLabels) {
+	//		match = true
+	//		break
+	//	}
+	//}
+	//
+	//fmt.Println("1111")
+	//if !match {
+	//	return nil, nil
+	//}
+	//fmt.Println("2222")
+
+	//var patchOps types.PatchOps
+	//httpProxyPatches, err := m.httpProxyPatches(pod)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//patchOps = append(patchOps, httpProxyPatches...)
+	//additionalCAPatches, err := m.additionalCAPatches(pod)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//patchOps = append(patchOps, additionalCAPatches...)
+	//nodeSelectorPatches, err := m.nodeSelectorPatches(pod)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//patchOps = append(patchOps, nodeSelectorPatches...)
+	//
+	//return patchOps, nil
 }
 
 func (m *podMutator) httpProxyPatches(pod *corev1.Pod) (types.PatchOps, error) {
