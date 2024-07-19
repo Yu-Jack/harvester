@@ -47,8 +47,8 @@ replace (
 	k8s.io/pod-security-admission => k8s.io/pod-security-admission v0.30.1
 	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.30.2
 
-	kubevirt.io/api => kubevirt.io/api v1.3.0-rc.2
-	kubevirt.io/client-go => kubevirt.io/client-go v1.3.0-rc.2
+	kubevirt.io/api => kubevirt.io/api v1.3.0
+	kubevirt.io/client-go => kubevirt.io/client-go v1.3.0
 	sigs.k8s.io/structured-merge-diff => sigs.k8s.io/structured-merge-diff v0.0.0-20190302045857-e85c7b244fd2
 )
 
@@ -119,7 +119,7 @@ require (
 	kubevirt.io/api v1.1.1
 	kubevirt.io/client-go v1.1.1
 	kubevirt.io/containerized-data-importer-api v1.57.0-alpha1
-	kubevirt.io/kubevirt v1.3.0-rc.2
+	kubevirt.io/kubevirt v1.3.0
 	sigs.k8s.io/cluster-api v1.7.4
 	sigs.k8s.io/controller-runtime v0.18.4
 	sigs.k8s.io/kind v0.14.0
