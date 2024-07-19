@@ -6,7 +6,7 @@ cd $(dirname $0)
 go env
 
 ./validate
-#./validate-ci
+./validate-ci
 ./build
 ./test
 ./package-webhook
