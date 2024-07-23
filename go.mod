@@ -10,10 +10,13 @@ replace (
 	github.com/openshift/api => github.com/openshift/api v0.0.0-20191219222812-2987a591a72c
 	github.com/openshift/client-go => github.com/openshift/client-go v0.0.0-20200521150516-05eb9880269c
 	github.com/operator-framework/operator-lifecycle-manager => github.com/operator-framework/operator-lifecycle-manager v0.0.0-20190128024246-5eb7ae5bdb7a
+
 	github.com/rancher/rancher => github.com/rancher/rancher v0.0.0-20240710123941-93e332156bbe
 	github.com/rancher/rancher/pkg/apis => github.com/rancher/rancher/pkg/apis v0.0.0-20240710123941-93e332156bbe
 	github.com/rancher/rancher/pkg/client => github.com/rancher/rancher/pkg/client v0.0.0-20240710123941-93e332156bbe
 	github.com/rancher/rke => github.com/rancher/rke v1.6.0-rc10
+	// handle rancher dependenices
+	go.qase.io/client => github.com/rancher/qase-go/client v0.0.0-20231114201952-65195ec001fa
 
 	helm.sh/helm/v3 => github.com/rancher/helm/v3 v3.13.3-rancher1
 	k8s.io/api => k8s.io/api v0.30.1
@@ -47,8 +50,6 @@ replace (
 	k8s.io/pod-security-admission => k8s.io/pod-security-admission v0.30.1
 	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.30.2
 
-	kubevirt.io/api => kubevirt.io/api v1.3.0
-	kubevirt.io/client-go => kubevirt.io/client-go v1.3.0
 	sigs.k8s.io/structured-merge-diff => sigs.k8s.io/structured-merge-diff v0.0.0-20190302045857-e85c7b244fd2
 )
 
@@ -111,13 +112,12 @@ require (
 	k8s.io/apiserver v0.30.2
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/component-helpers v0.30.2
-	k8s.io/gengo v0.0.0-20240310015720-9cff6334dab4
 	k8s.io/kube-openapi v0.30.0
 	k8s.io/kubectl v0.30.1
 	k8s.io/kubelet v0.27.4
 	k8s.io/utils v0.0.0-20240502163921-fe8a2dddb1d0
-	kubevirt.io/api v1.1.1
-	kubevirt.io/client-go v1.1.1
+	kubevirt.io/api v1.3.0
+	kubevirt.io/client-go v1.3.0
 	kubevirt.io/containerized-data-importer-api v1.57.0-alpha1
 	kubevirt.io/kubevirt v1.3.0
 	sigs.k8s.io/cluster-api v1.7.4
@@ -318,6 +318,7 @@ require (
 	k8s.io/cli-runtime v0.30.2 // indirect
 	k8s.io/code-generator v0.30.1 // indirect
 	k8s.io/component-base v0.30.2 // indirect
+	k8s.io/gengo v0.0.0-20240310015720-9cff6334dab4 // indirect
 	k8s.io/gengo/v2 v2.0.0-20240228010128-51d4e06bde70 // indirect
 	k8s.io/klog v1.0.0 // indirect
 	k8s.io/klog/v2 v2.120.1 // indirect
