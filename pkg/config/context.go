@@ -3,7 +3,6 @@ package config
 import (
 	"context"
 
-	ctlnodeharvester "github.com/harvester/node-manager/pkg/generated/controllers/node.harvesterhci.io"
 	helmv1 "github.com/k3s-io/helm-controller/pkg/generated/controllers/helm.cattle.io"
 	dashboardapi "github.com/kubernetes/dashboard/src/app/backend/auth/api"
 	"github.com/rancher/lasso/pkg/controller"
@@ -37,6 +36,7 @@ import (
 	longhornv1 "github.com/harvester/harvester/pkg/generated/controllers/longhorn.io"
 	monitoringv1 "github.com/harvester/harvester/pkg/generated/controllers/monitoring.coreos.com"
 	"github.com/harvester/harvester/pkg/generated/controllers/networking.k8s.io"
+	ctlnodeharvester "github.com/harvester/harvester/pkg/generated/controllers/node.harvesterhci.io"
 	snapshotv1 "github.com/harvester/harvester/pkg/generated/controllers/snapshot.storage.k8s.io"
 	ctlharvstoragev1 "github.com/harvester/harvester/pkg/generated/controllers/storage.k8s.io"
 	"github.com/harvester/harvester/pkg/generated/controllers/upgrade.cattle.io"
