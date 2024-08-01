@@ -20,6 +20,7 @@ package scheme
 
 import (
 	harvesterhciv1beta1 "github.com/harvester/harvester/pkg/apis/harvesterhci.io/v1beta1"
+	nodev1beta1 "github.com/harvester/node-manager/pkg/apis/node.harvesterhci.io/v1beta1"
 	k8scnicncfiov1 "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
 	loggingv1beta1 "github.com/kube-logging/logging-operator/pkg/sdk/logging/api/v1beta1"
 	snapshotv1 "github.com/kubernetes-csi/external-snapshotter/client/v4/apis/volumesnapshot/v1"
@@ -53,6 +54,7 @@ var localSchemeBuilder = runtime.SchemeBuilder{
 	managementv3.AddToScheme,
 	monitoringv1.AddToScheme,
 	networkingv1.AddToScheme,
+	nodev1beta1.AddToScheme,
 	snapshotv1.AddToScheme,
 	storagev1.AddToScheme,
 	upgradev1.AddToScheme,

@@ -32,6 +32,7 @@ import (
 	managementv3 "github.com/harvester/harvester/pkg/generated/clientset/versioned/typed/management.cattle.io/v3"
 	monitoringv1 "github.com/harvester/harvester/pkg/generated/clientset/versioned/typed/monitoring.coreos.com/v1"
 	networkingv1 "github.com/harvester/harvester/pkg/generated/clientset/versioned/typed/networking.k8s.io/v1"
+	nodev1beta1 "github.com/harvester/harvester/pkg/generated/clientset/versioned/typed/node.harvesterhci.io/v1beta1"
 	snapshotv1 "github.com/harvester/harvester/pkg/generated/clientset/versioned/typed/snapshot.storage.k8s.io/v1"
 	storagev1 "github.com/harvester/harvester/pkg/generated/clientset/versioned/typed/storage.k8s.io/v1"
 	upgradev1 "github.com/harvester/harvester/pkg/generated/clientset/versioned/typed/upgrade.cattle.io/v1"
@@ -52,6 +53,7 @@ type Interface interface {
 	ManagementV3() managementv3.ManagementV3Interface
 	MonitoringV1() monitoringv1.MonitoringV1Interface
 	NetworkingV1() networkingv1.NetworkingV1Interface
+	NodeV1beta1() nodev1beta1.NodeV1beta1Interface
 	SnapshotV1() snapshotv1.SnapshotV1Interface
 	StorageV1() storagev1.StorageV1Interface
 	UpgradeV1() upgradev1.UpgradeV1Interface
@@ -70,6 +72,7 @@ type Clientset struct {
 	managementV3        *managementv3.ManagementV3Client
 	monitoringV1        *monitoringv1.MonitoringV1Client
 	networkingV1        *networkingv1.NetworkingV1Client
+	nodeV1beta1         *nodev1beta1.NodeV1beta1Client
 	snapshotV1          *snapshotv1.SnapshotV1Client
 	storageV1           *storagev1.StorageV1Client
 	upgradeV1           *upgradev1.UpgradeV1Client
@@ -123,6 +126,11 @@ func (c *Clientset) MonitoringV1() monitoringv1.MonitoringV1Interface {
 // NetworkingV1 retrieves the NetworkingV1Client
 func (c *Clientset) NetworkingV1() networkingv1.NetworkingV1Interface {
 	return c.networkingV1
+}
+
+// NodeV1beta1 retrieves the NodeV1beta1Client
+func (c *Clientset) NodeV1beta1() nodev1beta1.NodeV1beta1Interface {
+	return c.nodeV1beta1
 }
 
 // SnapshotV1 retrieves the SnapshotV1Client
@@ -224,6 +232,10 @@ func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset,
 	if err != nil {
 		return nil, err
 	}
+	cs.nodeV1beta1, err = nodev1beta1.NewForConfigAndClient(&configShallowCopy, httpClient)
+	if err != nil {
+		return nil, err
+	}
 	cs.snapshotV1, err = snapshotv1.NewForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
 		return nil, err
@@ -267,6 +279,7 @@ func New(c rest.Interface) *Clientset {
 	cs.managementV3 = managementv3.New(c)
 	cs.monitoringV1 = monitoringv1.New(c)
 	cs.networkingV1 = networkingv1.New(c)
+	cs.nodeV1beta1 = nodev1beta1.New(c)
 	cs.snapshotV1 = snapshotv1.New(c)
 	cs.storageV1 = storagev1.New(c)
 	cs.upgradeV1 = upgradev1.New(c)

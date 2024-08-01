@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	nodev1 "github.com/harvester/node-manager/pkg/apis/node.harvesterhci.io/v1beta1"
 	cniv1 "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
 	loggingv1 "github.com/kube-logging/logging-operator/pkg/sdk/logging/api/v1beta1"
 	storagesnapshotv1 "github.com/kubernetes-csi/external-snapshotter/client/v4/apis/volumesnapshot/v1"
@@ -159,6 +160,15 @@ func main() {
 				Types: []interface{}{
 					appsv1.ControllerRevision{},
 				},
+			},
+			// TODO: need to bump wrangler to v3 in node-manager
+			// After bumping, we can remove this generation.
+			nodev1.SchemeGroupVersion.Group: {
+				Types: []interface{}{
+					nodev1.NodeConfig{},
+				},
+				GenerateTypes:   false,
+				GenerateClients: true,
 			},
 		},
 	})

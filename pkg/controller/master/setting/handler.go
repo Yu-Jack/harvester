@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	ctlnodev1 "github.com/harvester/node-manager/pkg/generated/controllers/node.harvesterhci.io/v1beta1"
 	ctlhelmv1 "github.com/k3s-io/helm-controller/pkg/generated/controllers/helm.cattle.io/v1"
 	catalogv1api "github.com/rancher/rancher/pkg/apis/catalog.cattle.io/v1"
 	catalogv1 "github.com/rancher/rancher/pkg/generated/controllers/catalog.cattle.io/v1"
@@ -25,6 +24,7 @@ import (
 	"github.com/harvester/harvester/pkg/generated/controllers/harvesterhci.io/v1beta1"
 	ctllhv1 "github.com/harvester/harvester/pkg/generated/controllers/longhorn.io/v1beta2"
 	networkingv1 "github.com/harvester/harvester/pkg/generated/controllers/networking.k8s.io/v1"
+	ctlnodev1 "github.com/harvester/harvester/pkg/generated/controllers/node.harvesterhci.io/v1beta1"
 	"github.com/harvester/harvester/pkg/settings"
 	"github.com/harvester/harvester/pkg/util"
 )
