@@ -249,6 +249,25 @@ func (h *vmImageHandler) createBackingImage(image *harvesterv1.VirtualMachineIma
 			Checksum:         image.Spec.Checksum,
 		},
 	}
+
+	if image.Spec.SourceType == harvesterv1.VirtualMachineImageSourceTypeClone {
+		bi.Spec.SourceParameters[lhv1beta2.DataSourceTypeCloneParameterEncryption] = string(image.Spec.Encryption)
+		bi.Spec.SourceParameters[lhv1beta2.DataSourceTypeCloneParameterSecret] = image.Spec.SecretName
+		bi.Spec.SourceParameters[lhv1beta2.DataSourceTypeCloneParameterSecretNamespace] = image.Spec.SecretNamespace
+
+		sourceImage, err := h.images.Get(image.Spec.SourceVirtualMachineImageNamespace, image.Spec.SourceVirtualMachineImageName, metav1.GetOptions{})
+		if err != nil {
+			return fmt.Errorf("failed to get source vmimage %s/%s, error: %s", image.Spec.SourceVirtualMachineImageName, image.Spec.SourceVirtualMachineImageNamespace, err.Error())
+		}
+
+		sourceBiName, err := util.GetBackingImageName(h.backingImageCache, sourceImage)
+		if err != nil {
+			return fmt.Errorf("failed to get source backing image name for vmimage %s/%s, error: %s", sourceImage.Namespace, sourceImage.Name, err.Error())
+		}
+
+		bi.Spec.SourceParameters[lhv1beta2.DataSourceTypeCloneParameterBackingImage] = sourceBiName
+	}
+
 	if image.Spec.SourceType == harvesterv1.VirtualMachineImageSourceTypeDownload {
 		bi.Spec.SourceParameters[lhv1beta2.DataSourceTypeDownloadParameterURL] = image.Spec.URL
 	}

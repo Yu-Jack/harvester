@@ -59,6 +59,8 @@ spec:
                 type: string
               displayName:
                 type: string
+              encryption:
+                type: string
               pvcName:
                 type: string
               pvcNamespace:
@@ -68,11 +70,20 @@ spec:
                 maximum: 10
                 minimum: 0
                 type: integer
+              secretName:
+                type: string
+              secretNamespace:
+                type: string
               sourceType:
                 enum:
                 - download
                 - upload
                 - export-from-volume
+                - clone
+                type: string
+              sourceVirtualMachineImageName:
+                type: string
+              sourceVirtualMachineImageNamespace:
                 type: string
               storageClassParameters:
                 additionalProperties:

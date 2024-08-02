@@ -37,7 +37,7 @@ type VirtualMachineImageSpec struct {
 	DisplayName string `json:"displayName"`
 
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum=download;upload;export-from-volume
+	// +kubebuilder:validation:Enum=download;upload;export-from-volume;clone
 	SourceType VirtualMachineImageSourceType `json:"sourceType"`
 
 	// +optional
@@ -61,6 +61,21 @@ type VirtualMachineImageSpec struct {
 	// +kubebuilder:validation:Maximum:=10
 	// +kubebuilder:validation:Optional
 	Retry int `json:"retry" default:"3"`
+
+	// +optional
+	SecretName string `json:"secretName"`
+
+	// +optional
+	SecretNamespace string `json:"secretNamespace"`
+
+	// +optional
+	Encryption VirtualMachineImageEncryptionType `json:"encryption"`
+
+	// +optional
+	SourceVirtualMachineImageName string `json:"sourceVirtualMachineImageName"`
+
+	// +optional
+	SourceVirtualMachineImageNamespace string `json:"sourceVirtualMachineImageNamespace"`
 }
 
 // +enum
@@ -70,6 +85,14 @@ const (
 	VirtualMachineImageSourceTypeDownload     VirtualMachineImageSourceType = "download"
 	VirtualMachineImageSourceTypeUpload       VirtualMachineImageSourceType = "upload"
 	VirtualMachineImageSourceTypeExportVolume VirtualMachineImageSourceType = "export-from-volume"
+	VirtualMachineImageSourceTypeClone        VirtualMachineImageSourceType = "clone"
+)
+
+type VirtualMachineImageEncryptionType string
+
+const (
+	VirtualMachineImageEncryptionTypeEncrypt VirtualMachineImageEncryptionType = "encrypt"
+	VirtualMachineImageEncryptionTypeDecrypt VirtualMachineImageEncryptionType = "decrypt"
 )
 
 type VirtualMachineImageStatus struct {

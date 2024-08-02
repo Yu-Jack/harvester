@@ -5,6 +5,7 @@ import (
 
 	lhdatastore "github.com/longhorn/longhorn-manager/datastore"
 	"github.com/longhorn/longhorn-manager/k8s/pkg/apis/longhorn/v1beta2"
+	lhv1beta2 "github.com/longhorn/longhorn-manager/k8s/pkg/apis/longhorn/v1beta2"
 	longhorntypes "github.com/longhorn/longhorn-manager/types"
 	lhutil "github.com/longhorn/longhorn-manager/util"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -62,6 +63,18 @@ func GetImageStorageClassParameters(backingImageCache ctllhv1.BackingImageCache,
 	params := map[string]string{
 		LonghornOptionBackingImageName: biName,
 	}
+
+	if image.Spec.SourceType == harvesterv1.VirtualMachineImageSourceTypeClone && image.Spec.Encryption == harvesterv1.VirtualMachineImageEncryptionTypeEncrypt {
+		params[LonghornOptionBackingImageDataSourceName] = string(lhv1beta2.BackingImageDataSourceTypeClone)
+		params["encrypted"] = "true"
+		params["csi.storage.k8s.io/provisioner-secret-name"] = image.Spec.SecretName
+		params["csi.storage.k8s.io/provisioner-secret-namespace"] = image.Spec.SecretNamespace
+		params["csi.storage.k8s.io/node-publish-secret-name"] = image.Spec.SecretName
+		params["csi.storage.k8s.io/node-publish-secret-namespace"] = image.Spec.SecretNamespace
+		params["csi.storage.k8s.io/node-stage-secret-name"] = image.Spec.SecretName
+		params["csi.storage.k8s.io/node-stage-secret-namespace"] = image.Spec.SecretNamespace
+	}
+
 	for k, v := range image.Spec.StorageClassParameters {
 		params[k] = v
 	}

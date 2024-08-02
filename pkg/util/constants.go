@@ -67,9 +67,10 @@ const (
 	HTTPSProxyEnv = "HTTPS_PROXY"
 	NoProxyEnv    = "NO_PROXY"
 
-	LonghornOptionBackingImageName = "backingImage"
-	LonghornOptionMigratable       = "migratable"
-	AddonValuesAnnotation          = "harvesterhci.io/addon-defaults"
+	LonghornOptionBackingImageName           = "backingImage"
+	LonghornOptionBackingImageDataSourceName = "backingImageDataSourceType"
+	LonghornOptionMigratable                 = "migratable"
+	AddonValuesAnnotation                    = "harvesterhci.io/addon-defaults"
 
 	LabelUpgradeReadMessage          = prefix + "/read-message"
 	LabelUpgradeState                = prefix + "/upgradeState"
