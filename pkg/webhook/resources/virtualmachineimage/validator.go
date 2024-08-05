@@ -97,6 +97,24 @@ func (v *virtualMachineImageValidator) CheckImageDisplayNameAndURL(newImage *v1b
 		return werror.NewInvalidError(`url should be empty when image source type is not "download"`, "spec.url")
 	}
 
+	if newImage.Spec.SourceType == v1beta1.VirtualMachineImageSourceTypeClone {
+		if newImage.Spec.SourceVirtualMachineImageName == "" {
+			return werror.NewInvalidError(`sourceVirtualMachineImageName is required when image source type is "clone"`, "spec.sourceVirtualMachineImageName")
+		}
+		if newImage.Spec.SourceVirtualMachineImageNamespace == "" {
+			return werror.NewInvalidError(`SourceVirtualMachineImageNamespace is required when image source type is "clone"`, "spec.SourceVirtualMachineImageNamespace")
+		}
+		if newImage.Spec.SecretName == "" {
+			return werror.NewInvalidError(`secretName is required when image source type is "clone"`, "spec.secret")
+		}
+		if newImage.Spec.SecretNamespace == "" {
+			return werror.NewInvalidError(`secretNamespace is required when image source type is "clone"`, "spec.secretNamespace")
+		}
+		if newImage.Spec.Encryption == "" {
+			return werror.NewInvalidError(`encryption is required when image source type is "clone"`, "spec.encryption")
+		}
+	}
+
 	return nil
 }
 
