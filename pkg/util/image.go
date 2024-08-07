@@ -64,15 +64,15 @@ func GetImageStorageClassParameters(backingImageCache ctllhv1.BackingImageCache,
 		LonghornOptionBackingImageName: biName,
 	}
 
-	if image.Spec.SourceType == harvesterv1.VirtualMachineImageSourceTypeClone && image.Spec.Encryption == harvesterv1.VirtualMachineImageEncryptionTypeEncrypt {
+	if image.Spec.SourceType == harvesterv1.VirtualMachineImageSourceTypeClone && image.Spec.SourceParameters.Encryption == harvesterv1.VirtualMachineImageEncryptionTypeEncrypt {
 		params[LonghornOptionBackingImageDataSourceName] = string(lhv1beta2.BackingImageDataSourceTypeClone)
 		params["encrypted"] = "true"
-		params["csi.storage.k8s.io/provisioner-secret-name"] = image.Spec.SecretName
-		params["csi.storage.k8s.io/provisioner-secret-namespace"] = image.Spec.SecretNamespace
-		params["csi.storage.k8s.io/node-publish-secret-name"] = image.Spec.SecretName
-		params["csi.storage.k8s.io/node-publish-secret-namespace"] = image.Spec.SecretNamespace
-		params["csi.storage.k8s.io/node-stage-secret-name"] = image.Spec.SecretName
-		params["csi.storage.k8s.io/node-stage-secret-namespace"] = image.Spec.SecretNamespace
+		params["csi.storage.k8s.io/provisioner-secret-name"] = image.Spec.SourceParameters.SecretName
+		params["csi.storage.k8s.io/provisioner-secret-namespace"] = image.Spec.SourceParameters.SecretNamespace
+		params["csi.storage.k8s.io/node-publish-secret-name"] = image.Spec.SourceParameters.SecretName
+		params["csi.storage.k8s.io/node-publish-secret-namespace"] = image.Spec.SourceParameters.SecretNamespace
+		params["csi.storage.k8s.io/node-stage-secret-name"] = image.Spec.SourceParameters.SecretName
+		params["csi.storage.k8s.io/node-stage-secret-namespace"] = image.Spec.SourceParameters.SecretNamespace
 	}
 
 	for k, v := range image.Spec.StorageClassParameters {

@@ -63,12 +63,18 @@ type VirtualMachineImageSpec struct {
 	Retry int `json:"retry" default:"3"`
 
 	// +optional
+	SourceParameters VirtualMachineImageSourceParameters `json:"sourceParameters"`
+}
+
+type VirtualMachineImageSourceParameters struct {
+	// +optional
 	SecretName string `json:"secretName"`
 
 	// +optional
 	SecretNamespace string `json:"secretNamespace"`
 
 	// +optional
+	// +kubebuilder:validation:Enum=encrypt;decrypt
 	Encryption VirtualMachineImageEncryptionType `json:"encryption"`
 
 	// +optional
