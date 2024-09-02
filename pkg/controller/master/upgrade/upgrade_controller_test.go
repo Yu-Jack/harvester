@@ -586,13 +586,14 @@ func TestUpgradeHandler_prepareNodesForUpgrade(t *testing.T) {
 				upgradeCache:  fakeclients.UpgradeCache(clientset.HarvesterhciV1beta1().Upgrades),
 				planClient:    fakeclients.PlanClient(clientset.UpgradeV1().Plans),
 			}
-
+			//
 			var err error
-			err = settings.UpgradeConfigSet.Set(tc.given.setting.Value)
-			assert.Nil(t, err, "case %q", tc.name)
+			//err = settings.UpgradeConfigSet.Set(tc.given.setting.Value)
+			//assert.Nil(t, err, "case %q", tc.name)
 
 			var actual output
-			actual.upgrade, actual.err = handler.prepareNodesForUpgrade(tc.given.upgrade, "")
+			setting, _ := settings.DecodeConfig[settings.UpgradeConfig](tc.given.setting.Value)
+			actual.upgrade, actual.err = handler.prepareNodesForUpgrade(tc.given.upgrade, "", setting)
 			assert.Equal(t, tc.expected.err, actual.err, "case %q", tc.name)
 			assert.Equal(t, tc.expected.upgrade, actual.upgrade, "case %q", tc.name)
 
