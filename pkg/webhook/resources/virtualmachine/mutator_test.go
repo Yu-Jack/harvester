@@ -130,6 +130,7 @@ func TestPatchResourceOvercommit(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			// arrage
 			clientset := fake.NewSimpleClientset()
 			settingCpy := setting.DeepCopy()

@@ -86,6 +86,7 @@ func Test_validateOvercommitConfig(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := validateOvercommitConfig(tt.args)
 			if tt.errMsg != "" {
 				assert.Equal(t, tt.errMsg, err.Error())
@@ -164,6 +165,7 @@ func Test_validateSupportBundleTimeout(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := validateSupportBundleTimeout(tt.args)
 			if tt.expectedErr {
 				assert.Error(t, err)
@@ -235,6 +237,7 @@ func Test_validateSupportBundleExpiration(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := validateSupportBundleExpiration(tt.args)
 			assert.Equal(t, tt.expectedErr, err != nil)
 		})
@@ -302,6 +305,7 @@ func Test_validateSupportBundleNodeCollectionTimeout(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := validateSupportBundleNodeCollectionTimeout(tt.args)
 			assert.Equal(t, tt.expectedErr, err != nil)
 		})
@@ -349,6 +353,7 @@ func Test_validateSSLProtocols(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := validateSSLProtocols(tt.args)
 			if tt.expectedErr {
 				assert.Error(t, err)
@@ -447,6 +452,7 @@ func Test_validateNoProxy_1(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := validateNoProxy(tt.noProxy, nodes)
 			if tt.expectedErr {
 				assert.Error(t, err)
@@ -529,6 +535,7 @@ func Test_validateNoProxy_2(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := validateNoProxy(tt.noProxy, nodes)
 			if tt.expectedErr {
 				assert.Error(t, err)
@@ -610,6 +617,7 @@ func Test_validateKubeconfigTTLSetting(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := validateKubeConfigTTLSetting(tt.args)
 			assert.Equal(t, tt.expectedErr, err != nil)
 		})
@@ -731,6 +739,7 @@ func Test_validateNTPServers(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			err := validateNTPServers(testCase.args)
 			if len(testCase.expectedErr) > 0 {
 				assert.Equal(t, testCase.expectedErr, err.Error())
@@ -895,6 +904,7 @@ func Test_validateUpgradeConfig(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := validateUpgradeConfig(tt.args)
 			assert.Equal(t, tt.expectedErr, err != nil)
 		})
