@@ -83,9 +83,12 @@ func Test_envPatches(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
-		result, err := envPatches(testCase.input.targetEnvs, testCase.input.proxyEnvs, testCase.input.basePath)
-		assert.Equal(t, testCase.output, result)
-		assert.Empty(t, err)
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			result, err := envPatches(testCase.input.targetEnvs, testCase.input.proxyEnvs, testCase.input.basePath)
+			assert.Equal(t, testCase.output, result)
+			assert.Empty(t, err)
+		})
 	}
 }
 
@@ -142,9 +145,12 @@ func Test_volumePatch(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
-		result, err := volumePatch(testCase.input.target, testCase.input.volume)
-		assert.Equal(t, testCase.output, result)
-		assert.Empty(t, err)
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			result, err := volumePatch(testCase.input.target, testCase.input.volume)
+			assert.Equal(t, testCase.output, result)
+			assert.Empty(t, err)
+		})
 	}
 }
 
@@ -196,8 +202,11 @@ func Test_volumeMountPatch(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
-		result, err := volumeMountPatch(testCase.input.target, testCase.input.path, testCase.input.volumeMount)
-		assert.Equal(t, testCase.output, result)
-		assert.Empty(t, err)
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			result, err := volumeMountPatch(testCase.input.target, testCase.input.path, testCase.input.volumeMount)
+			assert.Equal(t, testCase.output, result)
+			assert.Empty(t, err)
+		})
 	}
 }

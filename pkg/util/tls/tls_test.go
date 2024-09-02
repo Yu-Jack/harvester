@@ -134,8 +134,11 @@ func TestCAValidation(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		err := ValidateCABundle([]byte(test.pem))
-		assert.Equal(t, err, test.err)
+		t.Run(test.pem, func(t *testing.T) {
+			t.Parallel()
+			err := ValidateCABundle([]byte(test.pem))
+			assert.Equal(t, err, test.err)
+		})
 	}
 }
 
@@ -188,7 +191,10 @@ func TestPrivateKeyValidation(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		err := ValidatePrivateKey([]byte(test.pem))
-		assert.Equal(t, err, test.err)
+		t.Run(test.pem, func(t *testing.T) {
+			t.Parallel()
+			err := ValidatePrivateKey([]byte(test.pem))
+			assert.Equal(t, err, test.err)
+		})
 	}
 }
