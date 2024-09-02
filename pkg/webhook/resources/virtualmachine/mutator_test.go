@@ -406,16 +406,6 @@ func TestPatchAffinity(t *testing.T) {
 		},
 	}
 
-	clientSet := fake.NewSimpleClientset()
-	nadGvr := schema.GroupVersionResource{
-		Group:    "k8s.cni.cncf.io",
-		Version:  "v1",
-		Resource: "network-attachment-definitions",
-	}
-	if err := clientSet.Tracker().Create(nadGvr, net1.DeepCopy(), net1.Namespace); err != nil {
-		t.Fatalf("failed to add net1 %+v", net1)
-	}
-
 	tests := []struct {
 		name     string
 		vm       *kubevirtv1.VirtualMachine
@@ -560,21 +550,34 @@ func TestPatchAffinity(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		mutator := NewMutator(fakeclients.HarvesterSettingCache(clientSet.HarvesterhciV1beta1().Settings),
-			fakeclients.NetworkAttachmentDefinitionCache(clientSet.K8sCniCncfIoV1().NetworkAttachmentDefinitions))
-		patchOps, err := mutator.(*vmMutator).patchAffinity(tc.vm, nil)
-		assert.Nil(t, err, tc.name)
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 
-		patch := &patch{
-			Op:    replaceOP,
-			Path:  nodeAffinityPath,
-			Value: tc.affinity,
-		}
-
-		bytes, err := json.Marshal(patch)
-		if err != nil {
+			clientSet := fake.NewSimpleClientset()
+			nadGvr := schema.GroupVersionResource{
+				Group:    "k8s.cni.cncf.io",
+				Version:  "v1",
+				Resource: "network-attachment-definitions",
+			}
+			if err := clientSet.Tracker().Create(nadGvr, net1.DeepCopy(), net1.Namespace); err != nil {
+				t.Fatalf("failed to add net1 %+v", net1)
+			}
+			mutator := NewMutator(fakeclients.HarvesterSettingCache(clientSet.HarvesterhciV1beta1().Settings),
+				fakeclients.NetworkAttachmentDefinitionCache(clientSet.K8sCniCncfIoV1().NetworkAttachmentDefinitions))
+			patchOps, err := mutator.(*vmMutator).patchAffinity(tc.vm, nil)
 			assert.Nil(t, err, tc.name)
-		}
-		assert.Equal(t, types.PatchOps{string(bytes)}, patchOps)
+
+			patch := &patch{
+				Op:    replaceOP,
+				Path:  nodeAffinityPath,
+				Value: tc.affinity,
+			}
+
+			bytes, err := json.Marshal(patch)
+			if err != nil {
+				assert.Nil(t, err, tc.name)
+			}
+			assert.Equal(t, types.PatchOps{string(bytes)}, patchOps)
+		})
 	}
 }
