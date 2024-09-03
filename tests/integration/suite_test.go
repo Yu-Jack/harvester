@@ -237,8 +237,7 @@ var _ = SynchronizedBeforeSuite(
 
 		constant.KubeConfig, err = clientcmd.NewDefaultClientConfig(constant.CombinedCfg.RawKubeConfig, &clientcmd.ConfigOverrides{}).ClientConfig()
 		MustNotError(err)
-
-		constant.TestCtx = context.TODO()
+		//constant.TestCtx = context.TODO()
 	})
 
 var _ = SynchronizedAfterSuite(func() {
