@@ -1,4 +1,4 @@
-package api_test
+package api
 
 import (
 	"fmt"
@@ -20,6 +20,7 @@ import (
 	ctlkubevirtv1 "github.com/harvester/harvester/pkg/generated/controllers/kubevirt.io/v1"
 	"github.com/harvester/harvester/tests/framework/fuzz"
 	"github.com/harvester/harvester/tests/framework/helper"
+	"github.com/harvester/harvester/tests/integration/constant"
 )
 
 var _ = Describe("verify vm APIs", func() {
@@ -33,12 +34,12 @@ var _ = Describe("verify vm APIs", func() {
 	)
 
 	BeforeEach(func() {
-		coreFactory, err := core.NewFactoryFromConfig(kubeConfig)
+		coreFactory, err := core.NewFactoryFromConfig(constant.KubeConfig)
 		MustNotError(err)
 		pvcController = coreFactory.Core().V1().PersistentVolumeClaim()
 		nsController = coreFactory.Core().V1().Namespace()
 
-		virtFactory, err := kubevirt.NewFactoryFromConfig(kubeConfig)
+		virtFactory, err := kubevirt.NewFactoryFromConfig(constant.KubeConfig)
 		MustNotError(err)
 		vmController = virtFactory.Kubevirt().V1().VirtualMachine()
 		vmiController = virtFactory.Kubevirt().V1().VirtualMachineInstance()
@@ -53,7 +54,7 @@ var _ = Describe("verify vm APIs", func() {
 
 	Cleanup(func() {
 		vmList, err := vmController.List(vmNamespace, metav1.ListOptions{
-			LabelSelector: labels.FormatLabels(testResourceLabels)})
+			LabelSelector: labels.FormatLabels(constant.TestResourceLabels)})
 		if err != nil {
 			GinkgoT().Logf("failed to list tested vms, %v", err)
 			return
@@ -65,7 +66,7 @@ var _ = Describe("verify vm APIs", func() {
 		}
 
 		pvcList, err := pvcController.List(vmNamespace, metav1.ListOptions{
-			LabelSelector: labels.FormatLabels(testResourceLabels)})
+			LabelSelector: labels.FormatLabels(constant.TestResourceLabels)})
 		if err != nil {
 			GinkgoT().Logf("failed to list tested pvcs, %v", err)
 			return
@@ -83,7 +84,7 @@ var _ = Describe("verify vm APIs", func() {
 
 		BeforeEach(func() {
 
-			vmsAPI = helper.BuildAPIURL("v1", "kubevirt.io.virtualmachines", options.HTTPSListenPort)
+			vmsAPI = helper.BuildAPIURL("v1", "kubevirt.io.virtualmachines", constant.Options.HTTPSListenPort)
 
 		})
 
@@ -92,7 +93,7 @@ var _ = Describe("verify vm APIs", func() {
 			// create
 			By("create a virtual machine should fail if name missing")
 			MustFinallyBeTrue(func() bool {
-				vm, err := NewDefaultTestVMBuilder(testResourceLabels).Name("").
+				vm, err := NewDefaultTestVMBuilder(constant.TestResourceLabels).Name("").
 					NetworkInterface(testVMInterfaceName, testVMInterfaceModel, "", builder.NetworkInterfaceTypeMasquerade, "").
 					PVCDisk(testVMBlankDiskName, testVMDefaultDiskBus, false, false, 1, testVMDiskSize, "", nil).
 					VM()
@@ -115,7 +116,7 @@ var _ = Describe("verify vm APIs", func() {
 			}
 			userData := fmt.Sprintf(testVMCloudInitUserDataTemplate, vmCloudInit.UserName, vmCloudInit.Password)
 			networkData := fmt.Sprintf(testVMCloudInitNetworkDataTemplate, vmCloudInit.Address, vmCloudInit.Gateway)
-			vm, err := NewDefaultTestVMBuilder(testResourceLabels).Name(vmName).Namespace(vmNamespace).
+			vm, err := NewDefaultTestVMBuilder(constant.TestResourceLabels).Name(vmName).Namespace(vmNamespace).
 				NetworkInterface(testVMInterfaceName, testVMInterfaceModel, "", builder.NetworkInterfaceTypeMasquerade, "").
 				ContainerDisk(testVMContainerDiskName, testVMDefaultDiskBus, false, 1, testVMContainerDiskImageName, testVMContainerDiskImagePullPolicy).
 				CloudInitDisk(testVMCloudInitDiskName, testVMDefaultDiskBus, false, 0, builder.CloudInitSource{
@@ -264,7 +265,7 @@ var _ = Describe("verify vm APIs", func() {
 		Specify("deleting a vm and its volume", func() {
 			By("create a virtual machine with one spare disk")
 			vmName := testVMGenerateName + fuzz.String(5)
-			vm, err := NewDefaultTestVMBuilder(testResourceLabels).Namespace(vmNamespace).Name(vmName).
+			vm, err := NewDefaultTestVMBuilder(constant.TestResourceLabels).Namespace(vmNamespace).Name(vmName).
 				NetworkInterface(testVMInterfaceName, testVMInterfaceModel, "", builder.NetworkInterfaceTypeMasquerade, "").
 				PVCDisk(testVMRemoveDiskName, testVMDefaultDiskBus, false, false, 1, testVMDiskSize, testVMRemoveDiskName, &builder.PersistentVolumeClaimOption{
 					VolumeMode: builder.PersistentVolumeModeFilesystem,

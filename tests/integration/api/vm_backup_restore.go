@@ -1,4 +1,4 @@
-package api_test
+package api
 
 import (
 	"fmt"
@@ -25,6 +25,7 @@ import (
 	"github.com/harvester/harvester/tests/framework/env"
 	"github.com/harvester/harvester/tests/framework/fuzz"
 	"github.com/harvester/harvester/tests/framework/helper"
+	"github.com/harvester/harvester/tests/integration/constant"
 )
 
 var _ = Describe("verify vm backup & restore APIs", func() {
@@ -42,13 +43,13 @@ var _ = Describe("verify vm backup & restore APIs", func() {
 		)
 
 		BeforeEach(func() {
-			coreFactory, err := core.NewFactoryFromConfig(kubeConfig)
+			coreFactory, err := core.NewFactoryFromConfig(constant.KubeConfig)
 			MustNotError(err)
-			virtFactory, err := kubevirt.NewFactoryFromConfig(kubeConfig)
+			virtFactory, err := kubevirt.NewFactoryFromConfig(constant.KubeConfig)
 			MustNotError(err)
-			harvFactory, err := harvesterhci.NewFactoryFromConfig(kubeConfig)
+			harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.KubeConfig)
 			MustNotError(err)
-			longFactory, err := longhorn.NewFactoryFromConfig(kubeConfig)
+			longFactory, err := longhorn.NewFactoryFromConfig(constant.KubeConfig)
 			MustNotError(err)
 
 			backupController = harvFactory.Harvesterhci().V1beta1().VirtualMachineBackup()
@@ -73,7 +74,7 @@ var _ = Describe("verify vm backup & restore APIs", func() {
 		Cleanup(func() {
 			// cleanup backup vms
 			vmList, err := vmController.List(backupNamespace, metav1.ListOptions{
-				LabelSelector: labels.FormatLabels(testVMBackupLabels)})
+				LabelSelector: labels.FormatLabels(constant.TestVMBackupLabels)})
 			if err != nil {
 				GinkgoT().Logf("failed to list backup & restore tested vms, %v", err)
 				return
@@ -113,8 +114,8 @@ var _ = Describe("verify vm backup & restore APIs", func() {
 			var vmsAPI, restoresAPI string
 
 			BeforeEach(func() {
-				vmsAPI = helper.BuildAPIURL("v1", "kubevirt.io.virtualmachines", options.HTTPSListenPort)
-				restoresAPI = helper.BuildAPIURL("v1", "harvesterhci.io.virtualmachinerestores", options.HTTPSListenPort)
+				vmsAPI = helper.BuildAPIURL("v1", "kubevirt.io.virtualmachines", constant.Options.HTTPSListenPort)
+				restoresAPI = helper.BuildAPIURL("v1", "harvesterhci.io.virtualmachinerestores", constant.Options.HTTPSListenPort)
 			})
 
 			Specify("config the vm backup server", func() {
@@ -146,7 +147,7 @@ var _ = Describe("verify vm backup & restore APIs", func() {
 
 				By("when create a VM using a PVC")
 				vmName := testVMGenerateName + fuzz.String(5)
-				vm, err := NewDefaultTestVMBuilder(testVMBackupLabels).Namespace(backupNamespace).Name(vmName).
+				vm, err := NewDefaultTestVMBuilder(constant.TestVMBackupLabels).Namespace(backupNamespace).Name(vmName).
 					NetworkInterface(testVMInterfaceName, testVMInterfaceModel, "", builder.NetworkInterfaceTypeMasquerade, "").
 					PVCDisk("root-disk", testVMDefaultDiskBus, false, false, 1, "2Gi", "", nil).
 					Run(true).VM()
@@ -208,7 +209,7 @@ var _ = Describe("verify vm backup & restore APIs", func() {
 						ObjectMeta: metav1.ObjectMeta{
 							Name:      restoreName,
 							Namespace: backupNamespace,
-							Labels:    testVMBackupLabels,
+							Labels:    constant.TestVMBackupLabels,
 						},
 						Spec: harvesterv1.VirtualMachineRestoreSpec{
 							Target: corev1.TypedLocalObjectReference{

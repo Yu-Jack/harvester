@@ -1,4 +1,4 @@
-package api_test
+package api
 
 import (
 	"fmt"
@@ -11,6 +11,7 @@ import (
 	ctlnode "github.com/harvester/harvester/pkg/controller/master/node"
 	"github.com/harvester/harvester/tests/framework/cluster"
 	"github.com/harvester/harvester/tests/framework/helper"
+	"github.com/harvester/harvester/tests/integration/constant"
 )
 
 var _ = Describe("verify host APIs", func() {
@@ -21,7 +22,7 @@ var _ = Describe("verify host APIs", func() {
 
 		BeforeEach(func() {
 
-			nodesAPI = helper.BuildAPIURL("v1", "nodes", options.HTTPSListenPort)
+			nodesAPI = helper.BuildAPIURL("v1", "nodes", constant.Options.HTTPSListenPort)
 
 		})
 

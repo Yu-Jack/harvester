@@ -1,4 +1,4 @@
-package api_test
+package api
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ import (
 
 	harvesterv1 "github.com/harvester/harvester/pkg/apis/harvesterhci.io/v1beta1"
 	"github.com/harvester/harvester/tests/framework/helper"
+	"github.com/harvester/harvester/tests/integration/constant"
 )
 
 var _ = Describe("verify settings APIs", func() {
@@ -20,7 +21,7 @@ var _ = Describe("verify settings APIs", func() {
 		)
 
 		BeforeEach(func() {
-			settingsAPI = helper.BuildAPIURL("v1", "harvesterhci.io.settings", options.HTTPSListenPort)
+			settingsAPI = helper.BuildAPIURL("v1", "harvesterhci.io.settings", constant.Options.HTTPSListenPort)
 		})
 
 		Specify("view all the settings", func() {

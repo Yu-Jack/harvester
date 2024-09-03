@@ -1,4 +1,4 @@
-package api_test
+package api
 
 import (
 	"fmt"
@@ -11,6 +11,7 @@ import (
 
 	"github.com/harvester/harvester/tests/framework/fuzz"
 	"github.com/harvester/harvester/tests/framework/helper"
+	"github.com/harvester/harvester/tests/integration/constant"
 )
 
 var _ = Describe("verify volume APIs", func() {
@@ -29,7 +30,7 @@ var _ = Describe("verify volume APIs", func() {
 
 		BeforeEach(func() {
 
-			volumeAPI = helper.BuildAPIURL("v1", "persistentvolumeclaims", options.HTTPSListenPort)
+			volumeAPI = helper.BuildAPIURL("v1", "persistentvolumeclaims", constant.Options.HTTPSListenPort)
 
 		})
 

@@ -1,4 +1,4 @@
-package api_test
+package api
 
 import (
 	"fmt"
@@ -11,6 +11,7 @@ import (
 	"github.com/harvester/harvester/pkg/util"
 	"github.com/harvester/harvester/tests/framework/fuzz"
 	"github.com/harvester/harvester/tests/framework/helper"
+	"github.com/harvester/harvester/tests/integration/constant"
 )
 
 var _ = Describe("verify image APIs", func() {
@@ -29,7 +30,7 @@ var _ = Describe("verify image APIs", func() {
 
 		BeforeEach(func() {
 
-			imageAPI = helper.BuildAPIURL("v1", "harvesterhci.io.virtualmachineimages", options.HTTPSListenPort)
+			imageAPI = helper.BuildAPIURL("v1", "harvesterhci.io.virtualmachineimages", constant.Options.HTTPSListenPort)
 
 		})
 

@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	testChartDir            = "../../../deploy/charts/harvester"
-	testCRDChartDir         = "../../../deploy/charts/harvester-crd"
+	testChartDir            = "../../deploy/charts/harvester"
+	testCRDChartDir         = "../../deploy/charts/harvester-crd"
 	testHarvesterNamespace  = "harvester-system"
 	testLonghornNamespace   = "longhorn-system"
 	testCattleNamespace     = "cattle-system"

@@ -1,4 +1,4 @@
-package api_test
+package api
 
 import (
 	"fmt"
@@ -17,6 +17,7 @@ import (
 	ctlharvesterv1 "github.com/harvester/harvester/pkg/generated/controllers/harvesterhci.io/v1beta1"
 	"github.com/harvester/harvester/tests/framework/fuzz"
 	"github.com/harvester/harvester/tests/framework/helper"
+	"github.com/harvester/harvester/tests/integration/constant"
 )
 
 const (
@@ -33,9 +34,9 @@ var _ = Describe("verify vm template APIs", func() {
 	)
 
 	BeforeEach(func() {
-		harvFactory, err := harvesterhci.NewFactoryFromConfig(kubeConfig)
+		harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.KubeConfig)
 		MustNotError(err)
-		coreFactory, err := core.NewFactoryFromConfig(kubeConfig)
+		coreFactory, err := core.NewFactoryFromConfig(constant.KubeConfig)
 		MustNotError(err)
 		nsController := coreFactory.Core().V1().Namespace()
 		templates = harvFactory.Harvesterhci().V1beta1().VirtualMachineTemplate()
@@ -50,7 +51,7 @@ var _ = Describe("verify vm template APIs", func() {
 
 	Cleanup(func() {
 		templateList, err := templates.List(templateNamespace, metav1.ListOptions{
-			LabelSelector: labels.FormatLabels(testResourceLabels)})
+			LabelSelector: labels.FormatLabels(constant.TestResourceLabels)})
 		if err != nil {
 			GinkgoT().Logf("failed to list tested vm templates, %v", err)
 			return
@@ -62,7 +63,7 @@ var _ = Describe("verify vm template APIs", func() {
 		}
 
 		templateVersionList, err := templateVersions.List(templateNamespace, metav1.ListOptions{
-			LabelSelector: labels.FormatLabels(testResourceLabels)})
+			LabelSelector: labels.FormatLabels(constant.TestResourceLabels)})
 		if err != nil {
 			GinkgoT().Logf("failed to list tested vm templates, %v", err)
 			return
@@ -79,7 +80,7 @@ var _ = Describe("verify vm template APIs", func() {
 			template = harvesterv1.VirtualMachineTemplate{
 				ObjectMeta: v1.ObjectMeta{
 					Name:   "vm-template-0",
-					Labels: testResourceLabels,
+					Labels: constant.TestResourceLabels,
 				},
 				Spec: harvesterv1.VirtualMachineTemplateSpec{
 					Description: "testing vm template",
@@ -88,7 +89,7 @@ var _ = Describe("verify vm template APIs", func() {
 			templateVersion = harvesterv1.VirtualMachineTemplateVersion{
 				ObjectMeta: v1.ObjectMeta{
 					Name:   fuzz.String(5),
-					Labels: testResourceLabels,
+					Labels: constant.TestResourceLabels,
 				},
 				Spec: harvesterv1.VirtualMachineTemplateVersionSpec{},
 			}
@@ -96,7 +97,7 @@ var _ = Describe("verify vm template APIs", func() {
 		)
 
 		BeforeEach(func() {
-			var port = options.HTTPSListenPort
+			var port = constant.Options.HTTPSListenPort
 			template.Namespace = templateNamespace
 			templateVersion.Namespace = templateNamespace
 			templateAPI = helper.BuildAPIURL("v1", "harvesterhci.io.virtualmachinetemplates", port)
@@ -159,7 +160,7 @@ var _ = Describe("verify vm template APIs", func() {
 			By("create a vm template version", func() {
 
 				templateVersion.Spec.TemplateID = templateID
-				vm, err := NewDefaultTestVMBuilder(testResourceLabels).Namespace(templateNamespace).VM()
+				vm, err := NewDefaultTestVMBuilder(constant.TestResourceLabels).Namespace(templateNamespace).VM()
 				MustNotError(err)
 				templateVersion.Spec.VM = harvesterv1.VirtualMachineSourceSpec{
 					ObjectMeta: vm.ObjectMeta,

@@ -20,6 +20,7 @@ import (
 	"github.com/harvester/harvester/pkg/generated/controllers/harvesterhci.io"
 	ctlharvesterv1 "github.com/harvester/harvester/pkg/generated/controllers/harvesterhci.io/v1beta1"
 	"github.com/harvester/harvester/tests/framework/dsl"
+	"github.com/harvester/harvester/tests/integration/constant"
 	"github.com/harvester/harvester/tests/integration/controllers/fake"
 )
 
@@ -64,16 +65,16 @@ var _ = ginkgo.Describe("verify helm chart is create and addon gets to desired s
 			},
 		}
 		gomega.Eventually(func() error {
-			harvFactory, err := harvesterhci.NewFactoryFromConfig(kubeConfig)
+			harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.KubeConfig)
 			dsl.MustNotError(err)
 
-			helmFactory, err := helmv1.NewFactoryFromConfig(kubeConfig)
+			helmFactory, err := helmv1.NewFactoryFromConfig(constant.KubeConfig)
 			dsl.MustNotError(err)
 
-			batchFactory, err := batchv1.NewFactoryFromConfig(kubeConfig)
+			batchFactory, err := batchv1.NewFactoryFromConfig(constant.KubeConfig)
 			dsl.MustNotError(err)
 
-			catalogFactory, err := catalog.NewFactoryFromConfig(kubeConfig)
+			catalogFactory, err := catalog.NewFactoryFromConfig(constant.KubeConfig)
 			dsl.MustNotError(err)
 
 			addonController = harvFactory.Harvesterhci().V1beta1().Addon()
@@ -237,10 +238,10 @@ var _ = ginkgo.Describe("addon and helm chart deletion", func() {
 	ginkgo.It("verify helm deletion tasks", func() {
 		ginkgo.By("create addon", func() {
 			gomega.Eventually(func() error {
-				harvFactory, err := harvesterhci.NewFactoryFromConfig(kubeConfig)
+				harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.KubeConfig)
 				dsl.MustNotError(err)
 				addonController = harvFactory.Harvesterhci().V1beta1().Addon()
-				helmFactory, err := helmv1.NewFactoryFromConfig(kubeConfig)
+				helmFactory, err := helmv1.NewFactoryFromConfig(constant.KubeConfig)
 				dsl.MustNotError(err)
 				helmController = helmFactory.Helm().V1().HelmChart()
 				_, err = addonController.Create(a)
@@ -329,10 +330,10 @@ var _ = ginkgo.Describe("verify helm chart redeploy", func() {
 
 	ginkgo.BeforeEach(func() {
 		gomega.Eventually(func() error {
-			harvFactory, err := harvesterhci.NewFactoryFromConfig(kubeConfig)
+			harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.KubeConfig)
 			dsl.MustNotError(err)
 			addonController = harvFactory.Harvesterhci().V1beta1().Addon()
-			helmFactory, err := helmv1.NewFactoryFromConfig(kubeConfig)
+			helmFactory, err := helmv1.NewFactoryFromConfig(constant.KubeConfig)
 			dsl.MustNotError(err)
 			helmController = helmFactory.Helm().V1().HelmChart()
 			_, err = addonController.Create(a)
@@ -440,10 +441,10 @@ var _ = ginkgo.Describe("perform addon upgrade", func() {
 
 	ginkgo.BeforeEach(func() {
 		gomega.Eventually(func() error {
-			harvFactory, err := harvesterhci.NewFactoryFromConfig(kubeConfig)
+			harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.KubeConfig)
 			dsl.MustNotError(err)
 			addonController = harvFactory.Harvesterhci().V1beta1().Addon()
-			helmFactory, err := helmv1.NewFactoryFromConfig(kubeConfig)
+			helmFactory, err := helmv1.NewFactoryFromConfig(constant.KubeConfig)
 			dsl.MustNotError(err)
 			helmController = helmFactory.Helm().V1().HelmChart()
 			_, err = addonController.Create(a)
@@ -564,10 +565,10 @@ var _ = ginkgo.Describe("verify helm chart is create and addon gets to failed st
 		}
 
 		gomega.Eventually(func() error {
-			harvFactory, err := harvesterhci.NewFactoryFromConfig(kubeConfig)
+			harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.KubeConfig)
 			dsl.MustNotError(err)
 			addonController = harvFactory.Harvesterhci().V1beta1().Addon()
-			helmFactory, err := helmv1.NewFactoryFromConfig(kubeConfig)
+			helmFactory, err := helmv1.NewFactoryFromConfig(constant.KubeConfig)
 			dsl.MustNotError(err)
 			helmController = helmFactory.Helm().V1().HelmChart()
 			_, err = addonController.Create(a)
@@ -663,10 +664,10 @@ var _ = ginkgo.Describe("enable and disable successful addon", func() {
 		}
 
 		gomega.Eventually(func() error {
-			harvFactory, err := harvesterhci.NewFactoryFromConfig(kubeConfig)
+			harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.KubeConfig)
 			dsl.MustNotError(err)
 			addonController = harvFactory.Harvesterhci().V1beta1().Addon()
-			helmFactory, err := helmv1.NewFactoryFromConfig(kubeConfig)
+			helmFactory, err := helmv1.NewFactoryFromConfig(constant.KubeConfig)
 			dsl.MustNotError(err)
 			helmController = helmFactory.Helm().V1().HelmChart()
 			_, err = addonController.Create(a)
@@ -773,10 +774,10 @@ var _ = ginkgo.Describe("enable and disable failed addon", func() {
 		}
 
 		gomega.Eventually(func() error {
-			harvFactory, err := harvesterhci.NewFactoryFromConfig(kubeConfig)
+			harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.KubeConfig)
 			dsl.MustNotError(err)
 			addonController = harvFactory.Harvesterhci().V1beta1().Addon()
-			helmFactory, err := helmv1.NewFactoryFromConfig(kubeConfig)
+			helmFactory, err := helmv1.NewFactoryFromConfig(constant.KubeConfig)
 			dsl.MustNotError(err)
 			helmController = helmFactory.Helm().V1().HelmChart()
 			_, err = addonController.Create(a)
@@ -896,10 +897,10 @@ var _ = ginkgo.Describe("test addon upgrade fail", func() {
 
 	ginkgo.BeforeEach(func() {
 		gomega.Eventually(func() error {
-			harvFactory, err := harvesterhci.NewFactoryFromConfig(kubeConfig)
+			harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.KubeConfig)
 			dsl.MustNotError(err)
 			addonController = harvFactory.Harvesterhci().V1beta1().Addon()
-			helmFactory, err := helmv1.NewFactoryFromConfig(kubeConfig)
+			helmFactory, err := helmv1.NewFactoryFromConfig(constant.KubeConfig)
 			dsl.MustNotError(err)
 			helmController = helmFactory.Helm().V1().HelmChart()
 			_, err = addonController.Create(a)

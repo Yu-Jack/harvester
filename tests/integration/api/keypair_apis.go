@@ -1,4 +1,4 @@
-package api_test
+package api
 
 import (
 	"fmt"
@@ -14,6 +14,7 @@ import (
 	"github.com/harvester/harvester/pkg/util"
 	"github.com/harvester/harvester/tests/framework/fuzz"
 	"github.com/harvester/harvester/tests/framework/helper"
+	"github.com/harvester/harvester/tests/integration/constant"
 )
 
 var _ = Describe("verify keypair APIs", func() {
@@ -23,7 +24,7 @@ var _ = Describe("verify keypair APIs", func() {
 	BeforeEach(func() {
 
 		// keypair is stored in the same namespace of harvester
-		keypairNamespace = options.Namespace
+		keypairNamespace = constant.Options.Namespace
 
 	})
 
@@ -33,7 +34,7 @@ var _ = Describe("verify keypair APIs", func() {
 
 		BeforeEach(func() {
 
-			keypairsAPI = helper.BuildAPIURL("v1", "harvesterhci.io.keypairs", options.HTTPSListenPort)
+			keypairsAPI = helper.BuildAPIURL("v1", "harvesterhci.io.keypairs", constant.Options.HTTPSListenPort)
 
 		})
 

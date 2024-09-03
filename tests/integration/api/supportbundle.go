@@ -1,4 +1,4 @@
-package api_test
+package api
 
 import (
 	"fmt"
@@ -12,6 +12,7 @@ import (
 	harvesterv1 "github.com/harvester/harvester/pkg/apis/harvesterhci.io/v1beta1"
 	"github.com/harvester/harvester/pkg/generated/controllers/harvesterhci.io"
 	ctlharvesterv1 "github.com/harvester/harvester/pkg/generated/controllers/harvesterhci.io/v1beta1"
+	"github.com/harvester/harvester/tests/integration/constant"
 )
 
 var _ = Describe("create a supportbundle request and verify taints on daemonset", func() {
@@ -37,12 +38,12 @@ var _ = Describe("create a supportbundle request and verify taints on daemonset"
 			Operator: corev1.TolerationOpExists,
 		}
 
-		harvFactory, err := harvesterhci.NewFactoryFromConfig(kubeConfig)
+		harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.KubeConfig)
 		MustNotError(err)
 		sc = harvFactory.Harvesterhci().V1beta1().Setting()
 		sbc = harvFactory.Harvesterhci().V1beta1().SupportBundle()
 
-		coreFactory, err := appsv1.NewFactoryFromConfig(kubeConfig)
+		coreFactory, err := appsv1.NewFactoryFromConfig(constant.KubeConfig)
 		MustNotError(err)
 
 		dsc = coreFactory.Apps().V1().DaemonSet()

@@ -12,6 +12,7 @@ import (
 
 	"github.com/harvester/harvester/pkg/controller/master/mcmsettings"
 	"github.com/harvester/harvester/tests/framework/dsl"
+	"github.com/harvester/harvester/tests/integration/constant"
 )
 
 var _ = ginkgo.Describe("verify cluster repos are patched", func() {
@@ -33,7 +34,7 @@ var _ = ginkgo.Describe("verify cluster repos are patched", func() {
 			Spec: catalogv1.RepoSpec{},
 		}
 
-		catalogFactory, err := catalog.NewFactoryFromConfig(kubeConfig)
+		catalogFactory, err := catalog.NewFactoryFromConfig(constant.KubeConfig)
 		dsl.MustNotError(err)
 
 		clusterRepoController = catalogFactory.Catalog().V1().ClusterRepo()

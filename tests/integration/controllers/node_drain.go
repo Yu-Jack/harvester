@@ -12,6 +12,7 @@ import (
 
 	"github.com/harvester/harvester/pkg/util/drainhelper"
 	"github.com/harvester/harvester/tests/framework/dsl"
+	"github.com/harvester/harvester/tests/integration/constant"
 )
 
 var _ = ginkgo.Describe("verify node drain apis", func() {
@@ -19,7 +20,7 @@ var _ = ginkgo.Describe("verify node drain apis", func() {
 	var nodeController ctlcorev1.NodeController
 
 	ginkgo.BeforeEach(func() {
-		coreFactory, err := rancherCorev1.NewFactoryFromConfig(kubeConfig)
+		coreFactory, err := rancherCorev1.NewFactoryFromConfig(constant.KubeConfig)
 		dsl.MustNotError(err)
 		nodeController = coreFactory.Core().V1().Node()
 
@@ -41,7 +42,7 @@ var _ = ginkgo.Describe("verify node drain apis", func() {
 
 	ginkgo.It("drain node using drainhelper", func() {
 		ginkgo.By("draining nodes", func() {
-			err := drainhelper.DrainNode(testCtx, cfg, &node)
+			err := drainhelper.DrainNode(constant.TestCtx, constant.KubeConfig, &node)
 			dsl.MustNotError(err)
 		})
 
