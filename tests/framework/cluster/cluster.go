@@ -48,11 +48,11 @@ func GetExistCluster() Cluster {
 // Start starts a test environment and redirects Stdout/Stderr to output if "USE_EXISTING_CLUSTER" is not "true".
 func Start(output io.Writer) (clientcmd.ClientConfig, Cluster, error) {
 	var cluster Cluster
-	if env.IsUsingExistingCluster() {
-		cluster = GetExistCluster()
-	} else {
-		cluster = NewLocalCluster()
-	}
+	//if env.IsUsingExistingCluster() {
+	//cluster = GetExistCluster()
+	//} else {
+	cluster = NewLocalCluster()
+	//}
 	err := cluster.Startup(output)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to startup the local cluster %s, %v", cluster, err)

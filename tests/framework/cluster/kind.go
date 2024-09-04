@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"k8s.io/apimachinery/pkg/util/rand"
 	"sigs.k8s.io/kind/pkg/cluster"
 	"sigs.k8s.io/kind/pkg/exec"
 
@@ -20,6 +21,7 @@ import (
 )
 
 var _ Cluster = &LocalKindCluster{}
+var usedNumbers = make(map[int]bool)
 
 // LocalKindCluster specifies the configurable parameters to launch a local kubernetes-sigs/kind cluster.
 type LocalKindCluster struct {
@@ -265,19 +267,38 @@ var (
 )
 
 func NewLocalKindCluster() *LocalKindCluster {
-	localKindClusterOnce.Do(func() {
-		envFinder := finder.NewEnvFinder("kind")
-		localKindCluster = &LocalKindCluster{
-			ExportIngressHTTPPort:  envFinder.GetInt("exportIngressHttpPort", 0),
-			ExportIngressHTTPSPort: envFinder.GetInt("exportIngressHttpsPort", 0),
-			ExportImageStoragePort: envFinder.GetInt("exportImageStoragePort", 0),
-			ImageMirror:            envFinder.Get("imageMirror", ""),
-			ClusterName:            envFinder.Get("clusterName", "harvester"),
-			ControlPlanes:          envFinder.GetInt("controlPlanes", DefaultControlPlanes),
-			Workers:                envFinder.GetInt("workers", DefaultWorkers),
-			WaitTimeout:            envFinder.GetDuration("waitTimeout", 10*time.Minute),
-			ClusterConfigPath:      envFinder.Get("clusterConfigPath", ""),
-		}
-	})
+	envFinder := finder.NewEnvFinder("kind")
+	localKindCluster := &LocalKindCluster{
+		ExportIngressHTTPPort:  GetUniqueRandomNumber(usedNumbers, 30000, 40000),
+		ExportIngressHTTPSPort: GetUniqueRandomNumber(usedNumbers, 30000, 40000),
+		ExportImageStoragePort: GetUniqueRandomNumber(usedNumbers, 30000, 40000),
+		ImageMirror:            envFinder.Get("imageMirror", ""),
+		ClusterName:            envFinder.Get("clusterName", "harvester"),
+		ControlPlanes:          envFinder.GetInt("controlPlanes", DefaultControlPlanes),
+		Workers:                envFinder.GetInt("workers", DefaultWorkers),
+		WaitTimeout:            envFinder.GetDuration("waitTimeout", 10*time.Minute),
+		ClusterConfigPath:      envFinder.Get("clusterConfigPath", ""),
+	}
 	return localKindCluster
+}
+
+func GetUniqueRandomNumber(usedNumbers map[int]bool, min int, max int) int {
+	if len(usedNumbers) >= (max - min + 1) {
+		return -1 // Return -1 if all numbers have been used
+	}
+
+	// Seed the random number generator
+	rand.Seed(time.Now().UnixNano())
+
+	for {
+		// Generate a random number between min and max
+		number := rand.Intn(max-min+1) + min
+
+		// Check if the number has already been used
+		if !usedNumbers[number] {
+			// Mark the number as used
+			usedNumbers[number] = true
+			return number
+		}
+	}
 }
