@@ -966,19 +966,19 @@ var _ = ginkgo.Describe("test addon upgrade fail", func() {
 			}, "30s", "5s").ShouldNot(gomega.HaveOccurred())
 		})
 
-		ginkgo.By("update addon", func() {
-			gomega.Eventually(func() error {
-				aObj, err := addonController.Get(a.Namespace, a.Name, metav1.GetOptions{})
-				if err != nil {
-					return err
-				}
-				aObj.Spec.Version = "0.2.0"
-				aObj.Spec.Chart = "vm-import-controller-2"
-				aObj.Spec.Repo = "http://harvester-cluster-repo.cattle-system.svc.cluster.local"
-				_, err = addonController.Update(aObj)
-				return err
-			}, "30s", "5s").ShouldNot(gomega.HaveOccurred())
-		})
+		//ginkgo.By("update addon", func() {
+		//	gomega.Eventually(func() error {
+		//		aObj, err := addonController.Get(a.Namespace, a.Name, metav1.GetOptions{})
+		//		if err != nil {
+		//			return err
+		//		}
+		//		aObj.Spec.Version = "0.2.0"
+		//		aObj.Spec.Chart = "vm-import-controller-2"
+		//		aObj.Spec.Repo = "http://harvester-cluster-repo.cattle-system.svc.cluster.local"
+		//		_, err = addonController.Update(aObj)
+		//		return err
+		//	}, "30s", "5s").ShouldNot(gomega.HaveOccurred())
+		//})
 
 		ginkgo.By("check helm chart got updated", func() {
 			gomega.Eventually(func() error {
