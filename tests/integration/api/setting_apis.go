@@ -21,7 +21,7 @@ var _ = Describe("verify settings APIs", func() {
 		)
 
 		BeforeEach(func() {
-			settingsAPI = helper.BuildAPIURL("v1", "harvesterhci.io.settings", constant.Options.HTTPSListenPort)
+			settingsAPI = helper.BuildAPIURL("v1", "harvesterhci.io.settings", constant.HarvesterOptions.HTTPSListenPort)
 		})
 
 		Specify("view all the settings", func() {

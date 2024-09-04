@@ -30,7 +30,7 @@ var _ = Describe("verify volume APIs", func() {
 
 		BeforeEach(func() {
 
-			volumeAPI = helper.BuildAPIURL("v1", "persistentvolumeclaims", constant.Options.HTTPSListenPort)
+			volumeAPI = helper.BuildAPIURL("v1", "persistentvolumeclaims", constant.HarvesterOptions.HTTPSListenPort)
 
 		})
 

@@ -43,13 +43,13 @@ var _ = Describe("verify vm backup & restore APIs", func() {
 		)
 
 		BeforeEach(func() {
-			coreFactory, err := core.NewFactoryFromConfig(constant.KubeConfig)
+			coreFactory, err := core.NewFactoryFromConfig(constant.HarvesterKubeConfig)
 			MustNotError(err)
-			virtFactory, err := kubevirt.NewFactoryFromConfig(constant.KubeConfig)
+			virtFactory, err := kubevirt.NewFactoryFromConfig(constant.HarvesterKubeConfig)
 			MustNotError(err)
-			harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.KubeConfig)
+			harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.HarvesterKubeConfig)
 			MustNotError(err)
-			longFactory, err := longhorn.NewFactoryFromConfig(constant.KubeConfig)
+			longFactory, err := longhorn.NewFactoryFromConfig(constant.HarvesterKubeConfig)
 			MustNotError(err)
 
 			backupController = harvFactory.Harvesterhci().V1beta1().VirtualMachineBackup()
@@ -114,8 +114,8 @@ var _ = Describe("verify vm backup & restore APIs", func() {
 			var vmsAPI, restoresAPI string
 
 			BeforeEach(func() {
-				vmsAPI = helper.BuildAPIURL("v1", "kubevirt.io.virtualmachines", constant.Options.HTTPSListenPort)
-				restoresAPI = helper.BuildAPIURL("v1", "harvesterhci.io.virtualmachinerestores", constant.Options.HTTPSListenPort)
+				vmsAPI = helper.BuildAPIURL("v1", "kubevirt.io.virtualmachines", constant.HarvesterOptions.HTTPSListenPort)
+				restoresAPI = helper.BuildAPIURL("v1", "harvesterhci.io.virtualmachinerestores", constant.HarvesterOptions.HTTPSListenPort)
 			})
 
 			Specify("config the vm backup server", func() {

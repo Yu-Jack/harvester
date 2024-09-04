@@ -30,7 +30,7 @@ var _ = Describe("verify image APIs", func() {
 
 		BeforeEach(func() {
 
-			imageAPI = helper.BuildAPIURL("v1", "harvesterhci.io.virtualmachineimages", constant.Options.HTTPSListenPort)
+			imageAPI = helper.BuildAPIURL("v1", "harvesterhci.io.virtualmachineimages", constant.HarvesterOptions.HTTPSListenPort)
 
 		})
 

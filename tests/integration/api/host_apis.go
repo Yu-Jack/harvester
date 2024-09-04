@@ -22,7 +22,7 @@ var _ = Describe("verify host APIs", func() {
 
 		BeforeEach(func() {
 
-			nodesAPI = helper.BuildAPIURL("v1", "nodes", constant.Options.HTTPSListenPort)
+			nodesAPI = helper.BuildAPIURL("v1", "nodes", constant.HarvesterOptions.HTTPSListenPort)
 
 		})
 

@@ -24,7 +24,7 @@ var _ = Describe("verify keypair APIs", func() {
 	BeforeEach(func() {
 
 		// keypair is stored in the same namespace of harvester
-		keypairNamespace = constant.Options.Namespace
+		keypairNamespace = constant.HarvesterOptions.Namespace
 
 	})
 
@@ -34,7 +34,7 @@ var _ = Describe("verify keypair APIs", func() {
 
 		BeforeEach(func() {
 
-			keypairsAPI = helper.BuildAPIURL("v1", "harvesterhci.io.keypairs", constant.Options.HTTPSListenPort)
+			keypairsAPI = helper.BuildAPIURL("v1", "harvesterhci.io.keypairs", constant.HarvesterOptions.HTTPSListenPort)
 
 		})
 

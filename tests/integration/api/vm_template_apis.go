@@ -34,9 +34,9 @@ var _ = Describe("verify vm template APIs", func() {
 	)
 
 	BeforeEach(func() {
-		harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.KubeConfig)
+		harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.HarvesterKubeConfig)
 		MustNotError(err)
-		coreFactory, err := core.NewFactoryFromConfig(constant.KubeConfig)
+		coreFactory, err := core.NewFactoryFromConfig(constant.HarvesterKubeConfig)
 		MustNotError(err)
 		nsController := coreFactory.Core().V1().Namespace()
 		templates = harvFactory.Harvesterhci().V1beta1().VirtualMachineTemplate()
@@ -97,7 +97,7 @@ var _ = Describe("verify vm template APIs", func() {
 		)
 
 		BeforeEach(func() {
-			var port = constant.Options.HTTPSListenPort
+			var port = constant.HarvesterOptions.HTTPSListenPort
 			template.Namespace = templateNamespace
 			templateVersion.Namespace = templateNamespace
 			templateAPI = helper.BuildAPIURL("v1", "harvesterhci.io.virtualmachinetemplates", port)

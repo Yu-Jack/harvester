@@ -17,8 +17,9 @@ const (
 )
 
 type CombinedConfig struct {
-	RawKubeConfig clientcmdapi.Config
-	Options       config.Options
+	HarvesterRawKubeConfig clientcmdapi.Config
+	PureRawKubeConfig      clientcmdapi.Config
+	Options                config.Options
 }
 
 var (
@@ -27,11 +28,14 @@ var (
 	TestCtxCancel         context.CancelFunc
 	Harvester             *server.HarvesterServer
 
-	KubeConfig       *restclient.Config
-	KubeClientConfig clientcmd.ClientConfig
-	TestCluster      cluster.Cluster
-	Options          config.Options
-	CombinedCfg      CombinedConfig
+	HarvesterKubeConfig         *restclient.Config
+	HarvesterKubeClientConfig   clientcmd.ClientConfig
+	TestHarvesterCluster        cluster.Cluster
+	PureClusterKubeConfig       *restclient.Config
+	PureClusterKubeClientConfig clientcmd.ClientConfig
+	TestPureCluster             cluster.Cluster
+	HarvesterOptions            config.Options
+	CombinedCfg                 CombinedConfig
 
 	TestResourceLabels = map[string]string{
 		"harvester.test.io": "harvester-test",

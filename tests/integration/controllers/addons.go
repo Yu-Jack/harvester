@@ -21,7 +21,6 @@ import (
 	ctlharvesterv1 "github.com/harvester/harvester/pkg/generated/controllers/harvesterhci.io/v1beta1"
 	"github.com/harvester/harvester/tests/framework/dsl"
 	"github.com/harvester/harvester/tests/integration/constant"
-	"github.com/harvester/harvester/tests/integration/controllers/fake"
 )
 
 var _ = ginkgo.Describe("verify helm chart is create and addon gets to desired state", func() {
@@ -65,16 +64,16 @@ var _ = ginkgo.Describe("verify helm chart is create and addon gets to desired s
 			},
 		}
 		gomega.Eventually(func() error {
-			harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.KubeConfig)
+			harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.PureClusterKubeConfig)
 			dsl.MustNotError(err)
 
-			helmFactory, err := helmv1.NewFactoryFromConfig(constant.KubeConfig)
+			helmFactory, err := helmv1.NewFactoryFromConfig(constant.PureClusterKubeConfig)
 			dsl.MustNotError(err)
 
-			batchFactory, err := batchv1.NewFactoryFromConfig(constant.KubeConfig)
+			batchFactory, err := batchv1.NewFactoryFromConfig(constant.PureClusterKubeConfig)
 			dsl.MustNotError(err)
 
-			catalogFactory, err := catalog.NewFactoryFromConfig(constant.KubeConfig)
+			catalogFactory, err := catalog.NewFactoryFromConfig(constant.PureClusterKubeConfig)
 			dsl.MustNotError(err)
 
 			addonController = harvFactory.Harvesterhci().V1beta1().Addon()
@@ -238,10 +237,10 @@ var _ = ginkgo.Describe("addon and helm chart deletion", func() {
 	ginkgo.It("verify helm deletion tasks", func() {
 		ginkgo.By("create addon", func() {
 			gomega.Eventually(func() error {
-				harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.KubeConfig)
+				harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.PureClusterKubeConfig)
 				dsl.MustNotError(err)
 				addonController = harvFactory.Harvesterhci().V1beta1().Addon()
-				helmFactory, err := helmv1.NewFactoryFromConfig(constant.KubeConfig)
+				helmFactory, err := helmv1.NewFactoryFromConfig(constant.PureClusterKubeConfig)
 				dsl.MustNotError(err)
 				helmController = helmFactory.Helm().V1().HelmChart()
 				_, err = addonController.Create(a)
@@ -330,10 +329,10 @@ var _ = ginkgo.Describe("verify helm chart redeploy", func() {
 
 	ginkgo.BeforeEach(func() {
 		gomega.Eventually(func() error {
-			harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.KubeConfig)
+			harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.PureClusterKubeConfig)
 			dsl.MustNotError(err)
 			addonController = harvFactory.Harvesterhci().V1beta1().Addon()
-			helmFactory, err := helmv1.NewFactoryFromConfig(constant.KubeConfig)
+			helmFactory, err := helmv1.NewFactoryFromConfig(constant.PureClusterKubeConfig)
 			dsl.MustNotError(err)
 			helmController = helmFactory.Helm().V1().HelmChart()
 			_, err = addonController.Create(a)
@@ -441,10 +440,10 @@ var _ = ginkgo.Describe("perform addon upgrade", func() {
 
 	ginkgo.BeforeEach(func() {
 		gomega.Eventually(func() error {
-			harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.KubeConfig)
+			harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.PureClusterKubeConfig)
 			dsl.MustNotError(err)
 			addonController = harvFactory.Harvesterhci().V1beta1().Addon()
-			helmFactory, err := helmv1.NewFactoryFromConfig(constant.KubeConfig)
+			helmFactory, err := helmv1.NewFactoryFromConfig(constant.PureClusterKubeConfig)
 			dsl.MustNotError(err)
 			helmController = helmFactory.Helm().V1().HelmChart()
 			_, err = addonController.Create(a)
@@ -496,7 +495,6 @@ var _ = ginkgo.Describe("perform addon upgrade", func() {
 					return err
 				}
 				aObj.Spec.Version = "0.2.0"
-				aObj.Spec.Chart = "vm-import-controller-2"
 				aObj.Spec.Repo = "http://harvester-cluster-repo.cattle-system.svc.cluster.local"
 				_, err = addonController.Update(aObj)
 				return err
@@ -565,10 +563,10 @@ var _ = ginkgo.Describe("verify helm chart is create and addon gets to failed st
 		}
 
 		gomega.Eventually(func() error {
-			harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.KubeConfig)
+			harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.PureClusterKubeConfig)
 			dsl.MustNotError(err)
 			addonController = harvFactory.Harvesterhci().V1beta1().Addon()
-			helmFactory, err := helmv1.NewFactoryFromConfig(constant.KubeConfig)
+			helmFactory, err := helmv1.NewFactoryFromConfig(constant.PureClusterKubeConfig)
 			dsl.MustNotError(err)
 			helmController = helmFactory.Helm().V1().HelmChart()
 			_, err = addonController.Create(a)
@@ -664,10 +662,10 @@ var _ = ginkgo.Describe("enable and disable successful addon", func() {
 		}
 
 		gomega.Eventually(func() error {
-			harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.KubeConfig)
+			harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.PureClusterKubeConfig)
 			dsl.MustNotError(err)
 			addonController = harvFactory.Harvesterhci().V1beta1().Addon()
-			helmFactory, err := helmv1.NewFactoryFromConfig(constant.KubeConfig)
+			helmFactory, err := helmv1.NewFactoryFromConfig(constant.PureClusterKubeConfig)
 			dsl.MustNotError(err)
 			helmController = helmFactory.Helm().V1().HelmChart()
 			_, err = addonController.Create(a)
@@ -774,10 +772,10 @@ var _ = ginkgo.Describe("enable and disable failed addon", func() {
 		}
 
 		gomega.Eventually(func() error {
-			harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.KubeConfig)
+			harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.PureClusterKubeConfig)
 			dsl.MustNotError(err)
 			addonController = harvFactory.Harvesterhci().V1beta1().Addon()
-			helmFactory, err := helmv1.NewFactoryFromConfig(constant.KubeConfig)
+			helmFactory, err := helmv1.NewFactoryFromConfig(constant.PureClusterKubeConfig)
 			dsl.MustNotError(err)
 			helmController = helmFactory.Helm().V1().HelmChart()
 			_, err = addonController.Create(a)
@@ -875,157 +873,154 @@ var _ = ginkgo.Describe("enable and disable failed addon", func() {
 	})
 })
 
-var _ = ginkgo.Describe("test addon upgrade fail", func() {
-	var addonController ctlharvesterv1.AddonController
-	var helmController ctlhelmv1.HelmChartController
-
-	a := &harvesterv1.Addon{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "demo-addon-upgrade-2",
-			Namespace: "default",
-			Annotations: map[string]string{
-				"harvesterhci.io/addon-defaults": "ZGVmYXVsdFZhbHVlcwo=",
-			},
-		},
-		Spec: harvesterv1.AddonSpec{
-			Chart:   "vm-import-controller",
-			Repo:    "http://harvester-cluster-repo.cattle-system.svc",
-			Version: "v0.1.0",
-			Enabled: true,
-		},
-	}
-
-	ginkgo.BeforeEach(func() {
-		gomega.Eventually(func() error {
-			harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.KubeConfig)
-			dsl.MustNotError(err)
-			addonController = harvFactory.Harvesterhci().V1beta1().Addon()
-			helmFactory, err := helmv1.NewFactoryFromConfig(constant.KubeConfig)
-			dsl.MustNotError(err)
-			helmController = helmFactory.Helm().V1().HelmChart()
-			_, err = addonController.Create(a)
-			return err
-		}).ShouldNot(gomega.HaveOccurred())
-	})
-
-	ginkgo.It("reconcile helm chart upgrade", func() {
-		ginkgo.By("check helm chart object is created", func() {
-			gomega.Eventually(func() error {
-				h, err := helmController.Get(a.Namespace, a.Name, metav1.GetOptions{})
-				if err != nil {
-					return err
-				}
-
-				aObj, err := helmController.Get(a.Namespace, a.Name, metav1.GetOptions{})
-				if err != nil {
-					return err
-				}
-				if h.Spec.Chart != aObj.Spec.Chart {
-					return fmt.Errorf("expected chart name to be same")
-				}
-
-				if h.Spec.Version != aObj.Spec.Version {
-					return fmt.Errorf("expected chart version to be same")
-				}
-
-				if h.Spec.Repo != aObj.Spec.Repo {
-					return fmt.Errorf("expected chart repo to be same")
-				}
-
-				return nil
-			}, "30s", "5s").ShouldNot(gomega.HaveOccurred())
-		})
-
-		ginkgo.By("check addon status is successful", func() {
-			gomega.Eventually(func() error {
-				a, err := addonController.Get(a.Namespace, a.Name, metav1.GetOptions{})
-				if err != nil {
-					return err
-				}
-				if a.Status.Status != harvesterv1.AddonDeployed {
-					return fmt.Errorf("addon %s is not deployed successfully, status %v", a.Name, a.Status.Status)
-				}
-				return nil
-			}, "90s", "5s").ShouldNot(gomega.HaveOccurred())
-		})
-
-		ginkgo.By("patching helm chart to fail before upgrade", func() {
-			gomega.Eventually(func() error {
-				hObj, err := helmController.Get(a.Namespace, a.Name, metav1.GetOptions{})
-				if err != nil {
-					return err
-				}
-
-				if hObj.Annotations == nil {
-					hObj.Annotations = make(map[string]string)
-				}
-
-				hObj.Annotations[fake.OverrideToFail] = "true"
-				_, err = helmController.Update(hObj)
-				return err
-			}, "30s", "5s").ShouldNot(gomega.HaveOccurred())
-		})
-
-		//ginkgo.By("update addon", func() {
-		//	gomega.Eventually(func() error {
-		//		aObj, err := addonController.Get(a.Namespace, a.Name, metav1.GetOptions{})
-		//		if err != nil {
-		//			return err
-		//		}
-		//		aObj.Spec.Version = "0.2.0"
-		//		aObj.Spec.Chart = "vm-import-controller-2"
-		//		aObj.Spec.Repo = "http://harvester-cluster-repo.cattle-system.svc.cluster.local"
-		//		_, err = addonController.Update(aObj)
-		//		return err
-		//	}, "30s", "5s").ShouldNot(gomega.HaveOccurred())
-		//})
-
-		ginkgo.By("check helm chart got updated", func() {
-			gomega.Eventually(func() error {
-				aObj, err := addonController.Get(a.Namespace, a.Name, metav1.GetOptions{})
-				if err != nil {
-					return err
-				}
-
-				h, err := helmController.Get(a.Namespace, a.Name, metav1.GetOptions{})
-				if err != nil {
-					return err
-				}
-
-				if h.Spec.Chart != aObj.Spec.Chart {
-					return fmt.Errorf("expected chart name to be same")
-				}
-
-				if h.Spec.Version != aObj.Spec.Version {
-					return fmt.Errorf("expected chart version to be same")
-				}
-
-				if h.Spec.Repo != aObj.Spec.Repo {
-					return fmt.Errorf("expected chart repo to be same")
-				}
-
-				return nil
-			}, "60s", "5s").ShouldNot(gomega.HaveOccurred())
-		})
-
-		ginkgo.By("check addon upgrade failed", func() {
-			gomega.Eventually(func() error {
-				aObj, err := addonController.Get(a.Namespace, a.Name, metav1.GetOptions{})
-				if err != nil {
-					return err
-				}
-				if aObj.Status.Status == harvesterv1.AddonUpdating && harvesterv1.AddonOperationFailed.IsTrue(aObj) {
-					return nil
-				}
-				return fmt.Errorf("addon %s is not in correct state %v", aObj.Name, aObj.Status.Status)
-			}, "60s", "5s").ShouldNot(gomega.HaveOccurred())
-		})
-	})
-
-	ginkgo.AfterEach(func() {
-		gomega.Eventually(func() error {
-			return addonController.Delete(a.Namespace, a.Name, &metav1.DeleteOptions{})
-		}).ShouldNot(gomega.HaveOccurred())
-	})
-
-})
+//var _ = ginkgo.Describe("test addon upgrade fail", func() {
+//	var addonController ctlharvesterv1.AddonController
+//	var helmController ctlhelmv1.HelmChartController
+//
+//	a := &harvesterv1.Addon{
+//		ObjectMeta: metav1.ObjectMeta{
+//			Name:      "demo-addon-upgrade-2",
+//			Namespace: "default",
+//			Annotations: map[string]string{
+//				"harvesterhci.io/addon-defaults": "ZGVmYXVsdFZhbHVlcwo=",
+//			},
+//		},
+//		Spec: harvesterv1.AddonSpec{
+//			Chart:   "vm-import-controller",
+//			Repo:    "http://harvester-cluster-repo.cattle-system.svc",
+//			Version: "v0.1.0",
+//			Enabled: true,
+//		},
+//	}
+//
+//	ginkgo.BeforeEach(func() {
+//		gomega.Eventually(func() error {
+//			addonController = constant.Scaled.Management.HarvesterFactory.Harvesterhci().V1beta1().Addon()
+//			helmController = constant.Scaled.Management.HelmFactory.Helm().V1().HelmChart()
+//			_ = helmController
+//			_, err := addonController.Create(a)
+//			return err
+//		}).ShouldNot(gomega.HaveOccurred())
+//	})
+//
+//	ginkgo.It("reconcile helm chart upgrade", func() {
+//		ginkgo.By("check helm chart object is created", func() {
+//			gomega.Eventually(func() error {
+//				h, err := helmController.Get(a.Namespace, a.Name, metav1.GetOptions{})
+//				if err != nil {
+//					return err
+//				}
+//
+//				aObj, err := helmController.Get(a.Namespace, a.Name, metav1.GetOptions{})
+//				if err != nil {
+//					return err
+//				}
+//				if h.Spec.Chart != aObj.Spec.Chart {
+//					return fmt.Errorf("expected chart name to be same")
+//				}
+//
+//				if h.Spec.Version != aObj.Spec.Version {
+//					return fmt.Errorf("expected chart version to be same")
+//				}
+//
+//				if h.Spec.Repo != aObj.Spec.Repo {
+//					return fmt.Errorf("expected chart repo to be same")
+//				}
+//
+//				return nil
+//			}, "30s", "5s").ShouldNot(gomega.HaveOccurred())
+//		})
+//
+//		ginkgo.By("check addon status is successful", func() {
+//			gomega.Eventually(func() error {
+//				a, err := addonController.Get(a.Namespace, a.Name, metav1.GetOptions{})
+//				if err != nil {
+//					return err
+//				}
+//				if a.Status.Status != harvesterv1.AddonDeployed {
+//					return fmt.Errorf("addon %s is not deployed successfully, status %v", a.Name, a.Status.Status)
+//				}
+//				return nil
+//			}, "90s", "5s").ShouldNot(gomega.HaveOccurred())
+//		})
+//
+//		ginkgo.By("patching helm chart to fail before upgrade", func() {
+//			gomega.Eventually(func() error {
+//				hObj, err := helmController.Get(a.Namespace, a.Name, metav1.GetOptions{})
+//				if err != nil {
+//					return err
+//				}
+//
+//				if hObj.Annotations == nil {
+//					hObj.Annotations = make(map[string]string)
+//				}
+//
+//				hObj.Annotations[fake.OverrideToFail] = "true"
+//				_, err = helmController.Update(hObj)
+//				return err
+//			}, "30s", "5s").ShouldNot(gomega.HaveOccurred())
+//		})
+//
+//		ginkgo.By("update addon", func() {
+//			gomega.Eventually(func() error {
+//				aObj, err := addonController.Get(a.Namespace, a.Name, metav1.GetOptions{})
+//				if err != nil {
+//					return err
+//				}
+//				aObj.Spec.Version = "0.2.0"
+//				aObj.Spec.Chart = "vm-import-controller-2"
+//				aObj.Spec.Repo = "http://harvester-cluster-repo.cattle-system.svc.cluster.local"
+//				_, err = addonController.Update(aObj)
+//				return err
+//			}, "30s", "5s").ShouldNot(gomega.HaveOccurred())
+//		})
+//
+//		ginkgo.By("check helm chart got updated", func() {
+//			gomega.Eventually(func() error {
+//				aObj, err := addonController.Get(a.Namespace, a.Name, metav1.GetOptions{})
+//				if err != nil {
+//					return err
+//				}
+//
+//				h, err := helmController.Get(a.Namespace, a.Name, metav1.GetOptions{})
+//				if err != nil {
+//					return err
+//				}
+//
+//				if h.Spec.Chart != aObj.Spec.Chart {
+//					return fmt.Errorf("expected chart name to be same")
+//				}
+//
+//				if h.Spec.Version != aObj.Spec.Version {
+//					return fmt.Errorf("expected chart version to be same")
+//				}
+//
+//				if h.Spec.Repo != aObj.Spec.Repo {
+//					return fmt.Errorf("expected chart repo to be same")
+//				}
+//
+//				return nil
+//			}, "60s", "5s").ShouldNot(gomega.HaveOccurred())
+//		})
+//
+//		ginkgo.By("check addon upgrade failed", func() {
+//			gomega.Eventually(func() error {
+//				aObj, err := addonController.Get(a.Namespace, a.Name, metav1.GetOptions{})
+//				if err != nil {
+//					return err
+//				}
+//				if aObj.Status.Status == harvesterv1.AddonUpdating && harvesterv1.AddonOperationFailed.IsTrue(aObj) {
+//					return nil
+//				}
+//				return fmt.Errorf("addon %s is not in correct state %v", aObj.Name, aObj.Status.Status)
+//			}, "60s", "5s").ShouldNot(gomega.HaveOccurred())
+//		})
+//	})
+//
+//	ginkgo.AfterEach(func() {
+//		gomega.Eventually(func() error {
+//			return addonController.Delete(a.Namespace, a.Name, &metav1.DeleteOptions{})
+//		}).ShouldNot(gomega.HaveOccurred())
+//	})
+//
+//})

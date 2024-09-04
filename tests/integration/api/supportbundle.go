@@ -38,12 +38,12 @@ var _ = Describe("create a supportbundle request and verify taints on daemonset"
 			Operator: corev1.TolerationOpExists,
 		}
 
-		harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.KubeConfig)
+		harvFactory, err := harvesterhci.NewFactoryFromConfig(constant.HarvesterKubeConfig)
 		MustNotError(err)
 		sc = harvFactory.Harvesterhci().V1beta1().Setting()
 		sbc = harvFactory.Harvesterhci().V1beta1().SupportBundle()
 
-		coreFactory, err := appsv1.NewFactoryFromConfig(constant.KubeConfig)
+		coreFactory, err := appsv1.NewFactoryFromConfig(constant.HarvesterKubeConfig)
 		MustNotError(err)
 
 		dsc = coreFactory.Apps().V1().DaemonSet()

@@ -53,11 +53,11 @@ import (
 
 var (
 	crdList = []string{
-		//"./controllers/manifest/helm-crd.yaml",
-		//"./controllers/manifest/app-crd.yaml",
-		//"./controllers/manifest/ranchersettings-crd.yaml",
-		//"./controllers/manifest/clusterrepos-crd.yaml",
-		//"../../deploy/charts/harvester-crd/templates/harvesterhci.io_addons.yaml",
+		"./controllers/manifest/helm-crd.yaml",
+		"./controllers/manifest/app-crd.yaml",
+		"./controllers/manifest/ranchersettings-crd.yaml",
+		"./controllers/manifest/clusterrepos-crd.yaml",
+		"../../deploy/charts/harvester-crd/templates/harvesterhci.io_addons.yaml",
 	}
 	scheme = runtime.NewScheme()
 )
@@ -124,25 +124,24 @@ var _ = SynchronizedBeforeSuite(
 		constant.TestCtx, constant.TestCtxCancel = context.WithCancel(context.Background())
 		var err error
 
-		By("starting test cluster")
-		constant.KubeClientConfig, constant.TestCluster, err = cluster.Start(GinkgoWriter)
+		By("starting harvester test cluster")
+		constant.HarvesterKubeClientConfig, constant.TestHarvesterCluster, err = cluster.Start(GinkgoWriter)
 		MustNotError(err)
 
-		constant.KubeConfig, err = constant.KubeClientConfig.ClientConfig()
+		constant.HarvesterKubeConfig, err = constant.HarvesterKubeClientConfig.ClientConfig()
 		MustNotError(err)
 
 		// first part
-
 		By("construct harvester runtime")
-		err = harvesterRuntime.Construct(constant.TestCtx, constant.KubeConfig)
+		err = harvesterRuntime.Construct(constant.TestCtx, constant.HarvesterKubeConfig)
 		MustNotError(err)
 
 		By("set harvester config")
-		constant.Options, err = harvesterRuntime.SetConfig()
+		constant.HarvesterOptions, err = harvesterRuntime.SetConfig()
 		MustNotError(err)
 
 		By("new harvester server")
-		constant.Harvester, err = server.New(constant.TestCtx, constant.KubeClientConfig, constant.Options)
+		constant.Harvester, err = server.New(constant.TestCtx, constant.HarvesterKubeClientConfig, constant.HarvesterOptions)
 		MustNotError(err)
 
 		By("start harvester server")
@@ -151,7 +150,7 @@ var _ = SynchronizedBeforeSuite(
 		}
 		constant.TestSuiteStartErrChan = make(chan error)
 		go func() {
-			constant.TestSuiteStartErrChan <- constant.Harvester.ListenAndServe(listenOpts, constant.Options)
+			constant.TestSuiteStartErrChan <- constant.Harvester.ListenAndServe(listenOpts, constant.HarvesterOptions)
 		}()
 
 		// NB(thxCode): since the start of all controllers is not synchronized,
@@ -169,6 +168,12 @@ var _ = SynchronizedBeforeSuite(
 		}
 
 		// second part
+		By("starting pure test cluster")
+		constant.PureClusterKubeClientConfig, constant.TestPureCluster, err = cluster.Start(GinkgoWriter)
+		MustNotError(err)
+
+		constant.PureClusterKubeConfig, err = constant.PureClusterKubeClientConfig.ClientConfig()
+		MustNotError(err)
 
 		ginkgo.By("install crds")
 		var crds []apiextensionsv1.CustomResourceDefinition
@@ -202,7 +207,7 @@ var _ = SynchronizedBeforeSuite(
 		err = catalogv1.AddToScheme(scheme)
 		dsl.MustNotError(err)
 
-		clientFactory, err := client.NewSharedClientFactory(constant.KubeConfig, nil)
+		clientFactory, err := client.NewSharedClientFactory(constant.PureClusterKubeConfig, nil)
 		dsl.MustNotError(err)
 
 		cacheFactory := cache.NewSharedCachedFactory(clientFactory, nil)
@@ -212,16 +217,19 @@ var _ = SynchronizedBeforeSuite(
 			SharedControllerFactory: scf,
 		}
 
-		constant.TestCtx, constant.Scaled, err = config.SetupScaled(constant.TestCtx, constant.KubeConfig, factoryOpts)
+		constant.TestCtx, constant.Scaled, err = config.SetupScaled(constant.TestCtx, constant.PureClusterKubeConfig, factoryOpts)
 		dsl.MustNotError(err)
 
-		err = startControllers(constant.TestCtx, constant.KubeConfig, factoryOpts)
+		err = startControllers(constant.TestCtx, constant.PureClusterKubeConfig, factoryOpts)
 		dsl.MustNotError(err)
 
-		rawConf, err := constant.KubeClientConfig.RawConfig()
+		harvesterRawConf, err := constant.HarvesterKubeClientConfig.RawConfig()
 		MustNotError(err)
 
-		combinedConfig := constant.CombinedConfig{rawConf, constant.Options}
+		pureClusterRawConf, err := constant.PureClusterKubeClientConfig.RawConfig()
+		MustNotError(err)
+
+		combinedConfig := constant.CombinedConfig{HarvesterRawKubeConfig: harvesterRawConf, PureRawKubeConfig: pureClusterRawConf, Options: constant.HarvesterOptions}
 
 		b, err := json.Marshal(combinedConfig)
 		MustNotError(err)
@@ -233,10 +241,14 @@ var _ = SynchronizedBeforeSuite(
 		err := json.Unmarshal(combinedConf, &constant.CombinedCfg)
 		MustNotError(err)
 
-		constant.Options = constant.CombinedCfg.Options
+		constant.HarvesterOptions = constant.CombinedCfg.Options
 
-		constant.KubeConfig, err = clientcmd.NewDefaultClientConfig(constant.CombinedCfg.RawKubeConfig, &clientcmd.ConfigOverrides{}).ClientConfig()
+		constant.HarvesterKubeConfig, err = clientcmd.NewDefaultClientConfig(constant.CombinedCfg.HarvesterRawKubeConfig, &clientcmd.ConfigOverrides{}).ClientConfig()
 		MustNotError(err)
+
+		constant.PureClusterKubeConfig, err = clientcmd.NewDefaultClientConfig(constant.CombinedCfg.PureRawKubeConfig, &clientcmd.ConfigOverrides{}).ClientConfig()
+		MustNotError(err)
+
 		//constant.TestCtx = context.TODO()
 	})
 
@@ -245,10 +257,10 @@ var _ = SynchronizedAfterSuite(func() {
 }, func() {
 	// Only first processor run this function
 	By("tearing down harvester runtime")
-	err := harvesterRuntime.Destruct(context.Background(), constant.KubeConfig)
+	err := harvesterRuntime.Destruct(context.Background(), constant.HarvesterKubeConfig)
 	MustNotError(err)
 
-	By("tearing down test cluster")
+	By("tearing down both test cluster")
 	err = cluster.Stop(GinkgoWriter)
 	MustNotError(err)
 
@@ -260,7 +272,7 @@ var _ = SynchronizedAfterSuite(func() {
 
 // validate the v1 api server is ready
 func validateAPIIsReady() bool {
-	apiURL := helper.BuildAPIURL("v1", "", constant.Options.HTTPSListenPort)
+	apiURL := helper.BuildAPIURL("v1", "", constant.HarvesterOptions.HTTPSListenPort)
 	code, _, err := helper.GetResponse(apiURL)
 	if err != nil || code != http.StatusOK {
 		logrus.Errorf("failed to get %s, error: %d", apiURL, err)
@@ -284,7 +296,7 @@ func generateObjects(fileName string) (apiextensionsv1.CustomResourceDefinition,
 }
 
 func applyObj(obj []apiextensionsv1.CustomResourceDefinition) error {
-	apiClient, err := apiextensionsclient.NewForConfig(constant.KubeConfig)
+	apiClient, err := apiextensionsclient.NewForConfig(constant.PureClusterKubeConfig)
 	if err != nil {
 		return err
 	}

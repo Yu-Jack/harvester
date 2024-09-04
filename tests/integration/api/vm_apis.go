@@ -34,12 +34,12 @@ var _ = Describe("verify vm APIs", func() {
 	)
 
 	BeforeEach(func() {
-		coreFactory, err := core.NewFactoryFromConfig(constant.KubeConfig)
+		coreFactory, err := core.NewFactoryFromConfig(constant.HarvesterKubeConfig)
 		MustNotError(err)
 		pvcController = coreFactory.Core().V1().PersistentVolumeClaim()
 		nsController = coreFactory.Core().V1().Namespace()
 
-		virtFactory, err := kubevirt.NewFactoryFromConfig(constant.KubeConfig)
+		virtFactory, err := kubevirt.NewFactoryFromConfig(constant.HarvesterKubeConfig)
 		MustNotError(err)
 		vmController = virtFactory.Kubevirt().V1().VirtualMachine()
 		vmiController = virtFactory.Kubevirt().V1().VirtualMachineInstance()
@@ -84,7 +84,7 @@ var _ = Describe("verify vm APIs", func() {
 
 		BeforeEach(func() {
 
-			vmsAPI = helper.BuildAPIURL("v1", "kubevirt.io.virtualmachines", constant.Options.HTTPSListenPort)
+			vmsAPI = helper.BuildAPIURL("v1", "kubevirt.io.virtualmachines", constant.HarvesterOptions.HTTPSListenPort)
 
 		})
 
