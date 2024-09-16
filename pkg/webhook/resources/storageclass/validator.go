@@ -20,6 +20,10 @@ import (
 	"github.com/harvester/harvester/pkg/webhook/types"
 )
 
+const (
+	defaultStorageClassName = "harvester-longhorn"
+)
+
 var pairs = [][2]string{
 	{util.CSIProvisionerSecretNameKey, util.CSIProvisionerSecretNamespaceKey},
 	{util.CSINodeStageSecretNameKey, util.CSINodeStageSecretNamespaceKey},
@@ -77,8 +81,20 @@ func (v *storageClassValidator) Update(_ *types.Request, _ runtime.Object, newOb
 }
 
 func (v *storageClassValidator) Delete(_ *types.Request, obj runtime.Object) error {
-	sc := obj.(*storagev1.StorageClass)
-	return v.validateVMImageUsage(sc)
+	newObj := obj.(*storagev1.StorageClass)
+
+	validators := []func(*storagev1.StorageClass) error{
+		v.validateVMImageUsage,
+		v.validateDefault,
+	}
+
+	for _, validator := range validators {
+		if err := validator(newObj); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // Harvester rejects setting dataLocality as strict-local, because it makes volume non migrateable,
@@ -209,5 +225,12 @@ func (v *storageClassValidator) validateVMImageUsage(sc *storagev1.StorageClass)
 		return werror.NewInvalidError(fmt.Sprintf("storage class %s is used by virtual machine images: %s", sc.Name, usedVMImages), "")
 	}
 
+	return nil
+}
+
+func (v *storageClassValidator) validateDefault(sc *storagev1.StorageClass) error {
+	if sc.Name == defaultStorageClassName {
+		return werror.NewInvalidError("deleting default storage class is not allowed", "")
+	}
 	return nil
 }
