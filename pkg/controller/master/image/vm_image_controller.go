@@ -48,6 +48,19 @@ func (h *vmImageHandler) OnChanged(_ string, image *harvesterv1.VirtualMachineIm
 		return image, nil
 	}
 
+	//g, e := h.storageClasses.Get("test", metav1.GetOptions{})
+	//fmt.Println("------------")
+	//fmt.Println(g)
+	//fmt.Println(e)
+	//fmt.Println("------------")
+	//a, b := util.GetBackingImage(h.backingImageCache, image.DeepCopy())
+	//fmt.Println("===========")
+	//fmt.Println(a)
+	//fmt.Println(b)
+	//fmt.Println("===========")
+	//
+	//h.imageController.EnqueueAfter(image.Namespace, image.Name, 10*time.Second)
+
 	if harvesterv1.ImageImported.IsTrue(image) {
 		// sync display_name to labels in order to list by labelSelector
 		if image.Spec.DisplayName != image.Labels[util.LabelImageDisplayName] {
