@@ -5,7 +5,9 @@ import (
 	"strconv"
 	"strings"
 
+	lhcrypto "github.com/longhorn/longhorn-manager/csi/crypto"
 	longhorn "github.com/longhorn/longhorn-manager/k8s/pkg/apis/longhorn/v1beta2"
+	lhtypes "github.com/longhorn/longhorn-manager/types"
 	ctlcorev1 "github.com/rancher/wrangler/v3/pkg/generated/controllers/core/v1"
 	ctlstoragev1 "github.com/rancher/wrangler/v3/pkg/generated/controllers/storage/v1"
 	admissionregv1 "k8s.io/api/admissionregistration/v1"
@@ -179,12 +181,36 @@ func (v *storageClassValidator) validateEncryption(newObj runtime.Object) error 
 	}
 
 	if secretName != "" && secretNamespace != "" {
-		_, err := v.secretCache.Get(secretNamespace, secretName)
+		secret, err := v.secretCache.Get(secretNamespace, secretName)
 		if err != nil {
 			if errors.IsNotFound(err) {
 				return werror.NewInvalidError(fmt.Sprintf("secret %s/%s not found", secretNamespace, secretName), "")
 			}
 			return werror.NewInvalidError(err.Error(), "")
+		}
+
+		if v, ok := secret.Data[lhtypes.CryptoKeyCipher]; !ok || string(v) != lhcrypto.CryptoKeyDefaultCipher {
+			return werror.NewInvalidError(fmt.Sprintf("secret %s/%s is not a valid encryption secret", secretNamespace, secretName), "")
+		}
+
+		if v, ok := secret.Data[lhtypes.CryptoKeyHash]; !ok || string(v) != lhcrypto.CryptoKeyDefaultHash {
+			return werror.NewInvalidError(fmt.Sprintf("secret %s/%s is not a valid encryption secret", secretNamespace, secretName), "")
+		}
+
+		if v, ok := secret.Data[lhtypes.CryptoKeySize]; !ok || string(v) != lhcrypto.CryptoKeyDefaultSize {
+			return werror.NewInvalidError(fmt.Sprintf("secret %s/%s is not a valid encryption secret", secretNamespace, secretName), "")
+		}
+
+		if v, ok := secret.Data[lhtypes.CryptoPBKDF]; !ok || string(v) != lhcrypto.CryptoDefaultPBKDF {
+			return werror.NewInvalidError(fmt.Sprintf("secret %s/%s is not a valid encryption secret", secretNamespace, secretName), "")
+		}
+
+		if v, ok := secret.Data[lhtypes.CryptoKeyProvider]; !ok || string(v) != "secret" {
+			return werror.NewInvalidError(fmt.Sprintf("secret %s/%s is not a valid encryption secret", secretNamespace, secretName), "")
+		}
+
+		if _, ok := secret.Data[lhtypes.CryptoKeyValue]; !ok {
+			return werror.NewInvalidError(fmt.Sprintf("secret %s/%s is not a valid encryption secret", secretNamespace, secretName), "")
 		}
 	}
 
