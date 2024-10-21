@@ -13,6 +13,7 @@ import (
 )
 
 func Test_validateOvercommitConfig(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		args   *v1beta1.Setting
@@ -96,6 +97,7 @@ func Test_validateOvercommitConfig(t *testing.T) {
 }
 
 func Test_validateSupportBundleTimeout(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		args        *v1beta1.Setting
@@ -174,6 +176,7 @@ func Test_validateSupportBundleTimeout(t *testing.T) {
 }
 
 func Test_validateSupportBundleExpiration(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		args        *v1beta1.Setting
@@ -240,6 +243,7 @@ func Test_validateSupportBundleExpiration(t *testing.T) {
 }
 
 func Test_validateSupportBundleNodeCollectionTimeout(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		args        *v1beta1.Setting
@@ -306,6 +310,7 @@ func Test_validateSupportBundleNodeCollectionTimeout(t *testing.T) {
 }
 
 func Test_validateSSLProtocols(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		args        *settings.SSLParameter
@@ -356,6 +361,7 @@ func Test_validateSSLProtocols(t *testing.T) {
 }
 
 func Test_validateNoProxy_1(t *testing.T) {
+	t.Parallel()
 	nodes := []*corev1.Node{
 		{
 			ObjectMeta: metav1.ObjectMeta{
@@ -454,6 +460,7 @@ func Test_validateNoProxy_1(t *testing.T) {
 }
 
 func Test_validateNoProxy_2(t *testing.T) {
+	t.Parallel()
 	nodes := []*corev1.Node{
 		{
 			ObjectMeta: metav1.ObjectMeta{
@@ -643,6 +650,7 @@ func Test_validateHTTPProxyHelper(t *testing.T) {
 }
 
 func Test_validateKubeconfigTTLSetting(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		args        *v1beta1.Setting
@@ -718,6 +726,7 @@ func Test_validateKubeconfigTTLSetting(t *testing.T) {
 }
 
 func Test_validateNTPServers(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name        string
 		args        *v1beta1.Setting

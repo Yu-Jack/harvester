@@ -27,6 +27,7 @@ const (
 )
 
 func TestPatchResourceOvercommit(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		resourceReq kubevirtv1.ResourceRequirements
@@ -761,6 +762,7 @@ func TestPatchResourceOvercommitWithDedicatedCPUPlacement(t *testing.T) {
 }
 
 func TestPatchAffinity(t *testing.T) {
+	t.Parallel()
 	vm1 := &kubevirtv1.VirtualMachine{
 		Spec: kubevirtv1.VirtualMachineSpec{
 			Template: &kubevirtv1.VirtualMachineInstanceTemplateSpec{
