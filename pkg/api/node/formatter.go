@@ -83,11 +83,12 @@ func (h ActionHandler) Formatter(request *types.APIRequest, resource *types.RawR
 	}
 	if !ok {
 		delete(resource.Links, "delete")
+		delete(resource.Links, "remove")
 	}
 
 	if request.AccessControl.CanDelete(request, resource.APIObject, resource.Schema) != nil {
 		fmt.Println("failed to check delete node --- 2")
-		delete(resource.Links, "delete")
+		delete(resource.Links, "remove")
 		return
 	}
 
