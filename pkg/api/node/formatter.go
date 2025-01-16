@@ -87,11 +87,14 @@ func (h ActionHandler) Formatter(request *types.APIRequest, resource *types.RawR
 
 	user, ok := request.GetUserInfo()
 	if !ok {
+		fmt.Println("user info not found")
 		return
 	}
 
+	fmt.Println("user info: ", user.GetName())
 	ok, err := apiutil.CanDeleteNodes(h.clientSet, "", user.GetName())
 	if err != nil {
+		fmt.Println("failed to check delete node", err)
 		return
 	}
 	if !ok {
