@@ -5,6 +5,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	authorizationv1 "k8s.io/api/authorization/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -35,5 +36,34 @@ func CanUpdateResourceQuota(clientSet kubernetes.Clientset, namespace string, us
 		}).Error("Failed to check update resource quota")
 		return false, err
 	}
+	return review.Status.Allowed, nil
+}
+
+func CanDeleteNodes(clientSet kubernetes.Clientset, namespace string, user string) (bool, error) {
+	review, err := clientSet.AuthorizationV1().SubjectAccessReviews().Create(
+		context.TODO(),
+		&authorizationv1.SubjectAccessReview{
+			Spec: authorizationv1.SubjectAccessReviewSpec{
+				ResourceAttributes: &authorizationv1.ResourceAttributes{
+					Namespace: namespace,
+					Verb:      "delete",
+					Group:     corev1.SchemeGroupVersion.Group,
+					Version:   corev1.SchemeGroupVersion.Version,
+					Resource:  "nodes",
+				},
+				User: user,
+			},
+		},
+		metav1.CreateOptions{},
+	)
+
+	if err != nil {
+		logrus.WithError(err).WithFields(logrus.Fields{
+			"namespace": namespace,
+			"user":      user,
+		}).Error("Failed to check delete node")
+		return false, err
+	}
+
 	return review.Status.Allowed, nil
 }

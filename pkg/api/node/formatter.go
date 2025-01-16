@@ -24,9 +24,11 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/retry"
 
+	apiutil "github.com/harvester/harvester/pkg/api/util"
 	ctlnode "github.com/harvester/harvester/pkg/controller/master/node"
 	"github.com/harvester/harvester/pkg/controller/master/nodedrain"
 	harvesterctlv1beta1 "github.com/harvester/harvester/pkg/generated/controllers/harvesterhci.io/v1beta1"
@@ -58,7 +60,7 @@ var (
 	possiblePowerActions = []string{"shutdown", "poweron", "reboot"}
 )
 
-func Formatter(request *types.APIRequest, resource *types.RawResource) {
+func (h ActionHandler) Formatter(request *types.APIRequest, resource *types.RawResource) {
 	resource.Actions = make(map[string]string, 3)
 	resource.AddAction(request, listUnhealthyVM)
 	resource.AddAction(request, maintenancePossible)
@@ -82,6 +84,19 @@ func Formatter(request *types.APIRequest, resource *types.RawResource) {
 	} else {
 		resource.AddAction(request, "cordon")
 	}
+
+	user, ok := request.GetUserInfo()
+	if !ok {
+		return
+	}
+
+	ok, err := apiutil.CanDeleteNodes(h.clientSet, "", user.GetName())
+	if err != nil {
+		return
+	}
+	if !ok {
+		delete(resource.Actions, "delete")
+	}
 }
 
 type ActionHandler struct {
@@ -97,6 +112,7 @@ type ActionHandler struct {
 	dynamicClient               dynamic.Interface
 	virtSubresourceRestClient   rest.Interface
 	ctx                         context.Context
+	clientSet                   kubernetes.Clientset
 }
 
 func (h ActionHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {

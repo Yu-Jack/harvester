@@ -58,6 +58,7 @@ func RegisterSchema(scaled *config.Scaled, server *server.Server, _ config.Optio
 		dynamicClient:               dynamicClient,
 		virtSubresourceRestClient:   virtSubresourceClient,
 		ctx:                         scaled.Ctx,
+		clientSet:                   *scaled.Management.ClientSet,
 	}
 
 	server.BaseSchemas.MustImportAndCustomize(MaintenanceModeInput{}, nil)
@@ -65,7 +66,7 @@ func RegisterSchema(scaled *config.Scaled, server *server.Server, _ config.Optio
 	t := schema.Template{
 		ID: "node",
 		Customize: func(s *types.APISchema) {
-			s.Formatter = Formatter
+			s.Formatter = nodeHandler.Formatter
 			s.ResourceActions = map[string]schemas.Action{
 				enableMaintenanceModeAction: {
 					Input: "maintenanceModeInput",
