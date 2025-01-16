@@ -60,6 +60,10 @@ var (
 	possiblePowerActions = []string{"shutdown", "poweron", "reboot"}
 )
 
+func (h ActionHandler) CollectionMethods() []string {
+
+}
+
 func (h ActionHandler) Formatter(request *types.APIRequest, resource *types.RawResource) {
 	resource.Actions = make(map[string]string, 3)
 	resource.AddAction(request, listUnhealthyVM)
@@ -67,6 +71,23 @@ func (h ActionHandler) Formatter(request *types.APIRequest, resource *types.RawR
 	resource.AddAction(request, powerActionPossible)
 	resource.AddAction(request, enableCPUManager)
 	resource.AddAction(request, disableCPUManager)
+
+	user, ok := request.GetUserInfo()
+	if !ok {
+		fmt.Println("user info not found")
+		return
+	}
+
+	fmt.Println("user info: ", user.GetName())
+	ok, err := apiutil.CanDeleteNodes(h.clientSet, "", user.GetName())
+
+	if err != nil {
+		fmt.Println("failed to check delete node", err)
+		return
+	}
+	if !ok {
+		delete(resource.Links, "delete")
+	}
 
 	if request.AccessControl.CanUpdate(request, resource.APIObject, resource.Schema) != nil {
 		return
@@ -83,22 +104,6 @@ func (h ActionHandler) Formatter(request *types.APIRequest, resource *types.RawR
 		resource.AddAction(request, "uncordon")
 	} else {
 		resource.AddAction(request, "cordon")
-	}
-
-	user, ok := request.GetUserInfo()
-	if !ok {
-		fmt.Println("user info not found")
-		return
-	}
-
-	fmt.Println("user info: ", user.GetName())
-	ok, err := apiutil.CanDeleteNodes(h.clientSet, "", user.GetName())
-	if err != nil {
-		fmt.Println("failed to check delete node", err)
-		return
-	}
-	if !ok {
-		delete(resource.Actions, "delete")
 	}
 }
 
