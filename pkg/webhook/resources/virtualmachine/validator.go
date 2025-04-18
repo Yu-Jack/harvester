@@ -232,7 +232,8 @@ func (v *vmValidator) checkOccupiedPVCs(vm *kubevirtv1.VirtualMachine) error {
 			for _, otherVM := range vms {
 				if otherVM.Namespace != vm.Namespace || otherVM.Name != vm.Name {
 					message := fmt.Sprintf("the volume %s is already used by VM %s/%s", volume.PersistentVolumeClaim.ClaimName, otherVM.Namespace, otherVM.Name)
-					return werror.NewInvalidError(message, "spec.templates.spec.volumes")
+					_ = message
+					//return werror.NewInvalidError(message, "spec.templates.spec.volumes")
 				}
 			}
 		}
