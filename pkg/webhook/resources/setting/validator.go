@@ -54,6 +54,7 @@ import (
 	vmUtil "github.com/harvester/harvester/pkg/util/virtualmachine"
 	werror "github.com/harvester/harvester/pkg/webhook/error"
 	"github.com/harvester/harvester/pkg/webhook/types"
+	webhookUtil "github.com/harvester/harvester/pkg/webhook/util"
 )
 
 const (
@@ -702,7 +703,7 @@ func validateSupportBundleTimeoutHelper(value string) error {
 		return nil
 	}
 
-	i, err := strconv.Atoi(value)
+	i, err := webhookUtil.StrictAtoi(value)
 	if err != nil {
 		return err
 	}
@@ -732,7 +733,7 @@ func validateSupportBundleExpirationHelper(value string) error {
 		return nil
 	}
 
-	i, err := strconv.Atoi(value)
+	i, err := webhookUtil.StrictAtoi(value)
 	if err != nil {
 		return err
 	}
@@ -762,7 +763,7 @@ func validateSupportBundleNodeCollectionTimeoutHelper(value string) error {
 		return nil
 	}
 
-	i, err := strconv.Atoi(value)
+	i, err := webhookUtil.StrictAtoi(value)
 	if err != nil {
 		return err
 	}
@@ -1383,7 +1384,7 @@ func validateKubeConfigTTLSettingHelper(value string) error {
 		return nil
 	}
 
-	num, err := strconv.Atoi(value)
+	num, err := webhookUtil.StrictAtoi(value)
 	if err != nil {
 		return err
 	}
