@@ -57,6 +57,7 @@ require (
 	github.com/deckarep/golang-set/v2 v2.6.0
 	github.com/ehazlett/simplelog v0.0.0-20200226020431-d374894e92a4
 	github.com/emicklei/go-restful/v3 v3.12.1
+	github.com/go-bindata/go-bindata/v3 v3.1.3
 	github.com/go-errors/errors v1.4.2
 	github.com/gobuffalo/flect v1.0.2
 	github.com/gorilla/mux v1.8.1
@@ -224,6 +225,7 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/josharian/native v1.1.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/kisielk/errcheck v1.6.2 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/krolaw/dhcp4 v0.0.0-20180925202202-7cead472c414 // indirect
 	github.com/kubernetes-csi/external-snapshotter/client/v6 v6.0.1 // indirect
@@ -310,6 +312,7 @@ require (
 	go.opentelemetry.io/proto/otlp v1.3.1 // indirect
 	go.starlark.net v0.0.0-20230525235612-a134d8f9ddca // indirect
 	golang.org/x/exp v0.0.0-20250210185358-939b2ce775ac // indirect
+	golang.org/x/lint v0.0.0-20191125180803-fdd1cda4f05f // indirect
 	golang.org/x/mod v0.23.0 // indirect
 	golang.org/x/oauth2 v0.24.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
