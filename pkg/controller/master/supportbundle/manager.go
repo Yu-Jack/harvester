@@ -21,6 +21,7 @@ import (
 	harvesterv1 "github.com/harvester/harvester/pkg/apis/harvesterhci.io/v1beta1"
 	"github.com/harvester/harvester/pkg/controller/master/supportbundle/types"
 	"github.com/harvester/harvester/pkg/settings"
+	"github.com/harvester/harvester/pkg/util/supportbundle"
 	supportBundleUtil "github.com/harvester/harvester/pkg/util/supportbundle"
 )
 
@@ -168,21 +169,7 @@ func (m *Manager) Create(sb *harvesterv1.SupportBundle, image string, pullPolicy
 }
 
 func (m *Manager) getCollectNamespaces(sb *harvesterv1.SupportBundle) string {
-	namespaces := []string{
-		"cattle-dashboards",
-		"cattle-fleet-local-system",
-		"cattle-fleet-system",
-		"cattle-fleet-clusters-system",
-		"cattle-monitoring-system",
-		"fleet-local",
-		"harvester-system",
-		"local",
-		"longhorn-system",
-		"cattle-logging-system",
-		// namespace for CAPI system components
-		// https://github.com/rancher/rancher/blob/4ac81b66b0f971548be78f2d1c72ecb906171a0b/pkg/controllers/dashboard/systemcharts/controller.go#L176
-		"cattle-provisioning-capi-system",
-	}
+	namespaces := supportbundle.DefaultNamespaces()
 
 	// Priority 1: If spec.ExtraCollectionNamespaces has values, use them
 	if len(sb.Spec.ExtraCollectionNamespaces) > 0 {
