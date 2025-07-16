@@ -2,6 +2,7 @@ package util
 
 const (
 	prefix                              = "harvesterhci.io"
+	ForceMigration                      = prefix + "/forceMigration"
 	RemovedPVCsAnnotationKey            = prefix + "/removedPersistentVolumeClaims"
 	AdditionalCASecretName              = "harvester-additional-ca"
 	AdditionalCAFileName                = "additional-ca.pem"

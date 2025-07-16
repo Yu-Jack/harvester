@@ -3,6 +3,7 @@ package pod
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	admissionregv1 "k8s.io/api/admissionregistration/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -15,6 +16,11 @@ import (
 	harvSettings "github.com/harvester/harvester/pkg/settings"
 	"github.com/harvester/harvester/pkg/util"
 	"github.com/harvester/harvester/pkg/webhook/types"
+)
+
+const (
+	prefix         = "harvesterhci.io"
+	ForceMigration = prefix + "/forceMigration"
 )
 
 var matchingLabels = []labels.Set{
@@ -63,6 +69,16 @@ func (m *podMutator) Resource() types.Resource {
 func (m *podMutator) Create(_ *types.Request, newObj runtime.Object) (types.PatchOps, error) {
 	pod := newObj.(*corev1.Pod)
 
+	var patchOps types.PatchOps
+
+	// Handle force migration annotation - this should apply to all pods
+	forceMigrationPatches, err := m.forceMigrationPatches(pod)
+	if err != nil {
+		return nil, err
+	}
+	patchOps = append(patchOps, forceMigrationPatches...)
+
+	// Check if pod matches specific labels for other patches
 	podLabels := labels.Set(pod.Labels)
 	var match bool
 	for _, v := range matchingLabels {
@@ -72,10 +88,9 @@ func (m *podMutator) Create(_ *types.Request, newObj runtime.Object) (types.Patc
 		}
 	}
 	if !match {
-		return nil, nil
+		return patchOps, nil
 	}
 
-	var patchOps types.PatchOps
 	httpProxyPatches, err := m.httpProxyPatches(pod)
 	if err != nil {
 		return nil, err
@@ -235,4 +250,77 @@ func volumeMountPatch(target []corev1.VolumeMount, path string, volumeMount core
 		return "", err
 	}
 	return fmt.Sprintf(`{"op": "add", "path": "%s", "value": %s}`, path, valueStr), nil
+}
+
+func (m *podMutator) forceMigrationPatches(pod *corev1.Pod) (types.PatchOps, error) {
+	// Check if pod has the force migration annotation
+	if pod.Annotations == nil {
+		return nil, nil
+	}
+
+	_, exists := pod.Annotations[ForceMigration]
+	if !exists {
+		return nil, nil
+	}
+
+	// Only process if pod has existing node selector
+	if pod.Spec.NodeSelector == nil {
+		return nil, nil
+	}
+
+	var patchOps types.PatchOps
+
+	// Check if there are any kubevirt.io entries to remove
+	hasKubevirtEntries := false
+	newNodeSelector := make(map[string]string)
+
+	// Copy existing selectors, excluding kubevirt.io ones
+	for key, value := range pod.Spec.NodeSelector {
+		if !strings.Contains(key, "kubevirt.io") {
+			newNodeSelector[key] = value
+		} else {
+			hasKubevirtEntries = true
+		}
+	}
+
+	// Only create patch if there were kubevirt.io entries to remove
+	if hasKubevirtEntries {
+		if len(newNodeSelector) == 0 {
+			// If no selectors remain, remove the entire nodeSelector field
+			patch := fmt.Sprintf(`{"op": "remove", "path": "/spec/nodeSelector"}`)
+			patchOps = append(patchOps, patch)
+		} else {
+			// Replace with filtered selectors
+			patch, err := nodeSelectorPatch(newNodeSelector, false)
+			if err != nil {
+				return nil, err
+			}
+			patchOps = append(patchOps, patch)
+		}
+	}
+
+	return patchOps, nil
+}
+
+func nodeSelectorPatch(nodeSelector map[string]string, isNew bool) (string, error) {
+	var (
+		path  = "/spec/nodeSelector"
+		value = nodeSelector
+	)
+
+	if isNew {
+		// For new node selector, we need to add the entire object
+		valueBytes, err := json.Marshal(value)
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprintf(`{"op": "add", "path": "%s", "value": %s}`, path, valueBytes), nil
+	} else {
+		// For existing node selector, we replace the entire object
+		valueBytes, err := json.Marshal(value)
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprintf(`{"op": "replace", "path": "%s", "value": %s}`, path, valueBytes), nil
+	}
 }
