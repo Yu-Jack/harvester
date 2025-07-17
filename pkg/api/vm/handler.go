@@ -480,9 +480,16 @@ func (h *vmActionHandler) migrate(ctx context.Context, namespace, vmName string,
 		toUpdateVmi.Annotations[util.AnnotationMigrationTarget] = nodeName
 		toUpdateVmi.Spec.NodeSelector[corev1.LabelHostname] = nodeName
 
+		fmt.Println("=====================")
+		fmt.Println("A: toUpdateVmi.Spec.NodeSelector", toUpdateVmi.Spec.NodeSelector)
+
 		if err := util.VirtClientUpdateVmi(ctx, h.virtRestClient, h.namespace, namespace, vmName, toUpdateVmi); err != nil {
 			return err
 		}
+
+		vmii, _ := h.vmis.Get(namespace, vmName, metav1.GetOptions{})
+		fmt.Println("B: vmii.Spec.NodeSelector", vmii.Spec.NodeSelector)
+		fmt.Println("=====================")
 	}
 
 	vmimc, err := h.vmims.Create(vmim)

@@ -2,6 +2,7 @@ package migration
 
 import (
 	"context"
+	"fmt"
 
 	ctlcorev1 "github.com/rancher/wrangler/v3/pkg/generated/controllers/core/v1"
 	"github.com/sirupsen/logrus"
@@ -24,6 +25,7 @@ type Handler struct {
 	rqs          ctlharvcorev1.ResourceQuotaClient
 	rqCache      ctlharvcorev1.ResourceQuotaCache
 	vmiCache     ctlvirtv1.VirtualMachineInstanceCache
+	vmis         ctlvirtv1.VirtualMachineInstanceClient
 	vms          ctlvirtv1.VirtualMachineClient
 	vmCache      ctlvirtv1.VirtualMachineCache
 	podCache     ctlcorev1.PodCache
@@ -68,6 +70,14 @@ func (h *Handler) OnVmiChanged(_ string, vmi *kubevirtv1.VirtualMachineInstance)
 
 func (h *Handler) resetHarvesterMigrationStateInVMI(vmi *kubevirtv1.VirtualMachineInstance) error {
 	toUpdate := vmi.DeepCopy()
+	fmt.Println("=====================")
+	vmii, _ := h.vmis.Get(vmi.Namespace, vmi.Name, metav1.GetOptions{})
+	fmt.Println("A+++: vmii.Spec.NodeSelector", vmii.Spec.NodeSelector)
+	fmt.Println("A+++: vmii.Annotations[util.AnnotationMigrationTarget]", vmii.Annotations[util.AnnotationMigrationTarget])
+
+	fmt.Println("AAAA: toUpdate.Spec.NodeSelector", toUpdate.Spec.NodeSelector)
+	fmt.Println("AAAA: toUpdateVmi.Annotations[util.AnnotationMigrationTarget]", toUpdate.Annotations[util.AnnotationMigrationTarget])
+
 	delete(toUpdate.Annotations, util.AnnotationMigrationUID)
 	delete(toUpdate.Annotations, util.AnnotationMigrationState)
 	if vmi.Annotations[util.AnnotationMigrationTarget] != "" {
@@ -75,8 +85,16 @@ func (h *Handler) resetHarvesterMigrationStateInVMI(vmi *kubevirtv1.VirtualMachi
 		delete(toUpdate.Spec.NodeSelector, corev1.LabelHostname)
 	}
 
+	fmt.Println("BBBB: toUpdateVmi.Annotations[util.AnnotationMigrationTarget]", toUpdate.Annotations[util.AnnotationMigrationTarget])
+	fmt.Println("BBBB: toUpdate.Spec.NodeSelector", toUpdate.Spec.NodeSelector)
 	if err := util.VirtClientUpdateVmi(context.Background(), h.restClient, h.namespace, vmi.Namespace, vmi.Name, toUpdate); err != nil {
 		return err
 	}
+
+	vmii, _ = h.vmis.Get(vmi.Namespace, vmi.Name, metav1.GetOptions{})
+	fmt.Println("CCCC: vmii.Spec.NodeSelector", vmii.Spec.NodeSelector)
+	fmt.Println("CCCC: vmii.Annotations[util.AnnotationMigrationTarget]", vmii.Annotations[util.AnnotationMigrationTarget])
+	fmt.Println("=====================")
+
 	return nil
 }

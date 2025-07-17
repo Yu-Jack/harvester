@@ -31,6 +31,7 @@ func Register(ctx context.Context, management *config.Management, options config
 		namespace:    options.Namespace,
 		rqs:          rqs,
 		rqCache:      rqs.Cache(),
+		vmis:         vmis,
 		vmiCache:     vmis.Cache(),
 		vms:          vms,
 		vmCache:      vms.Cache(),
