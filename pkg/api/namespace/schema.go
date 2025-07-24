@@ -32,8 +32,9 @@ func RegisterSchema(scaled *config.Scaled, server *server.Server, _ config.Optio
 		ID: "namespace",
 		Customize: func(s *types.APISchema) {
 			s.Store = &Store{
-				Store:   proxy.NewProxyStore(server.ClientFactory, nil, server.AccessSetLookup, nil),
-				nsCache: scaled.CoreFactory.Core().V1().Namespace().Cache(),
+				Store:        proxy.NewProxyStore(server.ClientFactory, nil, server.AccessSetLookup, nil),
+				nsCache:      scaled.CoreFactory.Core().V1().Namespace().Cache(),
+				upgradeCache: scaled.HarvesterFactory.Harvesterhci().V1beta1().Upgrade().Cache(),
 			}
 			s.Formatter = nsformatter.formatter
 			s.ResourceActions = map[string]schemas.Action{
