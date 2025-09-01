@@ -2220,8 +2220,8 @@ k8s.io/client-go/util/keyutil
 k8s.io/client-go/util/retry
 k8s.io/client-go/util/watchlist
 k8s.io/client-go/util/workqueue
-# k8s.io/code-generator v0.33.1 => k8s.io/code-generator v0.32.5
-## explicit; go 1.23.0
+# k8s.io/code-generator v0.33.1 => k8s.io/code-generator v0.31.5
+## explicit; go 1.22.0
 k8s.io/code-generator/cmd/client-gen/args
 k8s.io/code-generator/cmd/client-gen/generators
 k8s.io/code-generator/cmd/client-gen/generators/fake
@@ -2790,7 +2790,7 @@ sigs.k8s.io/yaml/goyaml.v3
 # k8s.io/client-go => k8s.io/client-go v0.32.5
 # k8s.io/cloud-provider => k8s.io/cloud-provider v0.32.5
 # k8s.io/cluster-bootstrap => k8s.io/cluster-bootstrap v0.32.5
-# k8s.io/code-generator => k8s.io/code-generator v0.32.5
+# k8s.io/code-generator => k8s.io/code-generator v0.31.5
 # k8s.io/component-base => k8s.io/component-base v0.32.5
 # k8s.io/component-helpers => k8s.io/component-helpers v0.32.5
 # k8s.io/controller-manager => k8s.io/controller-manager v0.32.5
