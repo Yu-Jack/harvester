@@ -251,17 +251,34 @@ upgrade_addon()
   local name=$1
   local namespace=$2
 
+  echo "=== Upgrading addon: $name in namespace: $namespace ==="
+  
   patch=$(cat /usr/local/share/addons/${name}.yaml | yq '{"spec": .spec | pick(["version", "valuesContent"])}')
 
   cat > addon-patch.yaml <<EOF
 $patch
 EOF
 
+  echo "=== Patch content to be applied (addon-patch.yaml) ==="
+  cat addon-patch.yaml
+  echo "=== End of patch content ==="
+
   item_count=$(kubectl get addons.harvesterhci $name -n $namespace -o  jsonpath='{..name}' || true)
   if [ -z "$item_count" ]; then
+    echo "Addon $name not found in namespace $namespace, installing new addon..."
     install_addon $name $namespace
   else
+    echo "=== Current addon spec before merge ==="
+    kubectl get addons.harvesterhci $name -n $namespace -o yaml | yq '.spec'
+    echo "=== End of current addon spec ==="
+    
+    echo "=== Performing kubectl patch --type merge ==="
+    echo "This will merge the above patch content with the current addon spec"
     kubectl patch addons.harvesterhci $name -n $namespace --patch-file ./addon-patch.yaml --type merge
+    
+    echo "=== Addon spec after merge ==="
+    kubectl get addons.harvesterhci $name -n $namespace -o yaml | yq '.spec'
+    echo "=== End of merged addon spec ==="
   fi
 }
 
