@@ -397,6 +397,97 @@ EOF
   sleep 20
 }
 
+# Fix hostname inconsistencies between /oem/harvester.config and bootstrapped node name
+fix_hostname_with_cloudinit() {
+  local harvester_config="/oem/harvester.config"
+  local rancherd_manifest="/var/lib/rancher/rancherd/bootstrapmanifests/rancherd.yaml"
+  
+  echo "Checking hostname configuration..."
+  
+  # Check if harvester config exists
+  if [ ! -f "$harvester_config" ]; then
+    echo "Config file $harvester_config not found, skipping hostname fix"
+    return 0
+  fi
+  
+  # Extract hostname from /oem/harvester.config
+  local config_hostname=$(grep -E "^\s*hostname:" "$harvester_config" | awk '{print $2}' | tr -d '"' | tr -d "'")
+  if [ -z "$config_hostname" ]; then
+    echo "Could not extract hostname from $harvester_config, skipping hostname fix"
+    return 0
+  fi
+  echo "Hostname from config: $config_hostname"
+  
+  # Check if hostname contains a dot
+  if [[ ! "$config_hostname" == *.* ]]; then
+    echo "Hostname does not contain a dot. No action needed."
+    return 0
+  fi
+  echo "Hostname contains a dot. Proceeding with checks..."
+  
+  # Check if rancherd manifest exists
+  if [ ! -f "$rancherd_manifest" ]; then
+    echo "Manifest file $rancherd_manifest not found, skipping hostname fix"
+    return 0
+  fi
+  
+  # Extract node name from rancherd.yaml
+  local manifest_node_name=$(awk '
+    # Set a flag when we enter the kind: Node block
+    /kind: Node/ {
+      in_node=1
+      next
+    }
+
+    # If we are inside the kind: Node block
+    in_node {
+      # Look for the name: line
+      if ($1 == "name:") {
+        # Print the value after name: ($2)
+        print $2
+        # Exit awk after finding it
+        exit
+      }
+    }
+  ' "$rancherd_manifest")
+  
+  if [ -z "$manifest_node_name" ]; then
+    echo "Could not extract node name from $rancherd_manifest, skipping hostname fix"
+    return 0
+  fi
+  echo "Node name from manifest: $manifest_node_name"
+  
+  # Compare hostname and node name
+  if [ "$config_hostname" != "$manifest_node_name" ]; then
+    echo "Hostname mismatch detected. Creating CloudInit resource to set hostname to: $manifest_node_name"
+    
+    # Create CloudInit resource using kubectl
+    kubectl apply -f - <<EOF
+apiVersion: node.harvesterhci.io/v1beta1
+kind: CloudInit
+metadata:
+  name: hostnamectl-patch
+spec:
+  contents: |
+    stages:
+      network:
+        - commands:
+            - hostnamectl set-hostname $manifest_node_name
+  filename: 99_hostnamectl.patch.yaml
+  matchSelector:
+    harvesterhci.io/managed: "true"
+EOF
+    
+    if [ $? -eq 0 ]; then
+      echo "CloudInit resource successfully created to update hostname to: $manifest_node_name"
+    else
+      echo "Warning: Failed to create CloudInit resource" >&2
+    fi
+  else
+    echo "Hostname matches node name. No action needed."
+  fi
+}
+
 wait_capi_cluster() {
   # Wait for cluster to settle down
   namespace=$1
@@ -1286,6 +1377,7 @@ wait_repo
 detect_repo
 detect_upgrade
 pre_upgrade_manifest
+fix_hostname_with_cloudinit
 pause_all_charts
 skip_restart_rancher_system_agent
 upgrade_rancher
