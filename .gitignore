@@ -9,6 +9,7 @@
 api.test
 .docker
 .nocalhost
+.worktrees
 package/harvester
 package/harvester-webhook
 package/upgrade/upgrade-helper
