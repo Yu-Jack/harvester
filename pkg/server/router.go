@@ -44,10 +44,6 @@ func (r *Router) Routes(h router.Handlers) http.Handler {
 	m.Use(urlbuilder.RedirectRewrite)
 	m.Use(recoveryMiddleware)
 
-	m.Path("/").HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		http.Redirect(rw, req, "/dashboard/", http.StatusFound)
-	})
-
 	// UI 相關路由要放在前面，避免被其他路由攔截
 	vueUI := ui.Vue
 	m.Handle("/dashboard/", vueUI.IndexFile())
@@ -56,6 +52,10 @@ func (r *Router) Routes(h router.Handlers) http.Handler {
 		logrus.Infof("Router: /api-ui request received, URL.Path=%s, Method=%s", r.URL.Path, r.Method)
 		vueUI.ServeAsset("").ServeHTTP(w, r)
 	}))
+
+	m.Path("/").HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		http.Redirect(rw, req, "/dashboard/", http.StatusFound)
+	})
 
 	// Those routes should be above /v1/harvester/{type}, otherwise, the response status code would be 404
 	kcGenerateHandler := harvesterServer.NewHandler(kubeconfig.NewGenerateHandler(r.scaled, r.options))
