@@ -94,7 +94,18 @@ func (u *handler) path() (path string, isURL bool) {
 
 func (u *handler) ServeAsset(subFolder string) http.Handler {
 	return u.middleware(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		http.FileServer(http.Dir(filepath.Join(u.pathSetting(), subFolder))).ServeHTTP(rw, req)
+		dir := filepath.Join(u.pathSetting(), subFolder)
+		filePath := filepath.Join(dir, req.URL.Path)
+		logrus.Infof("ServeAsset: subFolder=%s, pathSetting=%s, dir=%s, req.URL.Path=%s, filePath=%s", subFolder, u.pathSetting(), dir, req.URL.Path, filePath)
+
+		// 檢查檔案是否存在
+		if _, err := os.Stat(filePath); err != nil {
+			logrus.Warnf("ServeAsset: file not found: %s, error: %v", filePath, err)
+		} else {
+			logrus.Infof("ServeAsset: file exists: %s", filePath)
+		}
+
+		http.FileServer(http.Dir(dir)).ServeHTTP(rw, req)
 	}))
 }
 
