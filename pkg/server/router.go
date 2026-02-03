@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"runtime/debug"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/rancher/apiserver/pkg/urlbuilder"
@@ -43,6 +44,16 @@ func (r *Router) Routes(h router.Handlers) http.Handler {
 	m.StrictSlash(true)
 	m.Use(urlbuilder.RedirectRewrite)
 	m.Use(recoveryMiddleware)
+
+	// 全域 middleware 追蹤 /api-ui/ 請求
+	m.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if strings.HasPrefix(r.URL.Path, "/api-ui/") {
+				logrus.Infof("Global middleware: request %s %s", r.Method, r.URL.Path)
+			}
+			next.ServeHTTP(w, r)
+		})
+	})
 
 	// UI 相關路由要放在前面，避免被其他路由攔截
 	vueUI := ui.Vue
