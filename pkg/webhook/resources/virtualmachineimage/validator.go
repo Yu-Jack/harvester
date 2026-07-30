@@ -6,6 +6,7 @@ import (
 	admissionregv1 "k8s.io/api/admissionregistration/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	authorizationv1client "k8s.io/client-go/kubernetes/typed/authorization/v1"
+	"k8s.io/client-go/rest"
 
 	"github.com/harvester/harvester/pkg/apis/harvesterhci.io/v1beta1"
 	ctlharvesterv1 "github.com/harvester/harvester/pkg/generated/controllers/harvesterhci.io/v1beta1"
@@ -24,11 +25,12 @@ func NewValidator(
 	ssar authorizationv1client.SelfSubjectAccessReviewInterface,
 	vmTemplateVersionCache ctlharvesterv1.VirtualMachineTemplateVersionCache,
 	scCache ctlstoragev1.StorageClassCache,
-	vmBackupCache ctlharvesterv1.VirtualMachineBackupCache) types.Validator {
+	vmBackupCache ctlharvesterv1.VirtualMachineBackupCache,
+	restConfig *rest.Config) types.Validator {
 
 	vmiv := common.GetVMIValidator(vmiCache, scCache, ssar, podCache, pvcCache, vmTemplateVersionCache, vmBackupCache)
 	validators := map[v1beta1.VMIBackend]backend.Validator{
-		v1beta1.VMIBackendBackingImage: backingimage.GetValidator(vmiv),
+		v1beta1.VMIBackendBackingImage: backingimage.GetValidator(vmiv, restConfig),
 		v1beta1.VMIBackendCDI:          cdi.GetValidator(vmiv),
 	}
 

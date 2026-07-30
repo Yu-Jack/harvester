@@ -1,21 +1,58 @@
 package backingimage
 
 import (
+	"context"
+	"fmt"
+
+	"github.com/sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/rest"
+
 	harvesterv1 "github.com/harvester/harvester/pkg/apis/harvesterhci.io/v1beta1"
+	harvesterClientset "github.com/harvester/harvester/pkg/generated/clientset/versioned/typed/harvesterhci.io/v1beta1"
 	"github.com/harvester/harvester/pkg/image/backend"
 	"github.com/harvester/harvester/pkg/image/common"
+	"github.com/harvester/harvester/pkg/util"
 	"github.com/harvester/harvester/pkg/webhook/types"
 )
 
 type Validator struct {
-	vmiv common.VMIValidator
+	vmiv       common.VMIValidator
+	restConfig *rest.Config
 }
 
-func GetValidator(vmiv common.VMIValidator) backend.Validator {
-	return &Validator{vmiv}
+func GetValidator(vmiv common.VMIValidator, restConfig *rest.Config) backend.Validator {
+	return &Validator{vmiv: vmiv, restConfig: restConfig}
+}
+
+// checkSourceImageAccess verifies the requesting user can GET the source VMI via impersonation.
+func (biv *Validator) checkSourceImageAccess(request *types.Request, vmi *harvesterv1.VirtualMachineImage) error {
+	sp := vmi.Spec.SecurityParameters
+	if sp == nil || sp.SourceImageName == "" {
+		return nil
+	}
+
+	logrus.Infof("=== backingimage validator Create: %s", request)
+	logrus.Infof("=== user info: %v", request.UserInfo)
+
+	return util.WithUserImpersonation(biv.restConfig, request.UserInfo.Username, request.UserInfo.Groups, func(cfg *rest.Config) error {
+		client, err := harvesterClientset.NewForConfig(cfg)
+		if err != nil {
+			return fmt.Errorf("failed to create impersonated client: %w", err)
+		}
+		if _, err := client.VirtualMachineImages(sp.SourceImageNamespace).Get(context.Background(), sp.SourceImageName, metav1.GetOptions{}); err != nil {
+			logrus.Infof("user %s has no access to source image %s/%s: %v", request.UserInfo.Username, sp.SourceImageNamespace, sp.SourceImageName, err)
+			return fmt.Errorf("user %q is not allowed to access source image %s/%s", request.UserInfo.Username, sp.SourceImageNamespace, sp.SourceImageName)
+		}
+		return nil
+	})
 }
 
 func (biv *Validator) Create(request *types.Request, vmi *harvesterv1.VirtualMachineImage) error {
+	if err := biv.checkSourceImageAccess(request, vmi); err != nil {
+		return err
+	}
+
 	if err := biv.vmiv.CheckDisplayName(vmi); err != nil {
 		return err
 	}

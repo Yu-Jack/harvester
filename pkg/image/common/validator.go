@@ -222,6 +222,10 @@ func (v *vmiValidator) CheckSecurityParameters(vmi *v1beta1.VirtualMachineImage)
 		return werror.NewInvalidError(fmt.Sprintf("storage class %s is not for encryption or decryption", scName), fmt.Sprintf("spec.parameters[%s] must be true", util.LonghornOptionEncrypted))
 	}
 
+	if sc.Parameters[util.LonghornOptionBackingImageName] != "" {
+		return werror.NewInvalidError(fmt.Sprintf("storage class %s is tied to a specific backing image and cannot be used as target for clone/encrypt", scName), fmt.Sprintf("metadata.annotations[%s]", util.AnnotationStorageClassName))
+	}
+
 	return nil
 }
 
