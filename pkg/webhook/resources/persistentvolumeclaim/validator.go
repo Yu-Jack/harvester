@@ -6,6 +6,7 @@ import (
 
 	v1 "github.com/rancher/wrangler/v3/pkg/generated/controllers/core/v1"
 	ctlstoragev1 "github.com/rancher/wrangler/v3/pkg/generated/controllers/storage/v1"
+	"github.com/sirupsen/logrus"
 	admissionregv1 "k8s.io/api/admissionregistration/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -250,6 +251,9 @@ func (v *pvcValidator) validateBackingImageAccess(request *types.Request, scName
 		return nil
 	}
 	imageNS, imageName := parts[0], parts[1]
+
+	logrus.Infof("checking access to image %s/%s for user %s", imageNS, imageName, request.UserInfo.Username)
+	logrus.Infof("request: %v", request.String())
 
 	allowed, err := util.CheckObjectAccess(request.Context, util.ResourceAccessCheck{
 		SAR:       v.sar,
