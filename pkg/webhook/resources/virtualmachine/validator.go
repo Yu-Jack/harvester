@@ -524,6 +524,8 @@ func (v *vmValidator) checkVolumeClaimTemplateEntry(request *types.Request, entr
 		}
 	}
 
+	logrus.Debugf("Checking access to image %s/%s for user %s", imageNS, imageName, request.String())
+
 	allowed, err := util.CheckObjectAccess(request.Context, util.ResourceAccessCheck{
 		SAR:       v.sar,
 		Username:  request.UserInfo.Username,
