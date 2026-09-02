@@ -3,6 +3,8 @@ package pod
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
+	"strings"
 
 	admissionregv1 "k8s.io/api/admissionregistration/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -10,8 +12,10 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/pointer"
+	kubevirtv1 "kubevirt.io/api/core/v1"
 
 	"github.com/harvester/harvester/pkg/generated/controllers/harvesterhci.io/v1beta1"
+	ctlkubevirtv1 "github.com/harvester/harvester/pkg/generated/controllers/kubevirt.io/v1"
 	harvSettings "github.com/harvester/harvester/pkg/settings"
 	"github.com/harvester/harvester/pkg/util"
 	"github.com/harvester/harvester/pkg/webhook/types"
@@ -30,9 +34,19 @@ var matchingLabels = []labels.Set{
 	},
 }
 
-func NewMutator(settingCache v1beta1.SettingCache) types.Mutator {
+var migrationCPUNodeSelectorPrefixes = []string{
+	kubevirtv1.CPUFeatureLabel,
+	kubevirtv1.CPUModelLabel,
+	kubevirtv1.SupportedHostModelMigrationCPU,
+	kubevirtv1.CPUModelVendorLabel,
+	kubevirtv1.HostModelCPULabel,
+	kubevirtv1.HostModelRequiredFeaturesLabel,
+}
+
+func NewMutator(settingCache v1beta1.SettingCache, vmCache ctlkubevirtv1.VirtualMachineCache) types.Mutator {
 	return &podMutator{
 		setttingCache: settingCache,
+		vmCache:       vmCache,
 	}
 }
 
@@ -41,6 +55,7 @@ func NewMutator(settingCache v1beta1.SettingCache) types.Mutator {
 type podMutator struct {
 	types.DefaultMutator
 	setttingCache v1beta1.SettingCache
+	vmCache       ctlkubevirtv1.VirtualMachineCache
 }
 
 func newResource(ops []admissionregv1.OperationType) types.Resource {
@@ -62,6 +77,10 @@ func (m *podMutator) Resource() types.Resource {
 
 func (m *podMutator) Create(_ *types.Request, newObj runtime.Object) (types.PatchOps, error) {
 	pod := newObj.(*corev1.Pod)
+	patchOps, err := m.patchMigrationCPUNodeSelector(pod)
+	if err != nil {
+		return nil, err
+	}
 
 	podLabels := labels.Set(pod.Labels)
 	var match bool
@@ -72,10 +91,9 @@ func (m *podMutator) Create(_ *types.Request, newObj runtime.Object) (types.Patc
 		}
 	}
 	if !match {
-		return nil, nil
+		return patchOps, nil
 	}
 
-	var patchOps types.PatchOps
 	httpProxyPatches, err := m.httpProxyPatches(pod)
 	if err != nil {
 		return nil, err
@@ -88,6 +106,90 @@ func (m *podMutator) Create(_ *types.Request, newObj runtime.Object) (types.Patc
 	patchOps = append(patchOps, additionalCAPatches...)
 
 	return patchOps, nil
+}
+
+func (m *podMutator) patchMigrationCPUNodeSelector(pod *corev1.Pod) (types.PatchOps, error) {
+	if pod == nil || pod.Labels == nil || pod.Spec.NodeSelector == nil {
+		return nil, nil
+	}
+
+	if pod.Labels[kubevirtv1.MigrationJobLabel] == "" {
+		return nil, nil
+	}
+
+	vmName := getVMNameFromPod(pod)
+	if vmName == "" {
+		return nil, nil
+	}
+
+	vm, err := m.vmCache.Get(pod.Namespace, vmName)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	if !isRelaxCPUCompatibilityEnabled(vm.Annotations) {
+		return nil, nil
+	}
+
+	keysToRemove := getMigrationCPUNodeSelectorKeysToRemove(pod.Spec.NodeSelector)
+	if len(keysToRemove) == 0 {
+		return nil, nil
+	}
+
+	patchOps := make(types.PatchOps, 0, len(keysToRemove))
+	for _, key := range keysToRemove {
+		patchOps = append(patchOps, fmt.Sprintf(`{"op": "remove", "path": "/spec/nodeSelector/%s"}`, escapeJSONPointer(key)))
+	}
+
+	return patchOps, nil
+}
+
+func getVMNameFromPod(pod *corev1.Pod) string {
+	if pod == nil {
+		return ""
+	}
+
+	if pod.Annotations != nil && pod.Annotations[kubevirtv1.DomainAnnotation] != "" {
+		return pod.Annotations[kubevirtv1.DomainAnnotation]
+	}
+
+	if pod.Labels != nil {
+		return pod.Labels[kubevirtv1.VirtualMachineNameLabel]
+	}
+
+	return ""
+}
+
+func isRelaxCPUCompatibilityEnabled(annotations map[string]string) bool {
+	if annotations == nil {
+		return false
+	}
+
+	return strings.ToLower(annotations[util.AnnotationRelaxCPUCompatibility]) == "true"
+}
+
+func getMigrationCPUNodeSelectorKeysToRemove(nodeSelector map[string]string) []string {
+	keys := make([]string, 0)
+	for key := range nodeSelector {
+		for _, prefix := range migrationCPUNodeSelectorPrefixes {
+			if strings.HasPrefix(key, prefix) {
+				keys = append(keys, key)
+				break
+			}
+		}
+	}
+
+	sort.Strings(keys)
+	return keys
+}
+
+func escapeJSONPointer(in string) string {
+	// RFC6901 escaping for JSON patch paths.
+	in = strings.ReplaceAll(in, "~", "~0")
+	return strings.ReplaceAll(in, "/", "~1")
 }
 
 func (m *podMutator) httpProxyPatches(pod *corev1.Pod) (types.PatchOps, error) {

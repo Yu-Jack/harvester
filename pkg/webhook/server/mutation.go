@@ -31,7 +31,7 @@ func Mutation(clients *clients.Clients, options *config.Options) (http.Handler, 
 	vmCache := clients.KubevirtFactory.Kubevirt().V1().VirtualMachine().Cache()
 	mutators := []types.Mutator{
 		persistentvolumeclaim.NewMutator(pvcCache, vmImgCache),
-		pod.NewMutator(settingCache),
+		pod.NewMutator(settingCache, vmCache),
 		templateversion.NewMutator(),
 		virtualmachine.NewMutator(settingCache, nadCache),
 		virtualmachineinstance.NewMutator(vmCache),

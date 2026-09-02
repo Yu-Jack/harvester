@@ -1,13 +1,19 @@
 package pod
 
 import (
+	"fmt"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
+	kubevirtv1 "kubevirt.io/api/core/v1"
 
+	"github.com/harvester/harvester/pkg/generated/clientset/versioned/fake"
 	"github.com/harvester/harvester/pkg/util"
+	"github.com/harvester/harvester/pkg/util/fakeclients"
 	"github.com/harvester/harvester/pkg/webhook/types"
 )
 
@@ -197,4 +203,169 @@ func Test_volumeMountPatch(t *testing.T) {
 		assert.Equal(t, testCase.output, result)
 		assert.Empty(t, err)
 	}
+}
+
+func TestPatchMigrationCPUNodeSelector(t *testing.T) {
+	newMigrationPod := func(nodeSelector map[string]string) *corev1.Pod {
+		return &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "virt-launcher-test",
+				Namespace: "default",
+				Labels: map[string]string{
+					kubevirtv1.MigrationJobLabel:       "migration-uid",
+					kubevirtv1.VirtualMachineNameLabel: "vm1",
+				},
+				Annotations: map[string]string{
+					kubevirtv1.DomainAnnotation: "vm1",
+				},
+			},
+			Spec: corev1.PodSpec{
+				NodeSelector: nodeSelector,
+			},
+		}
+	}
+
+	migrationCPUSelector := map[string]string{
+		kubevirtv1.CPUFeatureLabel + "aes":                   "true",
+		kubevirtv1.CPUModelLabel + "Skylake-Client":          "true",
+		kubevirtv1.SupportedHostModelMigrationCPU + "x86_64": "true",
+		kubevirtv1.CPUModelVendorLabel + "Intel":             "true",
+		kubevirtv1.HostModelCPULabel + "Skylake-Client":      "true",
+		kubevirtv1.HostModelRequiredFeaturesLabel + "ssse3":  "true",
+		kubevirtv1.CPUManager:                                "true",
+		kubevirtv1.NodeSchedulable:                           "true",
+	}
+
+	tests := []struct {
+		name            string
+		vmAnnotations   map[string]string
+		pod             *corev1.Pod
+		createVM        bool
+		expectedPatches types.PatchOps
+	}{
+		{
+			name: "remove migration CPU selectors when annotation enabled",
+			vmAnnotations: map[string]string{
+				util.AnnotationRelaxCPUCompatibility: "true",
+			},
+			pod:      newMigrationPod(migrationCPUSelector),
+			createVM: true,
+			expectedPatches: func() types.PatchOps {
+				keys := []string{
+					kubevirtv1.CPUFeatureLabel + "aes",
+					kubevirtv1.CPUModelLabel + "Skylake-Client",
+					kubevirtv1.SupportedHostModelMigrationCPU + "x86_64",
+					kubevirtv1.CPUModelVendorLabel + "Intel",
+					kubevirtv1.HostModelCPULabel + "Skylake-Client",
+					kubevirtv1.HostModelRequiredFeaturesLabel + "ssse3",
+				}
+				sort.Strings(keys)
+
+				patches := make(types.PatchOps, 0, len(keys))
+				for _, key := range keys {
+					patches = append(patches, fmt.Sprintf(`{"op": "remove", "path": "/spec/nodeSelector/%s"}`, escapeJSONPointer(key)))
+				}
+				return patches
+			}(),
+		},
+		{
+			name: "skip when annotation is not enabled",
+			vmAnnotations: map[string]string{
+				util.AnnotationRelaxCPUCompatibility: "false",
+			},
+			pod:             newMigrationPod(migrationCPUSelector),
+			createVM:        true,
+			expectedPatches: nil,
+		},
+		{
+			name: "skip when it is not a migration target pod",
+			vmAnnotations: map[string]string{
+				util.AnnotationRelaxCPUCompatibility: "true",
+			},
+			pod: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "virt-launcher-test",
+					Namespace: "default",
+					Labels: map[string]string{
+						kubevirtv1.VirtualMachineNameLabel: "vm1",
+					},
+					Annotations: map[string]string{
+						kubevirtv1.DomainAnnotation: "vm1",
+					},
+				},
+				Spec: corev1.PodSpec{NodeSelector: migrationCPUSelector},
+			},
+			createVM:        true,
+			expectedPatches: nil,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			clientSet := fake.NewSimpleClientset()
+			if tc.createVM {
+				err := clientSet.Tracker().Add(&kubevirtv1.VirtualMachine{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:        "vm1",
+						Namespace:   "default",
+						Annotations: tc.vmAnnotations,
+					},
+				})
+				assert.NoError(t, err)
+			}
+
+			mutator := NewMutator(
+				fakeclients.HarvesterSettingCache(clientSet.HarvesterhciV1beta1().Settings),
+				fakeclients.VirtualMachineCache(clientSet.KubevirtV1().VirtualMachines),
+			)
+
+			patches, err := mutator.(*podMutator).patchMigrationCPUNodeSelector(tc.pod)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expectedPatches, patches)
+		})
+	}
+}
+
+func TestCreateWithRelaxCPUCompatibility(t *testing.T) {
+	clientSet := fake.NewSimpleClientset()
+	err := clientSet.Tracker().Add(&kubevirtv1.VirtualMachine{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "vm1",
+			Namespace: "default",
+			Annotations: map[string]string{
+				util.AnnotationRelaxCPUCompatibility: "true",
+			},
+		},
+	})
+	assert.NoError(t, err)
+
+	mutator := NewMutator(
+		fakeclients.HarvesterSettingCache(clientSet.HarvesterhciV1beta1().Settings),
+		fakeclients.VirtualMachineCache(clientSet.KubevirtV1().VirtualMachines),
+	)
+
+	pod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "virt-launcher-test",
+			Namespace: "default",
+			Labels: map[string]string{
+				kubevirtv1.MigrationJobLabel:       "migration-uid",
+				kubevirtv1.VirtualMachineNameLabel: "vm1",
+			},
+			Annotations: map[string]string{
+				kubevirtv1.DomainAnnotation: "vm1",
+			},
+		},
+		Spec: corev1.PodSpec{
+			NodeSelector: map[string]string{
+				kubevirtv1.CPUFeatureLabel + "aes": "true",
+			},
+		},
+	}
+
+	patches, err := mutator.Create(nil, pod)
+	assert.NoError(t, err)
+	assert.Equal(t, types.PatchOps{
+		fmt.Sprintf(`{"op": "remove", "path": "/spec/nodeSelector/%s"}`, escapeJSONPointer(kubevirtv1.CPUFeatureLabel+"aes")),
+	}, patches)
 }
