@@ -29,6 +29,8 @@ import (
 
 var (
 	AddonResourceName                         = "addons"
+	ComponentHealthResourceName               = "componenthealths"
+	HealthSummaryResourceName                 = "healthsummaries"
 	KeyPairResourceName                       = "keypairs"
 	PreferenceResourceName                    = "preferences"
 	ResourceQuotaResourceName                 = "resourcequotas"
@@ -71,6 +73,10 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
 		&Addon{},
 		&AddonList{},
+		&ComponentHealth{},
+		&ComponentHealthList{},
+		&HealthSummary{},
+		&HealthSummaryList{},
 		&KeyPair{},
 		&KeyPairList{},
 		&Preference{},

@@ -29,6 +29,8 @@ import (
 type HarvesterhciV1beta1Interface interface {
 	RESTClient() rest.Interface
 	AddonsGetter
+	ComponentHealthsGetter
+	HealthSummariesGetter
 	KeyPairsGetter
 	PreferencesGetter
 	ResourceQuotasGetter
@@ -55,6 +57,14 @@ type HarvesterhciV1beta1Client struct {
 
 func (c *HarvesterhciV1beta1Client) Addons(namespace string) AddonInterface {
 	return newAddons(c, namespace)
+}
+
+func (c *HarvesterhciV1beta1Client) ComponentHealths() ComponentHealthInterface {
+	return newComponentHealths(c)
+}
+
+func (c *HarvesterhciV1beta1Client) HealthSummaries() HealthSummaryInterface {
+	return newHealthSummaries(c)
 }
 
 func (c *HarvesterhciV1beta1Client) KeyPairs(namespace string) KeyPairInterface {
