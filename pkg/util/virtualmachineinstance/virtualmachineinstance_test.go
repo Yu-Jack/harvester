@@ -550,6 +550,28 @@ func Test_GetNonLiveMigratableVMIs(t *testing.T) {
 	}
 }
 
+func Test_GetVMINamesWithHostDevicesOrGPUs(t *testing.T) {
+	vmis := []*kubevirtv1.VirtualMachineInstance{
+		{
+			ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "migratable"},
+		},
+		{
+			ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "host-device"},
+			Spec: kubevirtv1.VirtualMachineInstanceSpec{
+				Domain: kubevirtv1.DomainSpec{Devices: kubevirtv1.Devices{HostDevices: []kubevirtv1.HostDevice{{Name: "gpu"}}}},
+			},
+		},
+		{
+			ObjectMeta: metav1.ObjectMeta{Namespace: "production", Name: "vgpu"},
+			Spec: kubevirtv1.VirtualMachineInstanceSpec{
+				Domain: kubevirtv1.DomainSpec{Devices: kubevirtv1.Devices{GPUs: []kubevirtv1.GPU{{Name: "vgpu"}}}},
+			},
+		},
+	}
+
+	assert.Equal(t, []string{"default/host-device", "production/vgpu"}, GetVMINamesWithHostDevicesOrGPUs(vmis))
+}
+
 func Test_ListByNode(t *testing.T) {
 	clientSet := fake.NewSimpleClientset()
 	vmiCache := fakeclients.VirtualMachineInstanceCache(clientSet.KubevirtV1().VirtualMachineInstances)
