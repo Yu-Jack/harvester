@@ -32,6 +32,14 @@ func (c *FakeHarvesterhciV1beta1) Addons(namespace string) v1beta1.AddonInterfac
 	return newFakeAddons(c, namespace)
 }
 
+func (c *FakeHarvesterhciV1beta1) ComponentHealths() v1beta1.ComponentHealthInterface {
+	return newFakeComponentHealths(c)
+}
+
+func (c *FakeHarvesterhciV1beta1) HealthSummaries() v1beta1.HealthSummaryInterface {
+	return newFakeHealthSummaries(c)
+}
+
 func (c *FakeHarvesterhciV1beta1) KeyPairs(namespace string) v1beta1.KeyPairInterface {
 	return newFakeKeyPairs(c, namespace)
 }

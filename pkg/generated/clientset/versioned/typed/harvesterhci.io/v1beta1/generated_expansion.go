@@ -20,6 +20,10 @@ package v1beta1
 
 type AddonExpansion interface{}
 
+type ComponentHealthExpansion interface{}
+
+type HealthSummaryExpansion interface{}
+
 type KeyPairExpansion interface{}
 
 type PreferenceExpansion interface{}
