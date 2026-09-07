@@ -77,6 +77,40 @@ func NewSetting(namespace, name string, obj Setting) *Setting {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
+// ComponentHealthList is a list of ComponentHealth resources
+type ComponentHealthList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata"`
+
+	Items []ComponentHealth `json:"items"`
+}
+
+func NewComponentHealth(namespace, name string, obj ComponentHealth) *ComponentHealth {
+	obj.APIVersion, obj.Kind = SchemeGroupVersion.WithKind("ComponentHealth").ToAPIVersionAndKind()
+	obj.Name = name
+	obj.Namespace = namespace
+	return &obj
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// HealthSummaryList is a list of HealthSummary resources
+type HealthSummaryList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata"`
+
+	Items []HealthSummary `json:"items"`
+}
+
+func NewHealthSummary(namespace, name string, obj HealthSummary) *HealthSummary {
+	obj.APIVersion, obj.Kind = SchemeGroupVersion.WithKind("HealthSummary").ToAPIVersionAndKind()
+	obj.Name = name
+	obj.Namespace = namespace
+	return &obj
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
 // UpgradeList is a list of Upgrade resources
 type UpgradeList struct {
 	metav1.TypeMeta `json:",inline"`
