@@ -32,6 +32,8 @@ func init() {
 
 type Interface interface {
 	Addon() AddonController
+	ComponentHealth() ComponentHealthController
+	HealthSummary() HealthSummaryController
 	KeyPair() KeyPairController
 	Preference() PreferenceController
 	ResourceQuota() ResourceQuotaController
@@ -63,6 +65,14 @@ type version struct {
 
 func (v *version) Addon() AddonController {
 	return generic.NewController[*v1beta1.Addon, *v1beta1.AddonList](schema.GroupVersionKind{Group: "harvesterhci.io", Version: "v1beta1", Kind: "Addon"}, "addons", true, v.controllerFactory)
+}
+
+func (v *version) ComponentHealth() ComponentHealthController {
+	return generic.NewNonNamespacedController[*v1beta1.ComponentHealth, *v1beta1.ComponentHealthList](schema.GroupVersionKind{Group: "harvesterhci.io", Version: "v1beta1", Kind: "ComponentHealth"}, "componenthealths", v.controllerFactory)
+}
+
+func (v *version) HealthSummary() HealthSummaryController {
+	return generic.NewNonNamespacedController[*v1beta1.HealthSummary, *v1beta1.HealthSummaryList](schema.GroupVersionKind{Group: "harvesterhci.io", Version: "v1beta1", Kind: "HealthSummary"}, "healthsummaries", v.controllerFactory)
 }
 
 func (v *version) KeyPair() KeyPairController {

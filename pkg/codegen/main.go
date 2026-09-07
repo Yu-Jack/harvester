@@ -46,6 +46,8 @@ func main() {
 					harvesterv1.KeyPair{},
 					harvesterv1.Preference{},
 					harvesterv1.Setting{},
+					harvesterv1.ComponentHealth{},
+					harvesterv1.HealthSummary{},
 					harvesterv1.Upgrade{},
 					harvesterv1.UpgradeLog{},
 					harvesterv1.Version{},
