@@ -61,6 +61,19 @@ func GetAllNonLiveMigratableVMINames(vmis []*kubevirtv1.VirtualMachineInstance, 
 	return nonLiveMigratableVMINames, nil
 }
 
+// GetVMINamesWithHostDevicesOrGPUs returns VMIs that cannot be live migrated
+// because host or vGPU devices are attached.
+func GetVMINamesWithHostDevicesOrGPUs(vmis []*kubevirtv1.VirtualMachineInstance) []string {
+	var vmiNames []string
+	for _, vmi := range vmis {
+		if len(vmi.Spec.Domain.Devices.HostDevices) == 0 && len(vmi.Spec.Domain.Devices.GPUs) == 0 {
+			continue
+		}
+		vmiNames = append(vmiNames, fmt.Sprintf("%s/%s", vmi.Namespace, vmi.Name))
+	}
+	return vmiNames
+}
+
 func ValidateVMMigratable(vmi *kubevirtv1.VirtualMachineInstance) error {
 	vmiNamespacedName := fmt.Sprintf("%s/%s", vmi.Namespace, vmi.Name)
 
