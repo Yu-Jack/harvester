@@ -47,6 +47,7 @@ func Register(ctx context.Context, management *config.Management, _ config.Optio
 	}
 
 	vmis.OnChange(ctx, vmiControllerName, h.OnVMIChanged)
+
 	return nil
 }
 
@@ -129,6 +130,6 @@ func (h *Handler) updateComponentHealth(checks map[string]harvesterv1.CheckResul
 	toUpdate := existing.DeepCopy()
 	toUpdate.Status.LastCheckedAt = metav1.Now()
 	toUpdate.Status.Checks = checks
-	_, err = h.componentHealths.UpdateStatus(toUpdate)
+	_, err = h.componentHealths.Update(toUpdate)
 	return err
 }

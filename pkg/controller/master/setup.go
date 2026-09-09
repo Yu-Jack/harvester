@@ -10,6 +10,7 @@ import (
 	"github.com/harvester/harvester/pkg/controller/master/addon"
 	"github.com/harvester/harvester/pkg/controller/master/backup"
 	"github.com/harvester/harvester/pkg/controller/master/componenthealth"
+	"github.com/harvester/harvester/pkg/controller/master/healthsummary"
 	"github.com/harvester/harvester/pkg/controller/master/image"
 	"github.com/harvester/harvester/pkg/controller/master/keypair"
 	"github.com/harvester/harvester/pkg/controller/master/kubevirt"
@@ -44,6 +45,7 @@ var registerFuncs = []registerFunc{
 	backup.RegisterBackupTarget,
 	backup.RegisterRestore,
 	componenthealth.Register,
+	healthsummary.Register,
 	image.Register,
 	keypair.Register,
 	kubevirt.Register,

@@ -25,6 +25,8 @@ type ComponentHealth struct {
 
 type ComponentHealthStatus struct {
 	// +optional
+	Node string `json:"node,omitempty"`
+	// +optional
 	LastCheckedAt metav1.Time `json:"lastCheckedAt,omitempty"`
 	// +optional
 	Checks map[string]CheckResult `json:"checks,omitempty"`
