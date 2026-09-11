@@ -55,16 +55,20 @@ func (h *Handler) reconcileSummary() error {
 
 	components := map[string]harvesterv1.ComponentSummary{}
 	for _, ch := range allHealths.Items {
-		var summary harvesterv1.ComponentSummary
+		key := ch.Name
+		if component, ok := ch.Labels[harvesterv1.LabelKeyComponent]; ok && component != "" {
+			key = component
+		}
+		entry := components[key]
 		for _, check := range ch.Status.Checks {
 			switch check.Severity {
 			case harvesterv1.SeverityError:
-				summary.ErrorCount++
+				entry.ErrorCount++
 			case harvesterv1.SeverityWarning:
-				summary.WarningCount++
+				entry.WarningCount++
 			}
 		}
-		components[ch.Name] = summary
+		components[key] = entry
 	}
 
 	return h.updateHealthSummary(components)

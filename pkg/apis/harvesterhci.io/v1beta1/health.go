@@ -8,6 +8,15 @@ const (
 	SeverityError   Severity = "Error"
 	SeverityWarning Severity = "Warning"
 	SeverityInfo    Severity = "Info"
+
+	// LabelKeyComponent identifies the logical component name a ComponentHealth CR belongs to.
+	// For Deployment-backed components this equals metadata.name; for DaemonSet-backed
+	// components multiple CRs (one per node) share the same label value.
+	LabelKeyComponent = "health.harvesterhci.io/component"
+
+	// LabelKeyNode is set only on ComponentHealth CRs produced by DaemonSet-backed components.
+	// It holds the node name the reporting pod is scheduled on.
+	LabelKeyNode = "health.harvesterhci.io/node"
 )
 
 // +genclient
@@ -24,8 +33,6 @@ type ComponentHealth struct {
 }
 
 type ComponentHealthStatus struct {
-	// +optional
-	Node string `json:"node,omitempty"`
 	// +optional
 	LastCheckedAt metav1.Time `json:"lastCheckedAt,omitempty"`
 	// +optional

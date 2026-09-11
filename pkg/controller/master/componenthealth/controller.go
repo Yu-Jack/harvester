@@ -111,7 +111,12 @@ func (h *Handler) updateComponentHealth(checks map[string]harvesterv1.CheckResul
 			return fmt.Errorf("failed to get ComponentHealth %s: %w", componentName, err)
 		}
 		created, err := h.componentHealths.Create(&harvesterv1.ComponentHealth{
-			ObjectMeta: metav1.ObjectMeta{Name: componentName},
+			ObjectMeta: metav1.ObjectMeta{
+				Name: componentName,
+				Labels: map[string]string{
+					harvesterv1.LabelKeyComponent: componentName,
+				},
+			},
 			Status: harvesterv1.ComponentHealthStatus{
 				LastCheckedAt: metav1.Now(),
 				Checks:        checks,
@@ -128,6 +133,10 @@ func (h *Handler) updateComponentHealth(checks map[string]harvesterv1.CheckResul
 	}
 
 	toUpdate := existing.DeepCopy()
+	if toUpdate.Labels == nil {
+		toUpdate.Labels = map[string]string{}
+	}
+	toUpdate.Labels[harvesterv1.LabelKeyComponent] = componentName
 	toUpdate.Status.LastCheckedAt = metav1.Now()
 	toUpdate.Status.Checks = checks
 	_, err = h.componentHealths.Update(toUpdate)
