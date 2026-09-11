@@ -550,7 +550,7 @@ func Test_GetNonLiveMigratableVMIs(t *testing.T) {
 	}
 }
 
-func Test_GetVMINamesWithHostDevicesOrGPUs(t *testing.T) {
+func Test_GetVMINamesMatching_HasHostDevicesOrGPUs(t *testing.T) {
 	vmis := []*kubevirtv1.VirtualMachineInstance{
 		{
 			ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "migratable"},
@@ -569,7 +569,7 @@ func Test_GetVMINamesWithHostDevicesOrGPUs(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, []string{"default/host-device", "production/vgpu"}, GetVMINamesWithHostDevicesOrGPUs(vmis))
+	assert.Equal(t, []string{"default/host-device", "production/vgpu"}, GetVMINamesMatching(vmis, HasHostDevicesOrGPUs))
 }
 
 func Test_ListByNode(t *testing.T) {
