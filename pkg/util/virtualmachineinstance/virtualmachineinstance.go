@@ -14,6 +14,39 @@ import (
 	"github.com/harvester/harvester/pkg/util"
 )
 
+// VMMigrationRule is an atomic, reusable live-migration blocking condition.
+// Consumers (e.g. ValidateVMMigratable, ComponentHealth checks) each pick the rules relevant to them.
+type VMMigrationRule struct {
+	Key     string
+	Check   func(*kubevirtv1.VirtualMachineInstance) bool
+	Message string
+}
+
+var (
+	RuleIsMigrating = VMMigrationRule{
+		Key:     "VMMigrationInProgressUnsupported",
+		Check:   IsMigrating,
+		Message: "it is already in a migrating state",
+	}
+	RuleHasNodeSelectorHostname = VMMigrationRule{
+		Key:     "VMNodeSelectorLiveMigrationUnsupported",
+		Check:   HasNodeSelectorHostname,
+		Message: "node selector is set",
+	}
+	RuleHasHostDevicesOrGPUs = VMMigrationRule{
+		Key:     "VMHostDeviceLiveMigrationUnsupported",
+		Check:   HasHostDevicesOrGPUs,
+		Message: "PCIe, USB or vGPU devices are attached",
+	}
+)
+
+// vmMigratabilityValidationRules is the full set of rules ValidateVMMigratable enforces.
+var vmMigratabilityValidationRules = []VMMigrationRule{
+	RuleIsMigrating,
+	RuleHasNodeSelectorHostname,
+	RuleHasHostDevicesOrGPUs,
+}
+
 func GetAllNonLiveMigratableVMINames(vmis []*kubevirtv1.VirtualMachineInstance, nodes []*corev1.Node) ([]string, error) {
 	var nonLiveMigratableVMINames []string
 
@@ -61,17 +94,33 @@ func GetAllNonLiveMigratableVMINames(vmis []*kubevirtv1.VirtualMachineInstance, 
 	return nonLiveMigratableVMINames, nil
 }
 
-// GetVMINamesWithHostDevicesOrGPUs returns VMIs that cannot be live migrated
-// because host or vGPU devices are attached.
-func GetVMINamesWithHostDevicesOrGPUs(vmis []*kubevirtv1.VirtualMachineInstance) []string {
-	var vmiNames []string
+// HasNodeSelectorHostname reports whether the VMI is pinned to a specific node via hostname node selector,
+// which blocks live migration.
+func HasNodeSelectorHostname(vmi *kubevirtv1.VirtualMachineInstance) bool {
+	return vmi.Spec.NodeSelector != nil && vmi.Spec.NodeSelector[corev1.LabelHostname] != ""
+}
+
+// HasHostDevicesOrGPUs reports whether the VMI has PCIe/USB host devices or vGPU devices attached,
+// either of which blocks live migration.
+func HasHostDevicesOrGPUs(vmi *kubevirtv1.VirtualMachineInstance) bool {
+	return len(vmi.Spec.Domain.Devices.HostDevices) != 0 || len(vmi.Spec.Domain.Devices.GPUs) != 0
+}
+
+// IsMigrating reports whether the VMI is already undergoing a migration.
+func IsMigrating(vmi *kubevirtv1.VirtualMachineInstance) bool {
+	return vmi.Annotations[util.AnnotationMigrationUID] != ""
+}
+
+// GetVMINamesMatching returns the namespaced names of VMIs for which match returns true.
+func GetVMINamesMatching(vmis []*kubevirtv1.VirtualMachineInstance, match func(*kubevirtv1.VirtualMachineInstance) bool) []string {
+	var names []string
 	for _, vmi := range vmis {
-		if len(vmi.Spec.Domain.Devices.HostDevices) == 0 && len(vmi.Spec.Domain.Devices.GPUs) == 0 {
+		if !match(vmi) {
 			continue
 		}
-		vmiNames = append(vmiNames, fmt.Sprintf("%s/%s", vmi.Namespace, vmi.Name))
+		names = append(names, fmt.Sprintf("%s/%s", vmi.Namespace, vmi.Name))
 	}
-	return vmiNames
+	return names
 }
 
 func ValidateVMMigratable(vmi *kubevirtv1.VirtualMachineInstance) error {
@@ -81,24 +130,10 @@ func ValidateVMMigratable(vmi *kubevirtv1.VirtualMachineInstance) error {
 		return fmt.Errorf("VM %s is not live migratable as it is not running", vmiNamespacedName)
 	}
 
-	// The VM is already in migrating state
-	if vmi.Annotations[util.AnnotationMigrationUID] != "" {
-		return fmt.Errorf("VM %s is not live migratable as it is already in a migrating state", vmiNamespacedName)
-	}
-
-	// Node selectors
-	if vmi.Spec.NodeSelector != nil && vmi.Spec.NodeSelector[corev1.LabelHostname] != "" {
-		return fmt.Errorf("VM %s is not live migratable as node selector is set", vmiNamespacedName)
-	}
-
-	// PCIe devices
-	if len(vmi.Spec.Domain.Devices.HostDevices) != 0 {
-		return fmt.Errorf("VM %s is not live migratable as PCIe or USB devices are attached", vmiNamespacedName)
-	}
-
-	// vGPU devices
-	if len(vmi.Spec.Domain.Devices.GPUs) != 0 {
-		return fmt.Errorf("VM %s is not live migratable as vGPU devices are attached", vmiNamespacedName)
+	for _, rule := range vmMigratabilityValidationRules {
+		if rule.Check(vmi) {
+			return fmt.Errorf("VM %s is not live migratable as %s", vmiNamespacedName, rule.Message)
+		}
 	}
 
 	// Lastly, check the condition reported by KubeVirt

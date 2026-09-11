@@ -2090,12 +2090,6 @@ func schema_pkg_apis_harvesterhciio_v1beta1_CheckResult(ref common.ReferenceCall
 							Format: "int32",
 						},
 					},
-					"truncated": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
-							Format: "",
-						},
-					},
 					"affectedResources": {
 						SchemaProps: spec.SchemaProps{
 							Ref: ref("github.com/harvester/harvester/pkg/apis/harvesterhci.io/v1beta1.AffectedResources"),
@@ -2206,12 +2200,6 @@ func schema_pkg_apis_harvesterhciio_v1beta1_ComponentHealthStatus(ref common.Ref
 			SchemaProps: spec.SchemaProps{
 				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
-					"node": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
 					"lastCheckedAt": {
 						SchemaProps: spec.SchemaProps{
 							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),

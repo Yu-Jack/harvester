@@ -39,8 +39,8 @@ func Register(ctx context.Context, management *config.Management, _ config.Optio
 
 // onComponentHealthChanged fires for every ComponentHealth event and reconciles HealthSummary/cluster.
 func (h *Handler) onComponentHealthChanged(_ string, obj *harvesterv1.ComponentHealth) (*harvesterv1.ComponentHealth, error) {
-	if obj != nil {
-		return obj, nil
+	if obj == nil || obj.DeletionTimestamp != nil {
+		return nil, nil
 	}
 	return obj, h.reconcileSummary()
 }
@@ -55,16 +55,20 @@ func (h *Handler) reconcileSummary() error {
 
 	components := map[string]harvesterv1.ComponentSummary{}
 	for _, ch := range allHealths.Items {
-		var summary harvesterv1.ComponentSummary
+		key := ch.Name
+		if component, ok := ch.Labels[harvesterv1.LabelKeyComponent]; ok && component != "" {
+			key = component
+		}
+		entry := components[key]
 		for _, check := range ch.Status.Checks {
 			switch check.Severity {
 			case harvesterv1.SeverityError:
-				summary.ErrorCount++
+				entry.ErrorCount++
 			case harvesterv1.SeverityWarning:
-				summary.WarningCount++
+				entry.WarningCount++
 			}
 		}
-		components[ch.Name] = summary
+		components[key] = entry
 	}
 
 	return h.updateHealthSummary(components)
