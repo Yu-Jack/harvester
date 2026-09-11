@@ -62,8 +62,6 @@ spec:
                       type: string
                     severity:
                       type: string
-                    truncated:
-                      type: boolean
                   required:
                   - message
                   - severity
@@ -71,8 +69,6 @@ spec:
                 type: object
               lastCheckedAt:
                 format: date-time
-                type: string
-              node:
                 type: string
             type: object
         type: object
