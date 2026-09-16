@@ -54,7 +54,15 @@ func (h *Handler) reconcileVMI() error {
 		checks[entry.Rule.Key] = buildVMCheckResult(entry.Severity, entry.Rule.Message, names)
 	}
 
-	return h.updateComponentHealth(checks)
+	return h.updateComponentHealthChecks(vmComponentHealthName, checks, vmiCheckKeys())
+}
+
+func vmiCheckKeys() []string {
+	keys := make([]string, 0, len(vmMigrationHealthChecks))
+	for _, entry := range vmMigrationHealthChecks {
+		keys = append(keys, entry.Rule.Key)
+	}
+	return keys
 }
 
 func buildVMCheckResult(severity harvesterv1.Severity, reason string, names []string) harvesterv1.CheckResult {
