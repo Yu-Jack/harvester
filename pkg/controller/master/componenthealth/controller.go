@@ -25,26 +25,34 @@ const (
 )
 
 type Handler struct {
-	componentHealths     ctlharvesterv1.ComponentHealthClient
-	componentHealthCache ctlharvesterv1.ComponentHealthCache
-	vmiCache             ctlkubevirtv1.VirtualMachineInstanceCache
-	volumeCache          ctllonghornv1.VolumeCache
+	componentHealths      ctlharvesterv1.ComponentHealthClient
+	componentHealthCache  ctlharvesterv1.ComponentHealthCache
+	vmiCache              ctlkubevirtv1.VirtualMachineInstanceCache
+	volumeCache           ctllonghornv1.VolumeCache
+	vmBackupCache         ctlharvesterv1.VirtualMachineBackupCache
+	scheduleVMBackupCache ctlharvesterv1.ScheduleVMBackupCache
 }
 
 func Register(ctx context.Context, management *config.Management, _ config.Options) error {
 	componentHealths := management.HarvesterFactory.Harvesterhci().V1beta1().ComponentHealth()
 	vmis := management.VirtFactory.Kubevirt().V1().VirtualMachineInstance()
 	volumes := management.LonghornFactory.Longhorn().V1beta2().Volume()
+	vmBackups := management.HarvesterFactory.Harvesterhci().V1beta1().VirtualMachineBackup()
+	scheduleVMBackups := management.HarvesterFactory.Harvesterhci().V1beta1().ScheduleVMBackup()
 
 	h := &Handler{
-		componentHealths:     componentHealths,
-		componentHealthCache: componentHealths.Cache(),
-		vmiCache:             vmis.Cache(),
-		volumeCache:          volumes.Cache(),
+		componentHealths:      componentHealths,
+		componentHealthCache:  componentHealths.Cache(),
+		vmiCache:              vmis.Cache(),
+		volumeCache:           volumes.Cache(),
+		vmBackupCache:         vmBackups.Cache(),
+		scheduleVMBackupCache: scheduleVMBackups.Cache(),
 	}
 
 	vmis.OnChange(ctx, vmiControllerName, h.OnVMIChanged)
 	volumes.OnChange(ctx, volumeControllerName, h.OnVolumeChanged)
+	vmBackups.OnChange(ctx, vmBackupControllerName, h.OnVMBackupChanged)
+	scheduleVMBackups.OnChange(ctx, scheduleVMBackupControllerName, h.OnScheduleVMBackupChanged)
 
 	return nil
 }
