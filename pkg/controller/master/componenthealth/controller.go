@@ -12,6 +12,7 @@ import (
 
 	harvesterv1 "github.com/harvester/harvester/pkg/apis/harvesterhci.io/v1beta1"
 	"github.com/harvester/harvester/pkg/config"
+	ctlcorev1 "github.com/harvester/harvester/pkg/generated/controllers/core/v1"
 	ctlharvesterv1 "github.com/harvester/harvester/pkg/generated/controllers/harvesterhci.io/v1beta1"
 	ctlkubevirtv1 "github.com/harvester/harvester/pkg/generated/controllers/kubevirt.io/v1"
 	ctllonghornv1 "github.com/harvester/harvester/pkg/generated/controllers/longhorn.io/v1beta2"
@@ -20,6 +21,7 @@ import (
 const (
 	// componentName is the logical component name owned by the main Harvester controller process.
 	componentName             = "harvester-controller"
+	nodeComponentHealthName   = "harvester-controller-node"
 	vmComponentHealthName     = "harvester-controller-vm"
 	volumeComponentHealthName = "harvester-controller-volume"
 )
@@ -27,6 +29,7 @@ const (
 type Handler struct {
 	componentHealths      ctlharvesterv1.ComponentHealthClient
 	componentHealthCache  ctlharvesterv1.ComponentHealthCache
+	nodeCache             ctlcorev1.NodeCache
 	vmiCache              ctlkubevirtv1.VirtualMachineInstanceCache
 	volumeCache           ctllonghornv1.VolumeCache
 	vmBackupCache         ctlharvesterv1.VirtualMachineBackupCache
@@ -35,6 +38,7 @@ type Handler struct {
 
 func Register(ctx context.Context, management *config.Management, _ config.Options) error {
 	componentHealths := management.HarvesterFactory.Harvesterhci().V1beta1().ComponentHealth()
+	nodes := management.CoreFactory.Core().V1().Node()
 	vmis := management.VirtFactory.Kubevirt().V1().VirtualMachineInstance()
 	volumes := management.LonghornFactory.Longhorn().V1beta2().Volume()
 	vmBackups := management.HarvesterFactory.Harvesterhci().V1beta1().VirtualMachineBackup()
@@ -43,12 +47,14 @@ func Register(ctx context.Context, management *config.Management, _ config.Optio
 	h := &Handler{
 		componentHealths:      componentHealths,
 		componentHealthCache:  componentHealths.Cache(),
+		nodeCache:             nodes.Cache(),
 		vmiCache:              vmis.Cache(),
 		volumeCache:           volumes.Cache(),
 		vmBackupCache:         vmBackups.Cache(),
 		scheduleVMBackupCache: scheduleVMBackups.Cache(),
 	}
 
+	nodes.OnChange(ctx, nodeControllerName, h.OnNodeChanged)
 	vmis.OnChange(ctx, vmiControllerName, h.OnVMIChanged)
 	volumes.OnChange(ctx, volumeControllerName, h.OnVolumeChanged)
 	vmBackups.OnChange(ctx, vmBackupControllerName, h.OnVMBackupChanged)
