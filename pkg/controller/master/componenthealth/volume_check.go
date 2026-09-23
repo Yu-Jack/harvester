@@ -64,7 +64,7 @@ func (h *Handler) reconcileVolumes() error {
 		checks[reason] = buildVolumeCheckResult(harvesterv1.SeverityWarning, reason, summary.names, getSortedMessages(summary.messages))
 	}
 
-	return h.updateComponentHealthChecksWithFilter(volumeComponentHealthName, checks, isVolumeCheck)
+	return h.updateComponentHealthChecksWithDynamic(volumeComponentHealthName, checks, isVolumeCheck, longhornv1.SchemeGroupVersion.WithKind(volumeKind), dynamicObjects(volumes))
 }
 
 func getFalseConditions(volume *longhornv1.Volume) []longhornv1.Condition {
