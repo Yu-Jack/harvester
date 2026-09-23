@@ -54,7 +54,14 @@ func (h *Handler) reconcileVMI() error {
 		checks[entry.Rule.Key] = buildVMCheckResult(entry.Severity, entry.Rule.Message, names)
 	}
 
-	return h.updateComponentHealthChecks(vmComponentHealthName, checks, vmiCheckKeys())
+	return h.updateComponentHealthChecksWithDynamic(vmComponentHealthName, checks, func(key string, _ harvesterv1.CheckResult) bool {
+		for _, ownedKey := range vmiCheckKeys() {
+			if key == ownedKey {
+				return true
+			}
+		}
+		return false
+	}, kubevirtv1.SchemeGroupVersion.WithKind(kubevirtv1.VirtualMachineInstanceGroupVersionKind.Kind), dynamicObjects(vmis))
 }
 
 func vmiCheckKeys() []string {

@@ -50,7 +50,7 @@ func (h *Handler) reconcileScheduleVMBackups() error {
 		checks[reason] = buildScheduleVMBackupCheckResult(reason, summary.names, getSortedMessages(summary.messages))
 	}
 
-	return h.updateComponentHealthChecksWithFilter(scheduleVMBackupComponentHealthName, checks, isScheduleVMBackupCheck)
+	return h.updateComponentHealthChecksWithDynamic(scheduleVMBackupComponentHealthName, checks, isScheduleVMBackupCheck, harvesterv1.SchemeGroupVersion.WithKind(scheduleVMBackupKind), dynamicObjects(scheduleVMBackups))
 }
 
 // getTrueConditions returns the ScheduleVMBackup conditions reporting a problem, i.e. status True with a reason.

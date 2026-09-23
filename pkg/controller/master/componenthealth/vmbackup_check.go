@@ -50,7 +50,9 @@ func (h *Handler) reconcileVMBackups() error {
 		checks[checkKeyVMBackupFailed] = buildVMBackupCheckResult(names, getSortedMessages(messageSet))
 	}
 
-	return h.updateComponentHealthChecks(vmBackupComponentHealthName, checks, []string{checkKeyVMBackupFailed})
+	return h.updateComponentHealthChecksWithDynamic(vmBackupComponentHealthName, checks, func(key string, _ harvesterv1.CheckResult) bool {
+		return key == checkKeyVMBackupFailed
+	}, harvesterv1.SchemeGroupVersion.WithKind(vmBackupKind), dynamicObjects(vmBackups))
 }
 
 // getLatestVolumeBackupWithError returns the most recently created VolumeBackup that has an

@@ -40,7 +40,9 @@ func (h *Handler) reconcileNodes() error {
 		checks[checkKeyNodeCordoned] = buildNodeCordonedCheckResult(cordonedNodeNames)
 	}
 
-	return h.updateComponentHealthChecks(nodeComponentHealthName, checks, []string{checkKeyNodeCordoned})
+	return h.updateComponentHealthChecksWithDynamic(nodeComponentHealthName, checks, func(key string, _ harvesterv1.CheckResult) bool {
+		return key == checkKeyNodeCordoned
+	}, corev1.SchemeGroupVersion.WithKind(nodeKind), dynamicObjects(nodes))
 }
 
 func buildNodeCordonedCheckResult(names []string) harvesterv1.CheckResult {
