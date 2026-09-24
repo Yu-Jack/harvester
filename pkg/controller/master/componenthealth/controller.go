@@ -131,7 +131,7 @@ func (h *Handler) updateComponentHealthChecksWithFilter(componentHealthName stri
 		updatedChecks[key] = check
 	}
 
-	if reflect.DeepEqual(existing.Status.Checks, updatedChecks) {
+	if len(existing.Status.Checks) == 0 && len(updatedChecks) == 0 || reflect.DeepEqual(existing.Status.Checks, updatedChecks) {
 		logrus.WithFields(logrus.Fields{
 			"component":        componentName,
 			"component_health": componentHealthName,
