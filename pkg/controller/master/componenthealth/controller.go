@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"sort"
 
-	ctlwranglerv1 "github.com/rancher/wrangler/v3/pkg/generated/controllers/core/v1"
 	"github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -19,7 +18,6 @@ import (
 	ctlharvesterv1 "github.com/harvester/harvester/pkg/generated/controllers/harvesterhci.io/v1beta1"
 	ctlkubevirtv1 "github.com/harvester/harvester/pkg/generated/controllers/kubevirt.io/v1"
 	ctllonghornv1 "github.com/harvester/harvester/pkg/generated/controllers/longhorn.io/v1beta2"
-	"github.com/harvester/harvester/pkg/util"
 )
 
 const (
@@ -33,7 +31,6 @@ const (
 type Handler struct {
 	componentHealths      ctlharvesterv1.ComponentHealthClient
 	componentHealthCache  ctlharvesterv1.ComponentHealthCache
-	configMapCache        ctlwranglerv1.ConfigMapCache
 	nodeCache             ctlcorev1.NodeCache
 	vmiCache              ctlkubevirtv1.VirtualMachineInstanceCache
 	volumeCache           ctllonghornv1.VolumeCache
@@ -48,12 +45,10 @@ func Register(ctx context.Context, management *config.Management, _ config.Optio
 	volumes := management.LonghornFactory.Longhorn().V1beta2().Volume()
 	vmBackups := management.HarvesterFactory.Harvesterhci().V1beta1().VirtualMachineBackup()
 	scheduleVMBackups := management.HarvesterFactory.Harvesterhci().V1beta1().ScheduleVMBackup()
-	configMaps := management.CoreFactory.Core().V1().ConfigMap()
 
 	h := &Handler{
 		componentHealths:      componentHealths,
 		componentHealthCache:  componentHealths.Cache(),
-		configMapCache:        configMaps.Cache(),
 		nodeCache:             nodes.Cache(),
 		vmiCache:              vmis.Cache(),
 		volumeCache:           volumes.Cache(),
@@ -70,8 +65,6 @@ func Register(ctx context.Context, management *config.Management, _ config.Optio
 	return nil
 }
 
-const dynamicFieldsNamespace = util.HarvesterSystemNamespaceName
-
 func (h *Handler) updateComponentHealthChecks(componentHealthName string, checks map[string]harvesterv1.CheckResult, ownedKeys []string) error {
 	ownedKeySet := make(map[string]struct{}, len(ownedKeys))
 	for _, key := range ownedKeys {
@@ -84,22 +77,15 @@ func (h *Handler) updateComponentHealthChecks(componentHealthName string, checks
 }
 
 func (h *Handler) updateComponentHealthChecksWithDynamic(componentHealthName string, checks map[string]harvesterv1.CheckResult, ownedCheck func(string, harvesterv1.CheckResult) bool, gvk schema.GroupVersionKind, objects []runtime.Object) error {
-	dynamicChecks, dynamicKeys, err := h.dynamicChecks(componentHealthName, gvk, objects)
+	dynamicChecks, _, err := h.dynamicChecks(componentHealthName, gvk, objects)
 	if err != nil {
 		return err
 	}
 	for key, check := range dynamicChecks {
 		checks[key] = check
 	}
-	dynamicKeySet := make(map[string]struct{}, len(dynamicKeys))
-	for _, key := range dynamicKeys {
-		dynamicKeySet[key] = struct{}{}
-	}
-	return h.updateComponentHealthChecksWithFilter(componentHealthName, checks, func(key string, check harvesterv1.CheckResult) bool {
-		if _, ok := dynamicKeySet[key]; ok {
-			return true
-		}
-		return ownedCheck(key, check)
+	return h.updateComponentHealthChecksWithFilter(componentHealthName, checks, func(_ string, _ harvesterv1.CheckResult) bool {
+		return true
 	})
 }
 

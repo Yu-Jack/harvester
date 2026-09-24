@@ -5,18 +5,13 @@ import (
 	"reflect"
 	"strings"
 
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/yaml"
 
 	harvesterv1 "github.com/harvester/harvester/pkg/apis/harvesterhci.io/v1beta1"
-)
-
-const (
-	dynamicFieldsConfigMapName = "componenthealth-dynamic-fields"
-	dynamicFieldsDataKey       = "rules.yaml"
+	"github.com/harvester/harvester/pkg/settings"
 )
 
 type dynamicFieldRule struct {
@@ -35,7 +30,7 @@ type dynamicFieldResource struct {
 }
 
 func (h *Handler) dynamicChecks(componentHealthName string, gvk schema.GroupVersionKind, objects []runtime.Object) (map[string]harvesterv1.CheckResult, []string, error) {
-	rules, err := h.dynamicFieldRules()
+	rules, err := dynamicFieldRules()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -70,22 +65,14 @@ func (h *Handler) dynamicChecks(componentHealthName string, gvk schema.GroupVers
 	return checks, ownedKeys, nil
 }
 
-func (h *Handler) dynamicFieldRules() ([]dynamicFieldRule, error) {
-	if h.configMapCache == nil {
-		return nil, nil
-	}
-	configMap, err := h.configMapCache.Get(dynamicFieldsNamespace, dynamicFieldsConfigMapName)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("failed to get dynamic component health ConfigMap: %w", err)
-	}
-	contents, ok := configMap.Data[dynamicFieldsDataKey]
-	if !ok || strings.TrimSpace(contents) == "" {
-		return nil, nil
-	}
+func dynamicFieldRules() ([]dynamicFieldRule, error) {
+	return parseDynamicFieldRules(settings.ComponentHealthDynamicFields.Get())
+}
 
+func parseDynamicFieldRules(contents string) ([]dynamicFieldRule, error) {
+	if strings.TrimSpace(contents) == "" {
+		return nil, nil
+	}
 	var rules []dynamicFieldRule
 	if err := yaml.UnmarshalStrict([]byte(contents), &rules); err != nil {
 		return nil, fmt.Errorf("failed to parse dynamic component health rules: %w", err)

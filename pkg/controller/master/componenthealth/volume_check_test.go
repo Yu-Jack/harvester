@@ -109,7 +109,7 @@ func TestReconcileVolumes(t *testing.T) {
 	}
 }
 
-func TestReconcileVolumesPreservesUnownedChecks(t *testing.T) {
+func TestReconcileVolumesReplacesExistingChecks(t *testing.T) {
 	clientset := fake.NewSimpleClientset(
 		&v1beta1.ComponentHealth{
 			ObjectMeta: metav1.ObjectMeta{Name: volumeComponentHealthName},
@@ -148,7 +148,7 @@ func TestReconcileVolumesPreservesUnownedChecks(t *testing.T) {
 	componentHealth, err := clientset.HarvesterhciV1beta1().ComponentHealths().Get(context.Background(), volumeComponentHealthName, metav1.GetOptions{})
 	assert.NoError(t, err)
 	assert.Equal(t, componentName, componentHealth.Labels[v1beta1.LabelKeyComponent])
-	assert.Contains(t, componentHealth.Status.Checks, vmMigrationHealthChecks[0].Rule.Key)
+	assert.NotContains(t, componentHealth.Status.Checks, vmMigrationHealthChecks[0].Rule.Key)
 	assert.NotContains(t, componentHealth.Status.Checks, longhornv1.VolumeConditionReasonReplicaSchedulingFailure)
 }
 
