@@ -71,6 +71,7 @@ var (
 	ClusterPodSecurityStandardSetting = NewSetting(ClusterPodSecurityStandardSettingName, `{"enabled":false,"whitelistedNamespacesList":"", "privilegedNamespacesList":"", "restrictedNamespacesList":""}`)
 	TraefikDefaultTLSOptionSetting    = NewSetting(TraefikDefaultTLSOptionsSettingName, `{"minVersion":"VersionTLS12", "maxVersion":"VersionTLS13", "sniStrict":false,"cipherSuites":[],"clientAuth":{"secretNames":[],"clientAuthType":""}}`)
 	MaintenanceModeDrainTimeout       = NewSetting(MaintenanceModeDrainTimeoutSettingName, "15") // Unit is minute. 0 disables the overall timeout.
+	ComponentHealthDynamicFields      = NewSetting(ComponentHealthDynamicFieldsSettingName, componentHealthDynamicFieldsDefault)
 )
 
 const (
@@ -129,11 +130,23 @@ const (
 	ClusterPodSecurityStandardSettingName             = "cluster-pod-security-standard"
 	TraefikDefaultTLSOptionsSettingName               = "traefik-default-tls-options"
 	MaintenanceModeDrainTimeoutSettingName            = "maintenance-mode-drain-timeout"
+	ComponentHealthDynamicFieldsSettingName           = "componenthealth-dynamic-fields"
 
 	// settings have `default` and `value` string used in many places, replace them with const
 	KeywordDefault = "default"
 	KeywordValue   = "value"
 )
+
+const componentHealthDynamicFieldsDefault = `- name: NodeUnschedulable
+  componentHealthName: harvester-controller-node
+  resource:
+    apiVersion: v1
+    kind: Node
+  fieldPath: spec.unschedulable
+  matchValue: "true"
+  severity: Warning
+  message: "Node is marked unschedulable"
+`
 
 func init() {
 	if InjectDefaults == "" {

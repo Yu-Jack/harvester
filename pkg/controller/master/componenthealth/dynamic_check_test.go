@@ -11,37 +11,40 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/harvester/harvester/pkg/apis/harvesterhci.io/v1beta1"
-	"github.com/harvester/harvester/pkg/generated/clientset/versioned/fake"
-	"github.com/harvester/harvester/pkg/util/fakeclients"
 )
 
 func TestDynamicChecks(t *testing.T) {
-	clientset := fake.NewSimpleClientset(&corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      dynamicFieldsConfigMapName,
-			Namespace: dynamicFieldsNamespace,
-		},
-		Data: map[string]string{
-			dynamicFieldsDataKey: "- name: NodeUnschedulable\n  componentHealthName: harvester-controller-node\n  resource:\n    apiVersion: v1\n    kind: Node\n  fieldPath: spec.unschedulable\n  matchValue: \"true\"\n  severity: Warning\n  message: Node is marked unschedulable\n",
-		},
-	})
-	handler := &Handler{
-		configMapCache: fakeclients.ConfigmapCache(clientset.CoreV1().ConfigMaps),
-	}
 	nodes := []runtime.Object{
 		&corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: "node-1"}, Spec: corev1.NodeSpec{Unschedulable: true}},
 		&corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: "node-2"}},
 	}
 
-	checks, ownedKeys, err := handler.dynamicChecks(nodeComponentHealthName, schema.GroupVersion{Version: "v1"}.WithKind(nodeKind), nodes)
+	rules, err := parseDynamicFieldRules(`- name: NodeUnschedulable
+  componentHealthName: harvester-controller-node
+  resource:
+    apiVersion: v1
+    kind: Node
+  fieldPath: spec.unschedulable
+  matchValue: "true"
+  severity: Warning
+  message: Node is marked unschedulable
+`)
 
 	assert.NoError(t, err)
-	assert.Equal(t, []string{"NodeUnschedulable"}, ownedKeys)
-	assert.Equal(t, v1beta1.SeverityWarning, checks["NodeUnschedulable"].Severity)
-	assert.Equal(t, "Node is marked unschedulable", checks["NodeUnschedulable"].Message)
-	assert.Equal(t, 1, checks["NodeUnschedulable"].AffectedCount)
-	assert.Contains(t, checks["NodeUnschedulable"].AffectedResources.Names, "node-1")
-	assert.NotContains(t, checks["NodeUnschedulable"].AffectedResources.Names, "node-2")
+	assert.Len(t, rules, 1)
+	assert.Equal(t, "NodeUnschedulable", rules[0].Name)
+	assert.Equal(t, v1beta1.SeverityWarning, rules[0].Severity)
+
+	matched, err := dynamicFieldMatches(nodes[0], rules[0].FieldPath, rules[0].MatchValue)
+	assert.NoError(t, err)
+	assert.True(t, matched)
+	matched, err = dynamicFieldMatches(nodes[1], rules[0].FieldPath, rules[0].MatchValue)
+	assert.NoError(t, err)
+	assert.False(t, matched)
+
+	check := buildDynamicCheckResult(rules[0], schema.GroupVersion{Version: "v1"}.WithKind(nodeKind), []string{"node-1"})
+	assert.Equal(t, 1, check.AffectedCount)
+	assert.Contains(t, check.AffectedResources.Names, "node-1")
 }
 
 func TestDynamicFieldRuleValidation(t *testing.T) {

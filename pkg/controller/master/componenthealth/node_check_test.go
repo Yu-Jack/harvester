@@ -27,7 +27,7 @@ func TestReconcileNodes(t *testing.T) {
 				newComponentHealthNode("node-1", true),
 				newComponentHealthNode("node-2", false),
 			},
-			expectedChecks: 1,
+			expectedChecks: 2,
 			assertCheck: func(t *testing.T, check v1beta1.CheckResult) {
 				assert.Equal(t, v1beta1.SeverityInfo, check.Severity)
 				assert.Equal(t, "1 Node(s) are cordoned", check.Message)
@@ -76,7 +76,7 @@ func TestReconcileNodes(t *testing.T) {
 	}
 }
 
-func TestReconcileNodesPreservesUnownedChecks(t *testing.T) {
+func TestReconcileNodesReplacesExistingChecks(t *testing.T) {
 	clientset := fake.NewSimpleClientset(
 		&v1beta1.ComponentHealth{
 			ObjectMeta: metav1.ObjectMeta{Name: nodeComponentHealthName},
@@ -108,7 +108,7 @@ func TestReconcileNodesPreservesUnownedChecks(t *testing.T) {
 	componentHealth, err := clientset.HarvesterhciV1beta1().ComponentHealths().Get(context.Background(), nodeComponentHealthName, metav1.GetOptions{})
 	assert.NoError(t, err)
 	assert.NotContains(t, componentHealth.Status.Checks, checkKeyNodeCordoned)
-	assert.Contains(t, componentHealth.Status.Checks, "OtherNodeCheck")
+	assert.NotContains(t, componentHealth.Status.Checks, "OtherNodeCheck")
 }
 
 func newComponentHealthNode(name string, unschedulable bool) corev1.Node {
