@@ -111,6 +111,23 @@ func TestReconcileNodesReplacesExistingChecks(t *testing.T) {
 	assert.NotContains(t, componentHealth.Status.Checks, "OtherNodeCheck")
 }
 
+func TestReconcileNodesDoesNotUpdateEmptyChecks(t *testing.T) {
+	clientset := fake.NewSimpleClientset(&v1beta1.ComponentHealth{
+		ObjectMeta: metav1.ObjectMeta{Name: nodeComponentHealthName},
+	})
+	handler := &Handler{
+		componentHealths: fakeclients.ComponentHealthClient(clientset.HarvesterhciV1beta1().ComponentHealths),
+		nodeCache:        fakeclients.NodeCache(clientset.CoreV1().Nodes),
+	}
+
+	err := handler.reconcileNodes()
+	assert.NoError(t, err)
+
+	componentHealth, err := clientset.HarvesterhciV1beta1().ComponentHealths().Get(context.Background(), nodeComponentHealthName, metav1.GetOptions{})
+	assert.NoError(t, err)
+	assert.Nil(t, componentHealth.Status.Checks)
+}
+
 func newComponentHealthNode(name string, unschedulable bool) corev1.Node {
 	return corev1.Node{
 		ObjectMeta: metav1.ObjectMeta{Name: name},
