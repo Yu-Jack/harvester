@@ -23,12 +23,10 @@ type volumeConditionSummary struct {
 	messages map[string]struct{}
 }
 
-// OnVolumeChanged recomputes the harvester-controller ComponentHealth on every Longhorn Volume change.
+// OnVolumeChanged queues a ComponentHealth reconciliation on every Longhorn Volume change.
 func (h *Handler) OnVolumeChanged(_ string, volume *longhornv1.Volume) (*longhornv1.Volume, error) {
-	if volume == nil {
-		return nil, nil
-	}
-	return volume, h.reconcileVolumes()
+	h.enqueueHealth(volumeComponentHealthName)
+	return volume, nil
 }
 
 func (h *Handler) reconcileVolumes() error {

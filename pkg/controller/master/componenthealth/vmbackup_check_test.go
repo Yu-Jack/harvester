@@ -28,6 +28,85 @@ func errorMessage(message string) *string {
 	return &message
 }
 
+func TestOnVMBackupChangedAfterDeletion(t *testing.T) {
+	tests := []struct {
+		name             string
+		remainingFailure bool
+	}{
+		{name: "deleting the last failed backup clears the check"},
+		{name: "deleting one failed backup preserves remaining failures", remainingFailure: true},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := context.Background()
+			backup := newVMBackup("deleted-backup", []v1beta1.VolumeBackup{
+				{Error: &v1beta1.Error{Message: errorMessage("backup failed")}},
+			})
+			clientset := fake.NewSimpleClientset(backup)
+			if tc.remainingFailure {
+				remaining := backup.DeepCopy()
+				remaining.Name = "remaining-backup"
+				_, err := clientset.HarvesterhciV1beta1().VirtualMachineBackups("default").Create(ctx, remaining, metav1.CreateOptions{})
+				if !assert.NoError(t, err) {
+					return
+				}
+			}
+			controller := &recordingComponentHealthController{}
+			handler := &Handler{
+				componentHealthController: controller,
+				componentHealths:          fakeclients.ComponentHealthClient(clientset.HarvesterhciV1beta1().ComponentHealths),
+				vmBackupCache:             fakeclients.VMBackupCache(clientset.HarvesterhciV1beta1().VirtualMachineBackups),
+			}
+			_, err := handler.OnVMBackupChanged("default/deleted-backup", backup)
+			if !assert.NoError(t, err) {
+				return
+			}
+			if !assert.Equal(t, []string{vmBackupComponentHealthName}, controller.enqueued) {
+				return
+			}
+			_, err = handler.OnComponentHealthChanged(controller.enqueued[0], nil)
+			if !assert.NoError(t, err) {
+				return
+			}
+			health, err := clientset.HarvesterhciV1beta1().ComponentHealths().Get(ctx, vmBackupComponentHealthName, metav1.GetOptions{})
+			if !assert.NoError(t, err) {
+				return
+			}
+			assert.Contains(t, health.Status.Checks, checkKeyVMBackupFailed)
+
+			err = clientset.HarvesterhciV1beta1().VirtualMachineBackups("default").Delete(ctx, backup.Name, metav1.DeleteOptions{})
+			if !assert.NoError(t, err) {
+				return
+			}
+			result, err := handler.OnVMBackupChanged("default/deleted-backup", nil)
+			assert.Nil(t, result)
+			if !assert.NoError(t, err) {
+				return
+			}
+			if !assert.Equal(t, []string{vmBackupComponentHealthName, vmBackupComponentHealthName}, controller.enqueued) {
+				return
+			}
+			_, err = handler.OnComponentHealthChanged(controller.enqueued[1], health)
+			if !assert.NoError(t, err) {
+				return
+			}
+			health, err = clientset.HarvesterhciV1beta1().ComponentHealths().Get(ctx, vmBackupComponentHealthName, metav1.GetOptions{})
+			if !assert.NoError(t, err) {
+				return
+			}
+			if tc.remainingFailure {
+				check := health.Status.Checks[checkKeyVMBackupFailed]
+				assert.Equal(t, 1, check.AffectedCount)
+				assert.Contains(t, check.AffectedResources.Names, "remaining-backup")
+				assert.NotContains(t, check.AffectedResources.Names, backup.Name)
+			} else {
+				assert.Empty(t, health.Status.Checks)
+			}
+		})
+	}
+}
+
 func TestReconcileVMBackups(t *testing.T) {
 	older := metav1.NewTime(metav1.Now().Add(-1 * 60 * 1e9)) // 1 minute earlier
 	newer := metav1.Now()

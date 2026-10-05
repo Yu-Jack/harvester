@@ -16,10 +16,8 @@ const (
 )
 
 func (h *Handler) OnNodeChanged(_ string, node *corev1.Node) (*corev1.Node, error) {
-	if node == nil {
-		return nil, nil
-	}
-	return node, h.reconcileNodes()
+	h.enqueueHealth(nodeComponentHealthName)
+	return node, nil
 }
 
 func (h *Handler) reconcileNodes() error {

@@ -11,6 +11,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/tools/cache"
 
 	harvesterv1 "github.com/harvester/harvester/pkg/apis/harvesterhci.io/v1beta1"
 	"github.com/harvester/harvester/pkg/config"
@@ -29,13 +30,15 @@ const (
 )
 
 type Handler struct {
-	componentHealths      ctlharvesterv1.ComponentHealthClient
-	componentHealthCache  ctlharvesterv1.ComponentHealthCache
-	nodeCache             ctlcorev1.NodeCache
-	vmiCache              ctlkubevirtv1.VirtualMachineInstanceCache
-	volumeCache           ctllonghornv1.VolumeCache
-	vmBackupCache         ctlharvesterv1.VirtualMachineBackupCache
-	scheduleVMBackupCache ctlharvesterv1.ScheduleVMBackupCache
+	componentHealthController ctlharvesterv1.ComponentHealthController
+	healthCachesSynced        []cache.InformerSynced
+	componentHealths          ctlharvesterv1.ComponentHealthClient
+	componentHealthCache      ctlharvesterv1.ComponentHealthCache
+	nodeCache                 ctlcorev1.NodeCache
+	vmiCache                  ctlkubevirtv1.VirtualMachineInstanceCache
+	volumeCache               ctllonghornv1.VolumeCache
+	vmBackupCache             ctlharvesterv1.VirtualMachineBackupCache
+	scheduleVMBackupCache     ctlharvesterv1.ScheduleVMBackupCache
 }
 
 func Register(ctx context.Context, management *config.Management, _ config.Options) error {
@@ -47,6 +50,14 @@ func Register(ctx context.Context, management *config.Management, _ config.Optio
 	scheduleVMBackups := management.HarvesterFactory.Harvesterhci().V1beta1().ScheduleVMBackup()
 
 	h := &Handler{
+		componentHealthController: componentHealths,
+		healthCachesSynced: []cache.InformerSynced{
+			nodes.Informer().HasSynced,
+			vmis.Informer().HasSynced,
+			volumes.Informer().HasSynced,
+			vmBackups.Informer().HasSynced,
+			scheduleVMBackups.Informer().HasSynced,
+		},
 		componentHealths:      componentHealths,
 		componentHealthCache:  componentHealths.Cache(),
 		nodeCache:             nodes.Cache(),
@@ -56,13 +67,59 @@ func Register(ctx context.Context, management *config.Management, _ config.Optio
 		scheduleVMBackupCache: scheduleVMBackups.Cache(),
 	}
 
+	componentHealths.OnChange(ctx, "component-health-reconcile", h.OnComponentHealthChanged)
 	nodes.OnChange(ctx, nodeControllerName, h.OnNodeChanged)
 	vmis.OnChange(ctx, vmiControllerName, h.OnVMIChanged)
 	volumes.OnChange(ctx, volumeControllerName, h.OnVolumeChanged)
 	vmBackups.OnChange(ctx, vmBackupControllerName, h.OnVMBackupChanged)
 	scheduleVMBackups.OnChange(ctx, scheduleVMBackupControllerName, h.OnScheduleVMBackupChanged)
 
+	go h.enqueueInitialHealth(ctx)
+
 	return nil
+}
+
+func (h *Handler) enqueueHealth(name string) {
+	h.componentHealthController.Enqueue(name)
+}
+
+func (h *Handler) enqueueInitialHealth(ctx context.Context) {
+	if !cache.WaitForCacheSync(ctx.Done(), h.healthCachesSynced...) || ctx.Err() != nil {
+		return
+	}
+	for _, name := range []string{
+		nodeComponentHealthName,
+		vmComponentHealthName,
+		volumeComponentHealthName,
+		vmBackupComponentHealthName,
+		scheduleVMBackupComponentHealthName,
+	} {
+		h.enqueueHealth(name)
+	}
+}
+
+func (h *Handler) OnComponentHealthChanged(key string, health *harvesterv1.ComponentHealth) (*harvesterv1.ComponentHealth, error) {
+	var reconcile func() error
+	switch key {
+	case nodeComponentHealthName:
+		reconcile = h.reconcileNodes
+	case vmComponentHealthName:
+		reconcile = h.reconcileVMI
+	case volumeComponentHealthName:
+		reconcile = h.reconcileVolumes
+	case vmBackupComponentHealthName:
+		reconcile = h.reconcileVMBackups
+	case scheduleVMBackupComponentHealthName:
+		reconcile = h.reconcileScheduleVMBackups
+	default:
+		return health, nil
+	}
+	for _, synced := range h.healthCachesSynced {
+		if !synced() {
+			return health, fmt.Errorf("ComponentHealth resource caches are not synced")
+		}
+	}
+	return health, reconcile()
 }
 
 func (h *Handler) updateComponentHealthChecks(componentHealthName string, checks map[string]harvesterv1.CheckResult, ownedKeys []string) error {
