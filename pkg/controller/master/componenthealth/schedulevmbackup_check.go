@@ -16,12 +16,10 @@ const (
 	scheduleVMBackupKind                = "ScheduleVMBackup"
 )
 
-// OnScheduleVMBackupChanged recomputes the harvester-controller ComponentHealth on every ScheduleVMBackup change.
+// OnScheduleVMBackupChanged queues a ComponentHealth reconciliation on every ScheduleVMBackup change.
 func (h *Handler) OnScheduleVMBackupChanged(_ string, scheduleVMBackup *harvesterv1.ScheduleVMBackup) (*harvesterv1.ScheduleVMBackup, error) {
-	if scheduleVMBackup == nil {
-		return nil, nil
-	}
-	return scheduleVMBackup, h.reconcileScheduleVMBackups()
+	h.enqueueHealth(scheduleVMBackupComponentHealthName)
+	return scheduleVMBackup, nil
 }
 
 func (h *Handler) reconcileScheduleVMBackups() error {

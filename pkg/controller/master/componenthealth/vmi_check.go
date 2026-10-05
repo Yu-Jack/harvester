@@ -31,12 +31,10 @@ var vmMigrationHealthChecks = []struct {
 	},
 }
 
-// OnVMIChanged recomputes the harvester-controller ComponentHealth on every VMI change.
+// OnVMIChanged queues a ComponentHealth reconciliation on every VMI change.
 func (h *Handler) OnVMIChanged(_ string, vmi *kubevirtv1.VirtualMachineInstance) (*kubevirtv1.VirtualMachineInstance, error) {
-	if vmi == nil {
-		return nil, nil
-	}
-	return vmi, h.reconcileVMI()
+	h.enqueueHealth(vmComponentHealthName)
+	return vmi, nil
 }
 
 func (h *Handler) reconcileVMI() error {

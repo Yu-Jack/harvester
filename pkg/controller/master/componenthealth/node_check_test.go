@@ -14,6 +14,87 @@ import (
 	"github.com/harvester/harvester/pkg/util/fakeclients"
 )
 
+func TestDeletionNotificationsClearComponentHealthChecks(t *testing.T) {
+	tests := []struct {
+		name                string
+		componentHealthName string
+		onDelete            func(*testing.T, *Handler) error
+	}{
+		{
+			name:                "node",
+			componentHealthName: nodeComponentHealthName,
+			onDelete: func(t *testing.T, handler *Handler) error {
+				result, err := handler.OnNodeChanged("deleted-node", nil)
+				assert.Nil(t, result)
+				return err
+			},
+		},
+		{
+			name:                "vmi",
+			componentHealthName: vmComponentHealthName,
+			onDelete: func(t *testing.T, handler *Handler) error {
+				result, err := handler.OnVMIChanged("default/deleted-vmi", nil)
+				assert.Nil(t, result)
+				return err
+			},
+		},
+		{
+			name:                "volume",
+			componentHealthName: volumeComponentHealthName,
+			onDelete: func(t *testing.T, handler *Handler) error {
+				result, err := handler.OnVolumeChanged("longhorn-system/deleted-volume", nil)
+				assert.Nil(t, result)
+				return err
+			},
+		},
+		{
+			name:                "scheduled backup",
+			componentHealthName: scheduleVMBackupComponentHealthName,
+			onDelete: func(t *testing.T, handler *Handler) error {
+				result, err := handler.OnScheduleVMBackupChanged("default/deleted-schedule", nil)
+				assert.Nil(t, result)
+				return err
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			clientset := fake.NewSimpleClientset(&v1beta1.ComponentHealth{
+				ObjectMeta: metav1.ObjectMeta{Name: tc.componentHealthName},
+				Status: v1beta1.ComponentHealthStatus{
+					Checks: map[string]v1beta1.CheckResult{
+						"StaleCheck": {Severity: v1beta1.SeverityError, Message: "deleted resource failed"},
+					},
+				},
+			})
+			controller := &recordingComponentHealthController{}
+			handler := &Handler{
+				componentHealthController: controller,
+				componentHealths:          fakeclients.ComponentHealthClient(clientset.HarvesterhciV1beta1().ComponentHealths),
+				nodeCache:                 fakeclients.NodeCache(clientset.CoreV1().Nodes),
+				vmiCache:                  fakeclients.VirtualMachineInstanceCache(clientset.KubevirtV1().VirtualMachineInstances),
+				volumeCache:               fakeclients.LonghornVolumeCache(clientset.LonghornV1beta2().Volumes),
+				scheduleVMBackupCache:     fakeclients.SVMBackupCache(clientset.HarvesterhciV1beta1().ScheduleVMBackups),
+			}
+			if !assert.NoError(t, tc.onDelete(t, handler)) {
+				return
+			}
+			if !assert.Equal(t, []string{tc.componentHealthName}, controller.enqueued) {
+				return
+			}
+			_, err := handler.OnComponentHealthChanged(controller.enqueued[0], nil)
+			if !assert.NoError(t, err) {
+				return
+			}
+			health, err := clientset.HarvesterhciV1beta1().ComponentHealths().Get(context.Background(), tc.componentHealthName, metav1.GetOptions{})
+			if assert.NoError(t, err) {
+				assert.Empty(t, health.Status.Checks)
+			}
+		})
+	}
+}
+
 func TestReconcileNodes(t *testing.T) {
 	tests := []struct {
 		name           string

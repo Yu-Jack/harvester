@@ -20,12 +20,10 @@ const (
 	checkKeyVMBackupFailed = "VMBackupFailed"
 )
 
-// OnVMBackupChanged recomputes the harvester-controller ComponentHealth on every VirtualMachineBackup change.
+// OnVMBackupChanged queues a ComponentHealth reconciliation on every VirtualMachineBackup change.
 func (h *Handler) OnVMBackupChanged(_ string, vmBackup *harvesterv1.VirtualMachineBackup) (*harvesterv1.VirtualMachineBackup, error) {
-	if vmBackup == nil {
-		return nil, nil
-	}
-	return vmBackup, h.reconcileVMBackups()
+	h.enqueueHealth(vmBackupComponentHealthName)
+	return vmBackup, nil
 }
 
 func (h *Handler) reconcileVMBackups() error {
