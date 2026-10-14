@@ -39,6 +39,7 @@ type Handler struct {
 	volumeCache               ctllonghornv1.VolumeCache
 	vmBackupCache             ctlharvesterv1.VirtualMachineBackupCache
 	scheduleVMBackupCache     ctlharvesterv1.ScheduleVMBackupCache
+	vmImageCache              ctlharvesterv1.VirtualMachineImageCache
 }
 
 func Register(ctx context.Context, management *config.Management, _ config.Options) error {
@@ -48,6 +49,7 @@ func Register(ctx context.Context, management *config.Management, _ config.Optio
 	volumes := management.LonghornFactory.Longhorn().V1beta2().Volume()
 	vmBackups := management.HarvesterFactory.Harvesterhci().V1beta1().VirtualMachineBackup()
 	scheduleVMBackups := management.HarvesterFactory.Harvesterhci().V1beta1().ScheduleVMBackup()
+	vmImages := management.HarvesterFactory.Harvesterhci().V1beta1().VirtualMachineImage()
 
 	h := &Handler{
 		componentHealthController: componentHealths,
@@ -57,6 +59,7 @@ func Register(ctx context.Context, management *config.Management, _ config.Optio
 			volumes.Informer().HasSynced,
 			vmBackups.Informer().HasSynced,
 			scheduleVMBackups.Informer().HasSynced,
+			vmImages.Informer().HasSynced,
 		},
 		componentHealths:      componentHealths,
 		componentHealthCache:  componentHealths.Cache(),
@@ -65,6 +68,7 @@ func Register(ctx context.Context, management *config.Management, _ config.Optio
 		volumeCache:           volumes.Cache(),
 		vmBackupCache:         vmBackups.Cache(),
 		scheduleVMBackupCache: scheduleVMBackups.Cache(),
+		vmImageCache:          vmImages.Cache(),
 	}
 
 	componentHealths.OnChange(ctx, "component-health-reconcile", h.OnComponentHealthChanged)
@@ -73,6 +77,7 @@ func Register(ctx context.Context, management *config.Management, _ config.Optio
 	volumes.OnChange(ctx, volumeControllerName, h.OnVolumeChanged)
 	vmBackups.OnChange(ctx, vmBackupControllerName, h.OnVMBackupChanged)
 	scheduleVMBackups.OnChange(ctx, scheduleVMBackupControllerName, h.OnScheduleVMBackupChanged)
+	vmImages.OnChange(ctx, vmImageControllerName, h.OnVMImageChanged)
 
 	go h.enqueueInitialHealth(ctx)
 
@@ -93,6 +98,7 @@ func (h *Handler) enqueueInitialHealth(ctx context.Context) {
 		volumeComponentHealthName,
 		vmBackupComponentHealthName,
 		scheduleVMBackupComponentHealthName,
+		vmImageComponentHealthName,
 	} {
 		h.enqueueHealth(name)
 	}
@@ -111,6 +117,8 @@ func (h *Handler) OnComponentHealthChanged(key string, health *harvesterv1.Compo
 		reconcile = h.reconcileVMBackups
 	case scheduleVMBackupComponentHealthName:
 		reconcile = h.reconcileScheduleVMBackups
+	case vmImageComponentHealthName:
+		reconcile = h.reconcileVMImages
 	default:
 		return health, nil
 	}

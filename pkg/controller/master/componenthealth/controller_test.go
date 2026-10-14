@@ -55,6 +55,7 @@ func TestEnqueueInitialHealth(t *testing.T) {
 		volumeComponentHealthName,
 		vmBackupComponentHealthName,
 		scheduleVMBackupComponentHealthName,
+		vmImageComponentHealthName,
 	}, controller.enqueued)
 }
 
@@ -101,6 +102,7 @@ func TestOnComponentHealthChangedDispatch(t *testing.T) {
 		{name: volumeComponentHealthName},
 		{name: vmBackupComponentHealthName},
 		{name: scheduleVMBackupComponentHealthName},
+		{name: vmImageComponentHealthName},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -112,6 +114,7 @@ func TestOnComponentHealthChangedDispatch(t *testing.T) {
 				volumeCache:           fakeclients.LonghornVolumeCache(clientset.LonghornV1beta2().Volumes),
 				vmBackupCache:         fakeclients.VMBackupCache(clientset.HarvesterhciV1beta1().VirtualMachineBackups),
 				scheduleVMBackupCache: fakeclients.SVMBackupCache(clientset.HarvesterhciV1beta1().ScheduleVMBackups),
+				vmImageCache:          fakeclients.VirtualMachineImageCache(clientset.HarvesterhciV1beta1().VirtualMachineImages),
 				healthCachesSynced:    []cache.InformerSynced{func() bool { return true }},
 			}
 			result, err := handler.OnComponentHealthChanged(tc.name, nil)
