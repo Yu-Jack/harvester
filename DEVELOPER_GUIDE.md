@@ -151,6 +151,34 @@ The most important components in Harvester are the custom resources, controllers
 - Webhook: Webhooks validate and mutate resources when they are created, updated, or deleted. All rules are located in [pkg/webhook/resources](./pkg/webhook/resources/).
 - API Server: We use [rancher/apiserver](https://github.com/rancher/apiserver?tab=readme-ov-file) to implement the API server, which is located in [pkg/api](./pkg/api) and [pkg/server](./pkg/server). The API server exposes actions used by the Harvester UI.
 
+#### Direct API authentication
+
+The Harvester HTTP/HTTPS listener requires a Kubernetes bearer token rather than
+assigning every request the admin identity. For example, a workload calling the
+Harvester Service must send its ServiceAccount token in `Authorization: Bearer
+<token>`. The server validates each request through Kubernetes TokenReview, using
+the Kubernetes API server's default token audience. No authentication results are
+cached. The Harvester server ServiceAccount needs permission to create
+`authentication.k8s.io/tokenreviews` (the chart's existing cluster-admin binding
+includes this permission).
+
+Missing or invalid credentials receive HTTP 401; TokenReview failures receive
+HTTP 503. Valid credentials populate the request user, UID, groups, and extra
+attributes for downstream authorization; authentication does not itself grant
+permission to perform an operation. Caller-supplied impersonation headers are
+removed on this listener. Kubernetes client certificates, Rancher session cookies,
+and Rancher-only API tokens are not supported by this direct authentication path.
+
+Rancher Dashboard requests continue to use the separate aggregation tunnel and
+its Rancher-provided user identity. The exact `GET /v1/harvester/readyz` route
+retains its existing RKE server-token authentication instead of TokenReview.
+There are no anonymous exceptions for direct dashboard assets or discovery
+endpoints. Any custom HTTP health probes must supply a supported credential, use
+the existing authenticated readiness route, or use TCP probes.
+For diagnostics, the direct listener logs the method, path, host, and request
+headers at info level before authentication. Credential-related header values
+(including Authorization and Cookie) are redacted.
+
 ### Deployment
 
 The main deployment charts reside in [deploy/charts/harvester](./deploy/charts/harvester/) and [deploy/charts/harvester-crd](./deploy/charts/harvester-crd).

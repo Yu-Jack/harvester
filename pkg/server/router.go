@@ -90,7 +90,7 @@ func (r *Router) Routes(h router.Handlers) http.Handler {
 	readyzHandlerv1 := harvesterServer.NewHandler(readyz.NewReadyzHandler(
 		r.scaled.CoreFactory.Core().V1().Pod().Cache(),
 		r.scaled.Management.RKEFactory.Rke().V1().RKEControlPlane().Cache()))
-	m.Path("/v1/harvester/readyz").Methods("GET").Handler(authMiddleware(r.scaled.CoreFactory.Core().V1().Secret().Cache(), readyzHandlerv1))
+	m.Path(clusterReadyPath).Methods("GET").Handler(authMiddleware(r.scaled.CoreFactory.Core().V1().Secret().Cache(), readyzHandlerv1))
 
 	// --- END of preposition routes ---
 
