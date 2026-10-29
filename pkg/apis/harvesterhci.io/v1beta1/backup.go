@@ -60,6 +60,12 @@ func (b BackupType) UsesRemoteBackupTarget() bool {
 	return false
 }
 
+// IsDataMover reports whether the backup type moves volume data to the remote
+// backup target through a Harvester-managed Job (restic/kopia) instead of CSI.
+func (b BackupType) IsDataMover() bool {
+	return b == Restic || b == Kopia
+}
+
 // UsesBackupSnapshotClass reports whether the backup type delegates remote
 // backup creation to the CSI driver. Data movers use a local snapshot class.
 func (b BackupType) UsesBackupSnapshotClass() bool {

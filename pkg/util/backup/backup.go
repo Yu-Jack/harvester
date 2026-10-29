@@ -24,6 +24,19 @@ const (
 	ConnectBackupStoreTimeout = 8 * time.Second
 )
 
+// SnapshotClassName returns the VolumeSnapshotClass name configured for the
+// backup type. ok is false if the backup type is unsupported; the returned name
+// is empty if the class is not configured.
+func SnapshotClassName(backupType harvesterv1.BackupType, info settings.CSIDriverInfo) (name string, ok bool) {
+	switch {
+	case backupType.UsesBackupSnapshotClass():
+		return info.BackupVolumeSnapshotClassName, true
+	case backupType == harvesterv1.Snapshot, backupType.IsDataMover():
+		return info.VolumeSnapshotClassName, true
+	}
+	return "", false
+}
+
 func ConstructEndpoint(target *settings.BackupTarget) string {
 	switch target.Type {
 	case settings.S3BackupType:
@@ -108,7 +121,7 @@ func RepositoryPassword(repositoryID string, backupType harvesterv1.BackupType) 
 	if repositoryID == "" {
 		return "", fmt.Errorf("repository ID is empty")
 	}
-	if backupType != harvesterv1.Restic && backupType != harvesterv1.Kopia {
+	if !backupType.IsDataMover() {
 		return "", fmt.Errorf("unsupported data-mover backup type %q", backupType)
 	}
 	identity := strings.Join([]string{string(backupType), repositoryID}, "\x00")

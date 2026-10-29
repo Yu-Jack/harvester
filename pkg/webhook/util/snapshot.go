@@ -17,6 +17,7 @@ import (
 	ctllonghornv1 "github.com/harvester/harvester/pkg/generated/controllers/longhorn.io/v1beta2"
 	"github.com/harvester/harvester/pkg/settings"
 	"github.com/harvester/harvester/pkg/util"
+	backuputil "github.com/harvester/harvester/pkg/util/backup"
 	werror "github.com/harvester/harvester/pkg/webhook/error"
 )
 
@@ -138,16 +139,7 @@ func ValidateProvisionerAndConfig(pvc *corev1.PersistentVolumeClaim,
 		return fmt.Errorf("provisioner %s is not configured in the %s setting", provisioner, settings.CSIDriverConfigSettingName)
 	}
 
-	var requiredValue string
-	switch {
-	case bt.UsesBackupSnapshotClass():
-		requiredValue = c.BackupVolumeSnapshotClassName
-	case bt == v1beta1.Snapshot,
-		bt == v1beta1.Restic,
-		bt == v1beta1.Kopia:
-		requiredValue = c.VolumeSnapshotClassName
-	}
-	if requiredValue == "" {
+	if requiredValue, _ := backuputil.SnapshotClassName(bt, c); requiredValue == "" {
 		return fmt.Errorf("%s's snapshot class is not configured for provisioner %s in the %s setting",
 			bt, provisioner, settings.CSIDriverConfigSettingName)
 	}

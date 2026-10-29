@@ -708,16 +708,8 @@ func (vmbo *vmbackupOperator) loadCSIDriverConfig() (map[string]settings.CSIDriv
 
 // getVolumeSnapshotClassName determines the appropriate snapshot class name based on backup type
 func getVSCName(backupType harvesterv1.BackupType, driverInfo settings.CSIDriverInfo, csiDriverName string) (string, error) {
-	var vscName string
-
-	switch {
-	case backupType.UsesBackupSnapshotClass():
-		vscName = driverInfo.BackupVolumeSnapshotClassName
-	case backupType == harvesterv1.Snapshot,
-		backupType == harvesterv1.Restic,
-		backupType == harvesterv1.Kopia:
-		vscName = driverInfo.VolumeSnapshotClassName
-	default:
+	vscName, ok := backuputil.SnapshotClassName(backupType, driverInfo)
+	if !ok {
 		return "", fmt.Errorf("unsupported backup type %q for CSI driver %q", backupType, csiDriverName)
 	}
 
