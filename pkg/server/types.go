@@ -259,8 +259,8 @@ func (s *HarvesterServer) generateSteveServer(options config.Options) error {
 	s.steve.APIServer.Parser = dynamicURLBuilderParse
 	apiroot.Register(s.steve.BaseSchemas, []string{"v1", "v1/harvester"}, "proxy:/apis")
 
-	authMiddleware := steveauth.ToMiddleware(steveauth.AuthenticatorFunc(steveauth.AlwaysAdmin))
-	s.Handler = authMiddleware(s.steve)
+	// TEMPORARY: no outer authenticator, direct requests carry no user in context.
+	s.Handler = s.steve
 
 	s.startHooks = []StartHook{
 		indexeres.Setup,
