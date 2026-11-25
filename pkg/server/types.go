@@ -259,7 +259,9 @@ func (s *HarvesterServer) generateSteveServer(options config.Options) error {
 	s.steve.APIServer.Parser = dynamicURLBuilderParse
 	apiroot.Register(s.steve.BaseSchemas, []string{"v1", "v1/harvester"}, "proxy:/apis")
 
-	authMiddleware := steveauth.ToMiddleware(steveauth.AuthenticatorFunc(steveauth.AlwaysAdmin))
+	// Requests reaching this handler directly (not through the Rancher aggregation tunnel) must present
+	// a bearer token; impersonation headers are honored only if the token's user may impersonate.
+	authMiddleware := steveauth.ToMiddleware(newTokenImpersonationAuthenticator(s.ClientSet))
 	s.Handler = authMiddleware(s.steve)
 
 	s.startHooks = []StartHook{
